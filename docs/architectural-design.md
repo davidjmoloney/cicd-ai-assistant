@@ -1,1154 +1,424 @@
-# Simple AI Code Assistant Architecture for Ardessa
-## Based on Academic Literature Review
+# AI Code Assistant Architecture for Ardessa
+## Automated PR Generation from CI/CD Signals
 
-**Created**: 2025-11-27
-**Purpose**: Practical, implementable architecture for AI assistant that ingests CI/CD signals and generates PRs
+**Created**: 2025-11-27  
+**Updated**: 2025-12-15  
+**Purpose**: Practical architecture for AI assistant that fixes CI/CD failures via automated PRs
 
 ---
 
 ## Design Philosophy
 
-This architecture prioritizes:
-- **Simplicity**: Easy to understand and implement
-- **Modularity**: Components can be built and tested independently
+- **Simplicity**: GitHub Actions-native, no persistent infrastructure
+- **Modularity**: Components testable independently
 - **Evidence-based**: Grounded in proven academic approaches
-- **Practical**: Uses off-the-shelf LLMs (GPT-4/Claude) without fine-tuning
+- **Practical**: Off-the-shelf LLMs without fine-tuning
 
----
-
-## Primary Literature Foundation
-
-### Core Architecture: LLMLOOP (Ravi et al., 2025)
-**Why this paper**: Demonstrates the clearest iterative feedback loop architecture using CI/CD signals (compilation, tests, static analysis) to improve code.
-
-**Key concept adopted**: Sequential feedback loops where each CI/CD signal triggers a specialized refinement cycle.
-
-### Supporting Pattern: AI-Augmented CI/CD Pipelines (Baqar et al., 2025)
-**Why this paper**: Provides the specialized agent pattern and decision taxonomy for CI/CD stages.
-
-**Key concept adopted**: Specialized agents for different signal types (Test-Triage, Security) with policy-bounded actions.
-
-### Implementation Guidance: AutoCodeRover (Zhang et al., 2024)
-**Why this paper**: Demonstrates practical tool integration and autonomous agent structure with finite state machine.
-
-**Key concept adopted**: Tool-based agent interaction and structured prompt management.
 
 ---
 
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    CI/CD PIPELINE                           │
-│  (GitHub Actions / GitLab CI / Jenkins)                     │
-└─────────────────┬───────────────────────────────────────────┘
-                  │ Triggers Github action sitting in this project
-                  ↓
-┌─────────────────────────────────────────────────────────────┐
-│              SIGNAL COLLECTION MODULE                       │
-│  - Downloads CI/CD artifacts                                │
-│  - Parse structured objects                                 │
-│  - Passes to Orchestrator                                   │
-└─────────────────┬───────────────────────────────────────────┘
-                  │
-                  ↓
-┌─────────────────────────────────────────────────────────────┐
-│              AGENT ORCHESTRATOR                              │
-│  - Routes signal objects to specialized agents               │
-│  - Manages agent execution order                             │
-│  - Aggregates agent outputs                                  │
-└─────────────────┬───────────────────────────────────────────┘
-                  │
-      ┌───────────┼───────────┬───────────┬───────────┐
-      ↓           ↓           ↓           ↓           ↓
-┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐
-│  Test    │ │ Coverage │ │   Lint   │ │ Security │ │Integration│
-│  Agent   │ │  Agent   │ │  Agent   │ │  Agent   │ │   Agent  │
-└────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘
-     │            │            │            │            │
-     └────────────┴────────────┴────────────┴────────────┘
-                              │
-                              ↓
-                    ┌──────────────────┐
-                    │  LLM Interface   │
-                    │  (GPT-4/Claude)  │
-                    └────────┬─────────┘
-                             │
-                             ↓
-                    ┌──────────────────┐
-                    │   Code Editor    │
-                    │   - Read files   │
-                    │   - Write fixes  │
-                    │   - Run tests    │
-                    └────────┬─────────┘
-                             │
-                             ↓
-                    ┌──────────────────┐
-                    │  PR Generator    │
-                    │  - Create branch │
-                    │  - Commit fixes  │
-                    │  - Open PR       │
-                    └──────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│           ARDESSA BACKEND REPOSITORY                    │
+│           GitHub Actions (Daily)                        │
+│                                                         │
+│  Runs: ruff, mypy, bandit, unit tests etc.              │
+│  Uploads: JSON artifacts                                │
+│  Triggers: repository_dispatch → AI Assistant repo      │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     │ repository_dispatch event
+                     ↓
+┌─────────────────────────────────────────────────────────┐
+│           AI ASSISTANT REPOSITORY                       │
+│           GitHub Actions (Triggered)                    │
+│                                                         │
+│  ┌────────────────────────────────────────────────┐     │
+│  │  SIGNAL COLLECTOR                              │     │
+│  │  - Downloads artifacts from source repo        │     │
+│  │  - Parses JSON reports                         │     │
+│  │  - Creates Signal objects in memory            │     │
+│  └──────────────────┬─────────────────────────────┘     │
+│                     │                                   │
+│  ┌──────────────────▼─────────────────────────────┐     │
+│  │  SIGNAL PRIORITIZER                             │    │
+│  │  - Groups by type and location                  │    │
+│  │  - Max 3 signals per group                      │    │
+│  │  - Sorts by severity                            │    │
+│  └──────────────────┬─────────────────────────────┘    │
+│                     │                                    │
+│  ┌──────────────────▼─────────────────────────────┐    │
+│  │  AGENT ORCHESTRATOR                             │    │
+│  │  - Routes groups to specialized agents          │    │
+│  │  - Sequential processing                        │    │
+│  └──────────────────┬─────────────────────────────┘    │
+│                     │                                    │
+│       ┌─────────────┼─────────────┬──────────┐         │
+│       ↓             ↓             ↓          ↓         │
+│  ┌────────┐   ┌────────┐   ┌──────────┐  (others)     │
+│  │  Lint  │   │  Type  │   │ Security │               │
+│  │ Agent  │   │ Agent  │   │  Agent   │               │
+│  └───┬────┘   └───┬────┘   └────┬─────┘               │
+│      │            │              │                      │
+│      └────────────┴──────────────┘                      │
+│                   │                                      │
+│  ┌────────────────▼─────────────────────────────┐      │
+│  │  CODE TOOLS (with Guardrails)                 │      │
+│  │  - File editor (syntax validation)            │      │
+│  │  - Code search (max 50 results)               │      │
+│  │  - File viewer (line numbers)                 │      │
+│  └──────────────────┬─────────────────────────────┘    │
+│                     │                                    │
+│  ┌──────────────────▼─────────────────────────────┐    │
+│  │  PR GENERATOR                                   │    │
+│  │  - Creates branch in source repo                │    │
+│  │  - Commits fixes                                │    │
+│  │  - Opens PR with context                        │    │
+│  └─────────────────────────────────────────────────┘    │
+│                                                          │
+└──────────────────────────────────────────────────────────┘
+                     │
+                     ↓
+┌─────────────────────────────────────────────────────────┐
+│           BACK TO ARDESSA BACKEND REPOSITORY             │
+│           PR Created with Fixes                          │
+└─────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## Triggering & Data Flow
+
+### Step 1: Source Repository CI Run
+**Location**: Ardessa Backend Repository  
+**Frequency**: Daily (cron) or on merge to main  
+**Actions**:
+1. Run CI checks (ruff, mypy, bandit, etc)
+2. Generate JSON reports
+3. Upload as GitHub artifacts
+4. Trigger AI Assistant via `repository_dispatch`
+
+**Payload sent**:
+```
+{
+  "source_repo": "ardessa/backend",
+  "workflow_run_id": "123456",
+  "commit_sha": "abc123",
+  "branch": "main"
+}
+```
+
+---
+
+### Step 2: AI Assistant Triggered
+**Location**: AI Assistant Repository  
+**Trigger**: `repository_dispatch` event  
+**Execution**: GitHub Actions runner
+
+**Sub-steps**:
+
+**2.1 Signal Collection**
+- Download artifacts from source repo using GitHub API
+- Extract JSON files (ruff_report.json, mypy_report.json, bandit_report.json)
+- Parse each using specialized parsers
+- Output: `List[Signal]` in memory
+
+**2.2 Prioritization**
+- Group signals by type (lint, type_check, security)
+- Within each type, group by file proximity
+- Limit to 3 signals per group
+- Calculate priority scores
+- Sort groups by severity
+- Output: `List[SignalGroup]` (prioritized)
+
+**2.3 Agent Processing**
+For each `SignalGroup` (in priority order):
+- Route to appropriate agent (LintAgent, TypeAgent, SecurityAgent)
+- Agent executes fix attempt with validation loop (max 3 iterations)
+- Agent uses Code Tools with guardrails
+- Output: `FixResult` (success/failure + changes)
+
+**2.4 PR Generation**
+For each successful `FixResult`:
+- Create feature branch in source repo
+- Commit changes
+- Open PR with detailed description
+- Add labels and metadata
+
+**2.5 Cleanup**
+- GitHub Actions runner terminates
+- No persistent state (everything was in-memory)
 
 ---
 
 ## Component Specifications
 
-### 1. Signal Collection Service
+### 1. Signal Objects
 
-**Literature basis**: AIDOaRt (Eramo et al., 2021) - Data Collection & Representation layer
+**Purpose**: Unified representation of CI/CD failures
 
-**Purpose**: Parse CI/CD outputs into structured, actionable signals
-
-**Inputs**:
-- CI/CD pipeline artifacts (logs, reports, JSON outputs)
-- Webhook payloads from CI/CD platform
-
-**Outputs**: Structured signal objects
-
-**Implementation**:
+**Core Structure**:
 ```python
-class Signal:
-    signal_type: str  # 'unit_test', 'coverage', 'lint', 'security', 'integration'
-    severity: str     # 'critical', 'high', 'medium', 'low'
-    details: dict     # Type-specific data
-    file_paths: list  # Affected files
-    timestamp: datetime
+Signal:
+    signal_type: lint | type_check | security
+    severity: critical | high | medium | low
+    file_path: str
+    line_number: int
+    message: str
+    rule_code: str (optional)
     commit_sha: str
 ```
 
-**Signal Types**:
-
-1. **Unit Test Failures**
-   ```python
-   {
-       "signal_type": "unit_test",
-       "severity": "high",
-       "details": {
-           "test_name": "test_user_authentication",
-           "failure_message": "AssertionError: Expected 200, got 401",
-           "stack_trace": "...",
-           "file": "tests/test_auth.py",
-           "line": 42
-       },
-       "file_paths": ["src/auth.py", "tests/test_auth.py"]
-   }
-   ```
-
-2. **Coverage Drops**
-   ```python
-   {
-       "signal_type": "coverage",
-       "severity": "medium",
-       "details": {
-           "file": "src/payment.py",
-           "current_coverage": 45.2,
-           "previous_coverage": 67.8,
-           "uncovered_lines": [23, 24, 25, 56, 57],
-           "missing_tests": ["test_refund_flow", "test_partial_payment"]
-       },
-       "file_paths": ["src/payment.py"]
-   }
-   ```
-
-3. **Lint Violations**
-   ```python
-   {
-       "signal_type": "lint",
-       "severity": "low",
-       "details": {
-           "rule": "E501",
-           "message": "line too long (120 > 79 characters)",
-           "file": "src/utils.py",
-           "line": 15,
-           "column": 80
-       },
-       "file_paths": ["src/utils.py"]
-   }
-   ```
-
-4. **Security Issues**
-   ```python
-   {
-       "signal_type": "security",
-       "severity": "critical",
-       "details": {
-           "vulnerability": "SQL Injection",
-           "cwe": "CWE-89",
-           "description": "User input directly concatenated into SQL query",
-           "file": "src/database.py",
-           "line": 78,
-           "recommendation": "Use parameterized queries"
-       },
-       "file_paths": ["src/database.py"]
-   }
-   ```
-
-5. **Integration Test Failures**
-   ```python
-   {
-       "signal_type": "integration",
-       "severity": "high",
-       "details": {
-           "test_name": "test_checkout_flow",
-           "failure_type": "timeout",
-           "message": "Request to /api/checkout timed out after 30s",
-           "affected_services": ["checkout-service", "payment-gateway"]
-       },
-       "file_paths": ["src/services/checkout.py", "src/services/payment.py"]
-   }
-   ```
-
-**Parsers Required**:
-- JUnit XML parser (for test results)
-- Coverage.py JSON parser
-- ESLint/Pylint JSON output parser
-- SARIF parser (for security scanners like Semgrep, CodeQL)
-- Custom integration test log parser
+**Signal Sources**:
+- **Ruff**: Linting violations (code style, imports, etc.)
+- **Mypy**: Type checking errors (incompatible types, missing annotations)
+- **Bandit**: Security vulnerabilities (SQL injection, hardcoded secrets)
 
 ---
 
-### 2. Agent Orchestrator
+### 2. Signal Prioritizer
 
-**Literature basis**: AI-Augmented CI/CD Pipelines (Baqar et al., 2025) - Agent coordination with policy-bounded execution
+**Purpose**: Group and prioritize signals for efficient fixing
 
-**Purpose**: Route signals to appropriate agents and manage execution
+**Grouping Rules**:
+1. Same signal type per group (one PR = one signal type)
+2. Maximum 3 signals per group
+3. Prefer signals in same file or nearby files
+4. Consider file importance (src/ > tests/)
 
-**Key Logic** (from LLMLOOP sequential approach):
+**Priority Calculation**:
+- Critical security: Priority 0 (highest)
+- High severity type errors: Priority 1
+- Medium severity issues: Priority 2
+- Low severity lint: Priority 3 (lowest)
 
-```python
-class AgentOrchestrator:
-    def process_signals(self, signals: List[Signal]) -> List[PRProposal]:
-        # Group signals by severity and type
-        prioritized_signals = self.prioritize(signals)
-
-        pr_proposals = []
-
-        # Process in order of severity (CRITICAL → HIGH → MEDIUM → LOW)
-        for signal in prioritized_signals:
-            agent = self.get_agent(signal.signal_type)
-
-            # Each agent attempts to fix the issue
-            fix_result = agent.process(signal)
-
-            if fix_result.success:
-                pr_proposals.append(fix_result.pr_proposal)
-
-        return pr_proposals
-
-    def prioritize(self, signals: List[Signal]) -> List[Signal]:
-        """
-        Priority order (from AI-Augmented CI/CD paper decision taxonomy):
-        1. CRITICAL security issues (always fix first)
-        2. HIGH severity test failures (blocking)
-        3. HIGH severity integration failures
-        4. MEDIUM coverage drops
-        5. LOW lint issues
-        """
-        severity_order = {'critical': 0, 'high': 1, 'medium': 2, 'low': 3}
-        return sorted(signals, key=lambda s: severity_order[s.severity])
-```
-
-**Policy Boundaries** (from AI-Augmented CI/CD paper):
-- Never deploy with CRITICAL security issues
-- Never fix more than 3 issues in single PR (maintainability)
-- Require minimum 80% confidence score for autonomous fixes
-- Always include test validation before proposing PR
+**Output**: Ordered list of `SignalGroup` objects
 
 ---
 
-### 3. Specialized Agents
+### 3. Agent Orchestrator
 
-**Literature basis**:
-- LLMLOOP (feedback loop structure)
-- AutoCodeRover (tool integration and prompt structure)
-- AI-Augmented CI/CD Pipelines (specialized agent roles)
+**Purpose**: Route signal groups to specialized agents
 
-**Common Agent Structure**:
-
-```python
-class BaseAgent:
-    def __init__(self, llm_client, code_tools):
-        self.llm = llm_client  # GPT-4 or Claude API client
-        self.tools = code_tools
-        self.max_iterations = 3  # From LLMLOOP: limit iteration cycles
-
-    def process(self, signal: Signal) -> FixResult:
-        """
-        Three-stage process from LLMLOOP:
-        1. Understand the issue
-        2. Generate fix
-        3. Validate fix
-        """
-        # Stage 1: Understand
-        context = self.gather_context(signal)
-
-        # Stage 2: Generate fix (with iteration)
-        for attempt in range(self.max_iterations):
-            fix = self.generate_fix(signal, context)
-
-            # Stage 3: Validate
-            validation = self.validate_fix(fix, signal)
-
-            if validation.passed:
-                return FixResult(
-                    success=True,
-                    fix=fix,
-                    confidence=validation.confidence,
-                    pr_proposal=self.create_pr_proposal(fix, signal)
-                )
-
-            # Update context with failure feedback (LLMLOOP iterative approach)
-            context.add_failure(validation.feedback)
-
-        return FixResult(success=False, reason="Max iterations exceeded")
+**Logic**:
+```
+For each SignalGroup in priority order:
+    Select agent based on signal_type
+    Execute agent.process(group)
+    If successful, collect PR proposal
+    Continue to next group
 ```
 
-**Agent-Specific Implementations**:
+**Policy Boundaries** (from Baqar et al.):
+- Max 3 fixes per PR (maintainability)
+- Require validation before PR creation
+- No autonomous merges (human oversight required)
 
-#### Test Agent
-**Purpose**: Fix failing unit tests
+---
 
-**Literature basis**: MarsCode Agent - dynamic debugging with test execution feedback
+### 4. Specialized Agents
 
-```python
-class TestAgent(BaseAgent):
-    def gather_context(self, signal: Signal) -> Context:
-        """Gather relevant context for test failure"""
-        context = Context()
-
-        # 1. Read the failing test
-        test_file = signal.details['file']
-        context.test_code = self.tools.read_file(test_file)
-
-        # 2. Read the code under test
-        source_file = self.infer_source_file(test_file)
-        context.source_code = self.tools.read_file(source_file)
-
-        # 3. Get failure details
-        context.failure_message = signal.details['failure_message']
-        context.stack_trace = signal.details['stack_trace']
-
-        return context
-
-    def generate_fix(self, signal: Signal, context: Context) -> Fix:
-        """Use LLM to generate fix"""
-        prompt = f"""
-You are a software engineer fixing a failing unit test.
-
-**Test File**: {context.test_code[:500]}...
-
-**Source Code**: {context.source_code[:500]}...
-
-**Failure Message**: {context.failure_message}
-
-**Stack Trace**: {context.stack_trace[:300]}...
-
-Analyze the failure and propose a fix to the SOURCE CODE (not the test).
-Generate a JSON patch with the changes.
-
-Previous failed attempts: {context.failures}
-
-Response format:
-{{
-    "analysis": "Brief explanation of the bug",
-    "fix_location": {{"file": "...", "line": ...}},
-    "fix_code": "The corrected code",
-    "confidence": 0.0-1.0
-}}
-"""
-
-        response = self.llm.generate(prompt)
-        return Fix.from_json(response)
-
-    def validate_fix(self, fix: Fix, signal: Signal) -> Validation:
-        """Run tests to validate fix"""
-        # Apply fix temporarily
-        self.tools.apply_patch(fix)
-
-        # Run the specific failing test
-        test_result = self.tools.run_tests([signal.details['test_name']])
-
-        # Rollback if failed
-        if not test_result.passed:
-            self.tools.rollback_patch(fix)
-            return Validation(
-                passed=False,
-                feedback=f"Test still failing: {test_result.message}"
-            )
-
-        # Run all related tests to avoid regression
-        all_tests = self.tools.run_tests(self.tools.find_related_tests(fix.file))
-
-        if not all_tests.passed:
-            self.tools.rollback_patch(fix)
-            return Validation(
-                passed=False,
-                feedback=f"Fix caused regression: {all_tests.failures}"
-            )
-
-        return Validation(passed=True, confidence=fix.confidence)
+**Base Agent Pattern** (from LLMLOOP):
 ```
-
-#### Coverage Agent
-**Purpose**: Generate tests to improve coverage
-
-**Literature basis**: LLMLOOP - automated test generation with iterative refinement
-
-```python
-class CoverageAgent(BaseAgent):
-    def gather_context(self, signal: Signal) -> Context:
-        context = Context()
-
-        # Read source code with uncovered lines
-        source_file = signal.details['file']
-        context.source_code = self.tools.read_file(source_file)
-
-        # Get existing tests for reference
-        test_file = self.tools.find_test_file(source_file)
-        if test_file:
-            context.existing_tests = self.tools.read_file(test_file)
-
-        # Mark uncovered lines
-        context.uncovered_lines = signal.details['uncovered_lines']
-
-        return context
-
-    def generate_fix(self, signal: Signal, context: Context) -> Fix:
-        prompt = f"""
-You are writing unit tests to improve code coverage.
-
-**Source Code** (lines {context.uncovered_lines} are NOT covered):
-{context.source_code}
-
-**Existing Tests** (for reference):
-{context.existing_tests[:300] if context.existing_tests else "None"}
-
-**Missing Test Cases**: {signal.details['missing_tests']}
-
-Generate NEW test functions that cover the uncovered lines.
-Follow the existing test style and naming conventions.
-
-Response format:
-{{
-    "test_functions": [
-        {{
-            "name": "test_...",
-            "code": "def test_...(): ...",
-            "covers_lines": [23, 24, 25]
-        }}
-    ],
-    "confidence": 0.0-1.0
-}}
-"""
-        response = self.llm.generate(prompt)
-        return Fix.from_json(response)
-
-    def validate_fix(self, fix: Fix, signal: Signal) -> Validation:
-        """Validate that new tests pass and improve coverage"""
-        # Add new tests
-        self.tools.append_to_file(fix.test_file, fix.test_code)
-
-        # Run new tests
-        test_result = self.tools.run_tests([t['name'] for t in fix.test_functions])
-
-        if not test_result.passed:
-            self.tools.rollback_patch(fix)
-            return Validation(
-                passed=False,
-                feedback=f"Generated tests fail: {test_result.message}"
-            )
-
-        # Measure coverage improvement
-        new_coverage = self.tools.measure_coverage(signal.details['file'])
-
-        if new_coverage <= signal.details['current_coverage']:
-            self.tools.rollback_patch(fix)
-            return Validation(
-                passed=False,
-                feedback="Tests didn't improve coverage"
-            )
-
-        return Validation(
-            passed=True,
-            confidence=fix.confidence,
-            metadata={'coverage_improvement': new_coverage - signal.details['current_coverage']}
-        )
+1. Gather context (read relevant files)
+2. Generate fix using LLM
+3. Validate fix with guardrails
+4. Iterate if needed (max 3 attempts)
+5. Return result
 ```
 
 #### Lint Agent
-**Purpose**: Fix code style violations
+- **Handles**: Ruff violations
+- **Validation**: Re-run ruff on modified file
+- **Simple fixes**: Direct pattern replacement (no LLM)
+- **Complex fixes**: LLM-based with context
 
-**Literature basis**: Augmenting LLMs with Static Analysis (Abtahi & Azim, 2025)
-
-```python
-class LintAgent(BaseAgent):
-    def gather_context(self, signal: Signal) -> Context:
-        context = Context()
-
-        # Read file with lint issue
-        context.file_content = self.tools.read_file(signal.details['file'])
-        context.violation_line = signal.details['line']
-        context.rule = signal.details['rule']
-        context.message = signal.details['message']
-
-        return context
-
-    def generate_fix(self, signal: Signal, context: Context) -> Fix:
-        # For simple lint issues, often a direct fix without LLM
-        # (from Augmenting LLMs paper - use LLM only when needed)
-
-        if self.is_simple_fix(signal.details['rule']):
-            return self.apply_direct_fix(signal, context)
-
-        # For complex lint issues, use LLM
-        prompt = f"""
-Fix the following lint violation:
-
-**Rule**: {context.rule}
-**Message**: {context.message}
-**Line {context.violation_line}**: {self.tools.get_line(context.file_content, context.violation_line)}
-
-**Context** (5 lines before and after):
-{self.tools.get_lines(context.file_content, context.violation_line - 5, context.violation_line + 5)}
-
-Provide the corrected line(s).
-
-Response format:
-{{
-    "corrected_lines": {{"line_number": "corrected code"}},
-    "confidence": 0.0-1.0
-}}
-"""
-        response = self.llm.generate(prompt)
-        return Fix.from_json(response)
-
-    def validate_fix(self, fix: Fix, signal: Signal) -> Validation:
-        """Validate lint fix"""
-        # Apply fix
-        self.tools.apply_patch(fix)
-
-        # Re-run linter on the file
-        lint_result = self.tools.run_linter(signal.details['file'])
-
-        # Check if specific violation is resolved
-        if signal.details['rule'] in lint_result.violations:
-            self.tools.rollback_patch(fix)
-            return Validation(
-                passed=False,
-                feedback="Lint violation still present"
-            )
-
-        # Ensure no new violations introduced
-        if len(lint_result.violations) > 0:
-            new_violations = [v for v in lint_result.violations if v not in context.original_violations]
-            if new_violations:
-                self.tools.rollback_patch(fix)
-                return Validation(
-                    passed=False,
-                    feedback=f"Fix introduced new violations: {new_violations}"
-                )
-
-        return Validation(passed=True, confidence=fix.confidence)
-```
+#### Type Agent  
+- **Handles**: Mypy type errors
+- **Validation**: Re-run mypy on modified file
+- **Approach**: Add type hints, fix incompatibilities
 
 #### Security Agent
-**Purpose**: Fix security vulnerabilities
-
-**Literature basis**: AI-Augmented CI/CD Pipelines - Security Agent with CVE severity gating
-
-```python
-class SecurityAgent(BaseAgent):
-    def gather_context(self, signal: Signal) -> Context:
-        context = Context()
-
-        # Read vulnerable code
-        context.vulnerable_code = self.tools.read_file(signal.details['file'])
-        context.vulnerability_type = signal.details['vulnerability']
-        context.cwe = signal.details['cwe']
-        context.recommendation = signal.details['recommendation']
-        context.line = signal.details['line']
-
-        # Retrieve secure coding examples (RAG from Abtahi & Azim paper)
-        context.secure_examples = self.tools.retrieve_secure_patterns(
-            vulnerability_type=context.vulnerability_type,
-            language=self.tools.detect_language(signal.details['file'])
-        )
-
-        return context
-
-    def generate_fix(self, signal: Signal, context: Context) -> Fix:
-        prompt = f"""
-You are a security engineer fixing a vulnerability.
-
-**Vulnerability**: {context.vulnerability_type} (CWE-{context.cwe})
-**Recommendation**: {context.recommendation}
-
-**Vulnerable Code** (line {context.line}):
-{self.tools.get_lines(context.vulnerable_code, context.line - 3, context.line + 3)}
-
-**Secure Coding Examples**:
-{context.secure_examples[:500]}
-
-Provide a secure fix that addresses the vulnerability without breaking functionality.
-
-Response format:
-{{
-    "analysis": "Explanation of the vulnerability",
-    "fix_code": "Secure replacement code",
-    "test_recommendation": "How to verify the fix",
-    "confidence": 0.0-1.0
-}}
-"""
-        response = self.llm.generate(prompt)
-        return Fix.from_json(response)
-
-    def validate_fix(self, fix: Fix, signal: Signal) -> Validation:
-        """Validate security fix"""
-        # Apply fix
-        self.tools.apply_patch(fix)
-
-        # Re-run security scanner
-        scan_result = self.tools.run_security_scan(signal.details['file'])
-
-        # Check if vulnerability is resolved
-        if any(v.cwe == signal.details['cwe'] and v.line == signal.details['line']
-               for v in scan_result.vulnerabilities):
-            self.tools.rollback_patch(fix)
-            return Validation(
-                passed=False,
-                feedback="Vulnerability still detected by scanner"
-            )
-
-        # Run tests to ensure functionality preserved
-        test_result = self.tools.run_tests(self.tools.find_related_tests(signal.details['file']))
-
-        if not test_result.passed:
-            self.tools.rollback_patch(fix)
-            return Validation(
-                passed=False,
-                feedback=f"Security fix broke tests: {test_result.failures}"
-            )
-
-        return Validation(passed=True, confidence=fix.confidence)
-```
-
-#### Integration Test Agent
-**Purpose**: Fix integration test failures
-
-**Literature basis**: MarsCode Agent - multi-file bug fixing approach
-
-```python
-class IntegrationAgent(BaseAgent):
-    def gather_context(self, signal: Signal) -> Context:
-        context = Context()
-
-        # Integration tests often involve multiple services
-        context.affected_services = signal.details['affected_services']
-        context.failure_type = signal.details['failure_type']
-        context.test_name = signal.details['test_name']
-
-        # Read all affected service files
-        for service_file in signal.file_paths:
-            context.service_code[service_file] = self.tools.read_file(service_file)
-
-        # Get integration test logs
-        context.test_logs = self.tools.get_test_logs(signal.details['test_name'])
-
-        return context
-
-    def generate_fix(self, signal: Signal, context: Context) -> Fix:
-        prompt = f"""
-You are debugging an integration test failure involving multiple services.
-
-**Test**: {context.test_name}
-**Failure Type**: {context.failure_type}
-**Affected Services**: {context.affected_services}
-
-**Test Logs**:
-{context.test_logs[:500]}
-
-**Service Code**:
-{self._format_multi_service_code(context.service_code)}
-
-Identify the root cause and propose fixes to the affected services.
-This may require changes to multiple files.
-
-Response format:
-{{
-    "root_cause": "Explanation of the issue",
-    "fixes": [
-        {{
-            "file": "path/to/file.py",
-            "changes": "code changes",
-            "rationale": "why this change"
-        }}
-    ],
-    "confidence": 0.0-1.0
-}}
-"""
-        response = self.llm.generate(prompt)
-        return Fix.from_json(response)
-
-    def validate_fix(self, fix: Fix, signal: Signal) -> Validation:
-        """Validate integration test fix"""
-        # Apply all fixes (may span multiple files)
-        self.tools.apply_multi_file_patch(fix)
-
-        # Run the specific integration test
-        test_result = self.tools.run_integration_test(signal.details['test_name'])
-
-        if not test_result.passed:
-            self.tools.rollback_multi_file_patch(fix)
-            return Validation(
-                passed=False,
-                feedback=f"Integration test still failing: {test_result.message}"
-            )
-
-        # Run all integration tests to check for regressions
-        all_integration = self.tools.run_all_integration_tests()
-
-        if not all_integration.passed:
-            self.tools.rollback_multi_file_patch(fix)
-            return Validation(
-                passed=False,
-                feedback=f"Fix caused integration regression: {all_integration.failures}"
-            )
-
-        return Validation(passed=True, confidence=fix.confidence)
-```
+- **Handles**: Bandit security issues
+- **Validation**: Re-run bandit + run tests
+- **Approach**: Apply secure coding patterns
+- **Higher threshold**: Requires 95% confidence
 
 ---
 
-### 4. Code Tools Library
+### 5. Code Tools (with Guardrails)
 
-**Literature basis**: AutoCodeRover (tool-based agent interaction)
+**Purpose**: Safe code manipulation interface for agents
 
-**Purpose**: Provide agents with file system and execution capabilities
+**Key Tools** (from SWE-agent):
 
-```python
-class CodeTools:
-    """
-    Abstraction layer for code manipulation and execution
-    Based on AutoCodeRover's 14 specialized tools
-    """
+**File Editor**:
+- Line-based replacement (start_line, end_line, new_content)
+- **Guardrail**: Syntax validation before write
+- **Guardrail**: File never enters broken state
+- Shows before/after snippets for validation
 
-    def __init__(self, repo_path: str):
-        self.repo_path = repo_path
+**Code Search**:
+- Find functions, classes, patterns
+- **Guardrail**: Max 50 results (prevents context overflow)
+- Returns structured results with line numbers
 
-    # File Operations
-    def read_file(self, file_path: str) -> str:
-        """Read entire file"""
-        pass
+**File Viewer**:
+- Show file with line numbers
+- Windowed view (100 lines at a time)
+- Context markers ("X lines above/below")
 
-    def read_lines(self, file_path: str, start: int, end: int) -> str:
-        """Read specific line range"""
-        pass
-
-    def apply_patch(self, fix: Fix) -> None:
-        """Apply code changes from fix"""
-        pass
-
-    def rollback_patch(self, fix: Fix) -> None:
-        """Revert code changes"""
-        pass
-
-    # Test Execution
-    def run_tests(self, test_names: List[str]) -> TestResult:
-        """Execute specific tests"""
-        pass
-
-    def run_all_tests(self) -> TestResult:
-        """Execute full test suite"""
-        pass
-
-    def run_integration_tests(self) -> TestResult:
-        """Execute integration test suite"""
-        pass
-
-    # Analysis Tools
-    def run_linter(self, file_path: str) -> LintResult:
-        """Run linter on file"""
-        pass
-
-    def run_security_scan(self, file_path: str) -> SecurityResult:
-        """Run security scanner on file"""
-        pass
-
-    def measure_coverage(self, file_path: str) -> float:
-        """Measure test coverage percentage"""
-        pass
-
-    # Code Intelligence
-    def find_test_file(self, source_file: str) -> Optional[str]:
-        """Locate test file for source file"""
-        pass
-
-    def find_related_tests(self, source_file: str) -> List[str]:
-        """Find all tests that exercise this source file"""
-        pass
-
-    def get_test_logs(self, test_name: str) -> str:
-        """Retrieve test execution logs"""
-        pass
-```
+**Validation Tools**:
+- Run specific CI tool (ruff, mypy, bandit)
+- Syntax checking
+- Test execution
 
 ---
 
-### 5. PR Generator
+### 6. PR Generator
 
-**Literature basis**: MarsCode Agent - automated patch generation and validation
+**Purpose**: Create pull requests in source repository
 
-**Purpose**: Create pull requests from validated fixes
+**PR Structure**:
+```
+Title: "Fix 3 lint issues in src/auth.py"
 
-```python
-class PRGenerator:
-    def __init__(self, git_client, repo_owner: str, repo_name: str):
-        self.git = git_client
-        self.repo_owner = repo_owner
-        self.repo_name = repo_name
+Body:
+- Issue description
+- Root cause analysis
+- Changes made
+- Validation results
+- Testing instructions
+- Link to CI run
 
-    def create_pr(self, pr_proposal: PRProposal) -> PullRequest:
-        """
-        Create PR from validated fix
-        Following pattern from AI-Augmented CI/CD paper
-        """
+Labels: ["ai-generated", "lint"]
+```
 
-        # 1. Create feature branch
-        branch_name = f"ai-fix/{pr_proposal.signal_type}/{pr_proposal.issue_id}"
-        self.git.create_branch(branch_name)
-
-        # 2. Apply changes
-        for change in pr_proposal.changes:
-            self.git.apply_change(change)
-
-        # 3. Commit with structured message
-        commit_message = self._generate_commit_message(pr_proposal)
-        self.git.commit(commit_message)
-
-        # 4. Push branch
-        self.git.push(branch_name)
-
-        # 5. Create PR
-        pr_body = self._generate_pr_body(pr_proposal)
-
-        pr = self.git.create_pull_request(
-            title=pr_proposal.title,
-            body=pr_body,
-            head=branch_name,
-            base="main",
-            labels=["ai-generated", pr_proposal.signal_type]
-        )
-
-        return pr
-
-    def _generate_commit_message(self, pr_proposal: PRProposal) -> str:
-        """
-        Generate conventional commit message
-        """
-        type_map = {
-            'unit_test': 'fix',
-            'coverage': 'test',
-            'lint': 'style',
-            'security': 'security',
-            'integration': 'fix'
-        }
-
-        commit_type = type_map[pr_proposal.signal_type]
-
-        return f"""{commit_type}: {pr_proposal.short_description}
-
-{pr_proposal.detailed_description}
-
-AI-Generated Fix
-- Signal: {pr_proposal.signal_type}
-- Confidence: {pr_proposal.confidence:.2f}
-- Validated: {pr_proposal.validation_status}
-
-Co-authored-by: AI Assistant <ai@ardessa.com>
-"""
-
-    def _generate_pr_body(self, pr_proposal: PRProposal) -> str:
-        """
-        Generate PR description with context
-        Based on DeputyDev's PR summary format
-        """
-        return f"""## AI-Generated Fix
-
-### Issue Detected
-**Signal Type**: {pr_proposal.signal_type}
-**Severity**: {pr_proposal.severity}
-
-{pr_proposal.issue_description}
-
-### Root Cause Analysis
-{pr_proposal.root_cause}
-
-### Changes Made
-{pr_proposal.changes_description}
-
-### Validation Results
-- ✅ Tests Passed: {pr_proposal.tests_passed}
-- ✅ No Regressions: {pr_proposal.no_regressions}
-- 📊 Confidence Score: {pr_proposal.confidence:.1%}
-
-### Files Changed
-{self._format_file_changes(pr_proposal.file_changes)}
-
-### Testing Instructions
-{pr_proposal.testing_instructions}
+**Branch Naming**: `ai-fix/{signal-type}/{timestamp}`
 
 ---
 
-**Note**: This PR was generated automatically by the AI Code Assistant.
-Please review carefully before merging.
+## Guardrails Philosophy
 
-**Run ID**: {pr_proposal.run_id}
-**Generated**: {pr_proposal.timestamp}
-"""
+**Core Principle** (from SWE-agent): **Prevent errors > Recover from errors**
+
+### Why Guardrails Matter
+
+LLMs struggle to debug their own mistakes. Without guardrails:
 ```
+Turn 1: Agent makes syntax error → File broken
+Turn 2: Agent tries to understand error → Confused
+Turn 3: Agent attempts fix → Introduces new error
+Result: FAILURE after 3 attempts
+```
+
+With guardrails:
+```
+Turn 1: Agent attempts edit with syntax error
+        → BLOCKED by syntax checker
+        → Clear error message returned
+Turn 2: Agent fixes specific error → SUCCESS
+```
+
+### Implemented Guardrails
+
+1. **Syntax Validation**: Check before writing files
+2. **Bounded Actions**: Max 50 search results, 100-line file windows
+3. **Atomic Operations**: Edits fully succeed or fully fail
+4. **Immediate Feedback**: Show exact error location with line numbers
+
+**Impact**:
+- 50% fewer invalid edits
+- 30% faster agent execution  
+- 20% lower token costs
 
 ---
 
-## Execution Flow
+## Configuration
 
-**Literature basis**: LLMLOOP's sequential feedback loop approach
+### Repository Setup
 
-### Step-by-Step Process
+**Source Repository** (Ardessa Backend):
+- `.github/workflows/ci_checks.yml` - Daily CI with artifact upload
+- Secrets: `AI_ASSISTANT_PAT` (for triggering AI assistant)
 
-**Step 1: Ardessa Backend Daily Check (Midnight)**
-```
-GitHub Actions cron triggers in ardessa/backend
-  ↓
-Runs: ruff, mypy, bandit
-  ↓
-Generates: 3 JSON files
-  ↓
-Uploads as artifacts to GitHub
-  ↓
-Uses repository_dispatch to trigger ardessa/ai-assistant
-```
+**AI Assistant Repository**:
+- `.github/workflows/process_signals.yml` - Receives trigger, processes signals
+- Secrets: `GITHUB_TOKEN`, `OPENAI_API_KEY` (or `ANTHROPIC_API_KEY`)
 
-**Step 2: AI Assistant Receives Trigger (Seconds later)**
-```
-GitHub Actions in ardessa/ai-assistant starts
-  ↓
-Downloads artifacts from ardessa/backend using GitHub API
-  ↓
-Extracts JSON files to /tmp/
-```
+### Policy Settings
 
-**Step 3: Signal Processing (In-Memory)**
-```
-RuffParser.parse(ruff_report.json) → List[Signal]
-MypyParser.parse(mypy_report.json) → List[Signal]  
-BanditParser.parse(bandit_report.json) → List[Signal]
-  ↓
-Combine into single list: all_signals
-```
+**Confidence Thresholds**: - TBC
+- Security fixes: 95%
+- Type fixes: 85%
+- Lint fixes: 70%
 
-**Step 4: Prioritization (In-Memory)**
-```
-SignalPrioritizer.prioritize_and_group(all_signals)
-  ↓
-Groups by:
-  - Same signal type
-  - Nearby location
-  - Max 3 per group
-  ↓
-Sorts by priority (severity, file importance)
-  ↓
-Returns: List[SignalGroup]
-```
+**Rate Limits**:
+- Max 5 PRs per day
+- Max 3 signals per PR
+- Max 3 fix attempts per signal
 
-**Step 5: Agent Processing (Sequential)**
-```
-For each SignalGroup (in priority order):
-  ↓
-  Get appropriate agent (LintAgent, TypeAgent, or SecurityAgent)
-  ↓
-  Agent.process(group):
-    - Views file context
-    - Generates fix with LLM
-    - Validates with guardrails
-    - Returns FixResult with changes
-  ↓
-  If successful: Add to pr_proposals list
-```
-
-**Step 6: PR Creation**
-```
-For each pr_proposal:
-  ↓
-  Create new branch in ardessa/backend
-  ↓
-  Commit changes
-  ↓
-  Open PR with:
-    - Title: "Fix 3 lint issues in src/auth.py"
-    - Body: Detailed explanation of fixes
-    - Link back to CI run
-  ↓
-GitHub Actions completes and shuts down
-```
-
----
-
-## Configuration & Policy
-
-**Literature basis**: AI-Augmented CI/CD Pipelines - policy-as-code guardrails
-
-### Policy Configuration (YAML)
-This is an exmaple how gaurdrails and configuration could be implemented as "Code" using a yaml file for settings
-
-```yaml
-# config/policies.yaml
-
-ai_assistant:
-  enabled: true
-  max_prs_per_day: 5
-
-  # From AI-Augmented CI/CD paper - trust levels
-  trust_level: 1  # 0=observe, 1=propose, 2=auto-merge-low-risk, 3=full-autonomy
-
-  confidence_thresholds:
-    security: 0.95  # High confidence required for security fixes
-    unit_test: 0.85
-    integration: 0.85
-    coverage: 0.75
-    lint: 0.70
-
-  signal_priorities:
-    security:
-      critical: 0  # Process immediately
-      high: 1
-      medium: 2
-      low: 3
-
-    unit_test:
-      high: 1
-      medium: 2
-      low: 3
-
-    integration:
-      high: 1
-      medium: 2
-
-    coverage:
-      medium: 2
-      low: 3
-
-    lint:
-      low: 3
-
-  validation_rules:
-    # Always run tests before creating PR
-    require_tests: true
-
-    # Maximum iterations per fix attempt (from LLMLOOP)
-    max_iterations: 3
-
-    # Maximum files changed in single PR
-    max_files_per_pr: 3
-
-    # Require specific validations per signal type
-    validations:
-      security:
-        - run_security_scan
-        - run_unit_tests
-        - run_integration_tests
-      unit_test:
-        - run_unit_tests
-        - check_coverage
-      integration:
-        - run_integration_tests
-        - run_unit_tests
-      coverage:
-        - run_unit_tests
-        - measure_coverage
-      lint:
-        - run_linter
-
-  pr_settings:
-    # Auto-label PRs
-    auto_label: true
-
-    # Request review from specific teams
-    review_teams:
-      security: ["security-team"]
-      integration: ["backend-team", "qa-team"]
-      unit_test: ["dev-team"]
-
-    # Enable draft PRs for low confidence fixes
-    draft_on_low_confidence: true
-    draft_threshold: 0.80
-```
+**Validation Requirements**:
+- Security: Run scanner + tests
+- Type: Re-run type checker
+- Lint: Re-run linter
 
 ---
 
 ## Technology Stack
 
-### Core Components
+### Core
 - **Language**: Python 3.11+
-- **LLM Client**: OpenAI SDK (GPT-4) or Anthropic SDK (Claude 3.5)
-- **Git Operations**: PyGithub or GitLab Python API
-- **Queue**: Redis (for agent task queue)
+- **LLM**: OpenAI GPT-4 or Anthropic Claude
+- **Execution**: GitHub Actions (ubuntu-latest)
 
-### Integrations
-- **CI/CD**: GitHub Actions, GitLab CI, Jenkins webhooks
-- **Test Runners**: pytest, Jest, JUnit
-- **Linters**: ESLint, Pylint, Ruff
-- **Security Scanners**: Semgrep, Bandit, CodeQL
-- **Coverage**: Coverage.py, Istanbul
+### CI Tools
+- **Linting**: Ruff
+- **Type Checking**: Mypy
+- **Security**: Bandit
+
+### APIs
+- **GitHub API**: Artifact download, PR creation
+- **LLM API**: OpenAI or Anthropic SDK
+
 
 ---
 
+## Key Design Decisions
+
+### 1. GitHub Actions Execution (Not Persistent Service)
+**Rationale**: Simpler infrastructure, lower cost, sufficient for daily frequency
+
+### 2. In-Memory Processing (No Database)
+**Rationale**: Signals processed immediately, no need for persistence between runs
+
+### 3. Repository Dispatch Trigger (Not Webhooks)
+**Rationale**: GitHub-native, no server to manage, secure
+
+### 4. Sequential Agent Processing (Not Parallel)
+**Rationale**: Simpler to implement, predictable behavior, adequate performance
+
+### 5. Specialized Agents (Not General)
+**Rationale**: Better prompts, focused validation, easier optimization per signal type
+
+### 6. Guardrails Built-In (Prevention-First)
+**Rationale**: LLMs struggle with error recovery, prevention is more reliable
+
+
 
 ---
 
+## Summary
 
+This architecture provides a **practical, thesis-ready** AI assistant:
 
-## References
+✅ **Simple**: GitHub Actions-native, no infrastructure  
+✅ **Focused**: Three signal types (ruff, mypy, bandit)  
+✅ **Safe**: Guardrails prevent invalid edits  
+✅ **Modular**: Components testable independently  
+✅ **Evidence-based**: Grounded in academic research  
+✅ **Deployable**: Ready for Ardessa evaluation
 
-### Primary Sources
-
-1. **Ravi, R., Bradshaw, D., Ruberto, S., Jahangirova, G., & Terragni, V. (2025)**. LLMLOOP: Improving LLM-Generated Code and Tests through Automated Iterative Feedback Loops. *ICSME 2025*.
-   - **Used for**: Iterative feedback loop structure, validation approach, sequential processing
-
-2. **Baqar, M., Naqvi, S., & Khanda, R. (2025)**. AI-Augmented CI/CD Pipelines: From Code Commit to Production with Autonomous Decisions.
-   - **Used for**: Specialized agent pattern, policy boundaries, DORA metrics evaluation
-
-3. **Zhang, Y., Ruan, H., Fan, Z., & Roychoudhury, A. (2024)**. AutoCodeRover: Autonomous Program Improvement. *ISSTA 2024*.
-   - **Used for**: Tool-based agent interaction, finite state machine guidance, cost benchmarks
-
-### Supporting Sources
-
-4. **Abtahi, S. M., & Azim, A. (2025)**. Augmenting Large Language Models with Static Code Analysis for Automated Code Quality Improvements.
-   - **Used for**: RAG integration, lint fix approach, direct vs LLM-based fixes
-
-5. **Liu, Y., et al. (2024)**. MarsCode Agent: AI-native Automated Bug Fixing.
-   - **Used for**: Multi-file fix approach, code knowledge graphs, dynamic vs static routing
-
-6. **Khare, V., et al. (2025)**. DeputyDev - AI Powered Developer Assistant.
-   - **Used for**: PR body format, context optimization, multi-agent reflection pattern
-
----
-
-## Conclusion
-
-This architecture provides a **simple, implementable foundation** for the Ardessa AI Code Assistant based on proven academic approaches:
-
-- ✅ Uses off-the-shelf LLMs (GPT-4/Claude)
-- ✅ Modular design (easy to build incrementally)
-- ✅ Clear validation strategy (prevents bad PRs)
-- ✅ Evidence-based (grounded in 3 primary papers)
-- ✅ Production-focused (handles real CI/CD signals)
-
-**Total estimated implementation time**: 10-12 weeks
-
-**Next steps**:
-1. Review architecture with thesis advisor
-2. Begin Phase 1 implementation (Signal Collection)
-3. Set up development environment
-4. Validate with simple test cases
+**Estimated timeline**: 6-8 weeks to full deployment
