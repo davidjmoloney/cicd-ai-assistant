@@ -1,51 +1,65 @@
 ```
 cicd-ai-assistant/
+├── .github/
+│   └── workflows/
+│       └── process_signals.yml              # Triggered by source repo, orchestrates entire pipeline
+|
+├── docs/
+│   ├── architectural-design.md              # high level architecture description for this AI assistant
+│   └── directory-plan.md                    # This file
+│
 ├── src/
 │   ├── __init__.py
-│   ├── main.py                              # Entry point for the assistant
-│   ├── webhook/
-│   │   ├── __init__.py
-│   │   └── handler.py                       # Receives GitHub webhooks
 │   ├── signals/
 │   │   ├── __init__.py
-│   │   ├── models.py                        # Signal data classes
-│   │   ├── collector.py                     # Fetches artifacts from GitHub
+│   │   ├── models.py                        # Signal data classes (Signal, SignalGroup)
+│   │   ├── collector.py                     # Downloads artifacts, coordinates parsing
 │   │   └── parsers/
 │   │       ├── __init__.py
-│   │       ├── ruff_parser.py
-│   │       ├── mypy_parser.py
-│   │       └── bandit_parser.py
+│   │       ├── ruff_parser.py               # Parse ruff JSON → Signal objects
+│   │       ├── mypy_parser.py               # Parse mypy JSON → Signal objects
+│   │       └── bandit_parser.py             # Parse bandit JSON → Signal objects
+│   │
 │   ├── orchestrator/
 │   │   ├── __init__.py
-│   │   ├── orchestrator.py                  # Routes signals to agents
-│   │   └── prioritizer.py                   # Groups and prioritizes signals
+│   │   ├── orchestrator.py                  # Routes SignalGroups to agents
+│   │   └── prioritizer.py                   # Groups signals (max 3), calculates priority
+│   │
 │   ├── agents/
 │   │   ├── __init__.py
-│   │   ├── base_agent.py                    # Abstract base class
-│   │   ├── lint_agent.py
-│   │   ├── type_agent.py                    # For mypy
-│   │   └── security_agent.py                # For bandit
+│   │   ├── base_agent.py                    # Abstract base class with validation loop
+│   │   ├── lint_agent.py                    # Fixes ruff violations
+│   │   ├── type_agent.py                    # Fixes mypy type errors
+│   │   └── security_agent.py                # Fixes bandit security issues
+│   │
 │   ├── tools/
 │   │   ├── __init__.py
-│   │   ├── code_editor.py                   # File editing with guardrails
-│   │   ├── code_search.py                   # Search functionality
-│   │   └── file_viewer.py                   # View files with line numbers
+│   │   ├── code_editor.py                   # Line-based editing with syntax guardrails
+│   │   ├── code_search.py                   # Function/pattern search (max 50 results)
+│   │   └── file_viewer.py                   # Windowed file view with line numbers
+│   │
 │   ├── github/
 │   │   ├── __init__.py
-│   │   ├── client.py                        # GitHub API interactions
-│   │   └── pr_generator.py                  # Creates PRs
+│   │   ├── artifact_downloader.py           # Downloads artifacts from source repo
+│   │   └── pr_generator.py                  # Creates PRs in source repo
+│   │
 │   └── config/
 │       ├── __init__.py
-│       └── settings.py                      # Configuration management
+│       └── settings.py                      # Confidence thresholds, rate limits, policies
+│
+├── scripts/
+│   ├── run_pipeline.py                      # Main entry point called by GitHub Actions
+│   └── validate_setup.py                    # Verify GitHub tokens, repo access
+│
 ├── tests/
 │   ├── __init__.py
-│   └── test_parsers.py                      # Start with parser tests
-├── scripts/
-│   └── download_artifacts.py                # Downloads CI/CD artifacts from the Ardessa repo
-├── pyproject.toml
-├── uv.lock
-├── .env.example                             # Example of .env file to be used locally, copy it and fill in your own files
+│   ├── test_parsers.py                      # Unit tests for signal parsers
+│   ├── test_prioritizer.py                  # Unit tests for grouping logic
+│   └── test_agents.py                       # Unit tests for agent behavior
+│
+├── pyproject.toml                           # Project dependencies and metadata
+├── uv.lock                                  # Lock file for uv package manager
+├── .env.example                             # Example environment variables
 ├── .gitignore
 ├── README.md
-└── docker-compose.yml                        # For future PostgreSQL + app
 ```
