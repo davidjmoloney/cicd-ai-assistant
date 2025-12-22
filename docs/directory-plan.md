@@ -8,6 +8,7 @@ cicd-ai-assistant/
 │   ├── architectural-design.md              # high level architecture description for this AI assistant
 │   └── directory-plan.md                    # This file
 │
+├── sample-cicd-artifacts                    # Directory with Sample results files from CI-CD pipeline runs
 ├── src/
 │   ├── __init__.py
 │   ├── signals/
