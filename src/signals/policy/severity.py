@@ -31,7 +31,7 @@ _RUFF_CODE_TO_SEVERITY: dict[str, Severity] = {
 }
 
 def severity_for_ruff(code: str) -> Severity:
-    return _RUFF_CODE_TO_SEVERITY.get(code, Severity.MEDIUM)
+    return _RUFF_CODE_TO_SEVERITY.get(code, Severity.MEDIUM)    # Return medium severity if code does not exist in dict definition 
 
 
 # -------------------------------------------------------------------------
