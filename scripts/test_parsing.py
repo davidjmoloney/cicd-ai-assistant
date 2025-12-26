@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from signals.parsers.ruff import parse_ruff_lint_results
+from orchestrator.prioritizer import Prioritizer
 
 def main() -> None:
     # Path to your Ruff JSON
@@ -13,18 +14,17 @@ def main() -> None:
     with ruff_json_path.open("r", encoding="utf-8") as f:
         data = json.load(f)
 
-    # Take only the first Ruff violation
-    first_violation = data[0:1]
-
     # Parse into FixSignal list
     signals = parse_ruff_lint_results(
-        first_violation,
+        data,
         repo_root="/home/runner/work/ardessa-agent/ardessa-agent",
     )
 
+    prioritizer = Prioritizer()
+    groups = prioritizer.prioritize(signals)
+
     # Print results
-    print(f"Parsed {len(signals)} FixSignal(s)\n")
-    for s in signals:
+    for s in groups[0].signals:
         print("---- FixSignal ----")
         print(f"Type:        {s.signal_type}")
         print(f"Severity:    {s.severity}")
