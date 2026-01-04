@@ -15,12 +15,18 @@ CONTEXT_FILE = Path(__file__).parent / "context_output.json"
 
 
 def main():
-    # Check API key is set
-    from agents.llm_provider import OPENAI_API_KEY
-    if not OPENAI_API_KEY:
-        print("ERROR: OPENAI_API_KEY environment variable not set")
+    # Check API key is set (try Anthropic first, fall back to OpenAI)
+    from agents.llm_provider import ANTHROPIC_API_KEY, OPENAI_API_KEY
+
+    if ANTHROPIC_API_KEY:
+        provider = "anthropic"
+        print("Using Anthropic/Claude")
+    elif OPENAI_API_KEY:
+        provider = "openai"
+        print("Using OpenAI")
+    else:
+        print("ERROR: Set ANTHROPIC_API_KEY or OPENAI_API_KEY environment variable")
         sys.exit(1)
-    print("API key configured")
 
     # Load context
     print(f"Loading context from {CONTEXT_FILE}")
@@ -29,8 +35,8 @@ def main():
     print(f"Loaded {context['group']['group_size']} signals")
 
     # Call agent
-    print("\nCalling OpenAI...")
-    handler = AgentHandler(provider="openai")
+    print(f"\nCalling {provider}...")
+    handler = AgentHandler(provider=provider)
     result = handler.generate_fix_plan(context)
 
     # Print result
