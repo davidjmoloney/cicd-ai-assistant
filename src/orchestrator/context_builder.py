@@ -148,9 +148,17 @@ class ContextBuilder:
         start = 1
         end = 0
         seen_import = False
+        in_docstring = False
 
         for idx, line in enumerate(lines, start=1):
             stripped = line.strip()
+        
+            if stripped.startswith(('"""', "'''")):
+                in_docstring = not in_docstring
+                continue
+            
+            if in_docstring == True:
+                continue
 
             if stripped == "" or stripped.startswith("#"):
                 # allow leading comments/blank lines before/within import block
