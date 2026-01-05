@@ -53,14 +53,5 @@ def main():
         if result.llm_error:
             print(f"Raw response: {result.llm_error}")
 
-
-# @dataclass
-# class LLMError:
-#     """Error response from LLM provider."""
-#     error_type: str
-#     message: str
-#     status_code: Optional[int] = None
-#     raw_response: Optional[dict[str, Any]] = None
-
 if __name__ == "__main__":
     main()
