@@ -343,7 +343,7 @@ class AgentHandler:
                 error=f"Failed to parse LLM response: {e}",
                 llm_response=response,
             )
-
+        
     def _build_user_prompt(self, context: dict[str, Any]) -> str:
         """Build the user prompt from context."""
         return f"Generate a fix plan for the following signals:\n\n{json.dumps(context, indent=2)}"
