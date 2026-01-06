@@ -15,6 +15,11 @@ CONTEXT_FILE = Path(__file__).parent / "context_output.json"
 
 
 def main():
+    
+    # Output file paths
+    output_dir = Path(__file__).parent
+    agent_output = output_dir / "agent_output.json"
+    
     # Check API key is set
     from agents.llm_provider import OPENAI_API_KEY
     if not OPENAI_API_KEY:
@@ -35,8 +40,14 @@ def main():
 
     # Print result
     if result.success:
+        
+        # Write context as pretty-printed JSON
+        with agent_output.open("w", encoding="utf-8") as f:
+            json.dump(result.fix_plan.to_dict(), f, indent=2, default=str)
+
         print("\nSUCCESS!")
         print(f"Summary: {result.fix_plan.summary}")
+        print(f"Output written to: {agent_output}")
         print(f"Confidence: {result.fix_plan.confidence}")
         print(f"Files to edit: {len(result.fix_plan.file_edits)}")
 
@@ -55,3 +66,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+ 
