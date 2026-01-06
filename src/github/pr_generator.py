@@ -18,7 +18,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import os
-import time
+import time 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -35,12 +35,11 @@ load_dotenv()
 # ============================================================================
 # Configuration (self-explanatory environment variable names)
 # ============================================================================
-
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
-TARGET_REPO_OWNER = os.getenv("TARGET_REPO_OWNER", "")
-TARGET_REPO_NAME = os.getenv("TARGET_REPO_NAME", "")
-TARGET_REPO_DEFAULT_BRANCH = os.getenv("TARGET_REPO_DEFAULT_BRANCH", "main")
-PR_BRANCH_PREFIX = os.getenv("PR_BRANCH_PREFIX", "ai-fix")
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "").strip()
+TARGET_REPO_OWNER = os.getenv("TARGET_REPO_OWNER", "").strip()
+TARGET_REPO_NAME = os.getenv("TARGET_REPO_NAME", "").strip()
+TARGET_REPO_DEFAULT_BRANCH = os.getenv("TARGET_REPO_DEFAULT_BRANCH", "david/cicd-ai-assistant").strip()
+PR_BRANCH_PREFIX = os.getenv("PR_BRANCH_PREFIX", "cicd-agent-fix").strip()
 PR_LABELS = [l.strip() for l in os.getenv("PR_LABELS", "ai-generated").split(",") if l.strip()]
 PR_DRAFT_MODE = os.getenv("PR_DRAFT_MODE", "false").lower() in ("true", "1", "yes")
 
