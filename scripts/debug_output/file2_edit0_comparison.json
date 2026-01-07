@@ -1,0 +1,55 @@
+{
+  "0_indexed_result": {
+    "debug": {
+      "indexing_mode": "0-indexed",
+      "total_lines": 509,
+      "edit_type": "replace",
+      "original_span": "(494:23) -> (494:57)",
+      "adjusted_span": "(494:23) -> (494:57)",
+      "context_lines_before": {
+        "493": "# Line 493: placeholder content",
+        "494": "        print(f\"\ud83d\udd0d Step 1: Analyzing user prompt\")"
+      },
+      "affected_lines": {
+        "495": "# Line 495: placeholder content"
+      },
+      "context_lines_after": {
+        "496": "# Line 496: placeholder content",
+        "497": "# Line 497: placeholder content"
+      },
+      "replacement_content": "\"\ud83d\udd0d Step 1: Analyzing user prompt\"",
+      "original_line": "# Line 495: placeholder content",
+      "original_segment": " content",
+      "modified_line": "# Line 495: placeholder\"\ud83d\udd0d Step 1: Analyzing user prompt\"",
+      "lines_after_edit": 509
+    },
+    "content_preview": "# Line 1: placeholder content\n# Line 2: placeholder content\n# Line 3: placeholder content\n# Line 4: placeholder content\n# Line 5: placeholder content\n# Line 6: placeholder content\n# Line 7: placeholder content\nimport re\n# Line 9: placeholder content\n# Line 10: placeholder content\nfrom pathlib import Path\n# Line 12: placeholder content\n# Line 13: placeholder content\n# Line 14: placeholder content\n# Line 15: placeholder content\n# Line 16: placeholder content\n# Line 17: placeholder content\n# Line 1..."
+  },
+  "1_indexed_result": {
+    "debug": {
+      "indexing_mode": "1-indexed",
+      "total_lines": 509,
+      "edit_type": "replace",
+      "original_span": "(494:23) -> (494:57)",
+      "adjusted_span": "(493:22) -> (493:56)",
+      "context_lines_before": {
+        "492": "# Line 492: placeholder content",
+        "493": "# Line 493: placeholder content"
+      },
+      "affected_lines": {
+        "494": "        print(f\"\ud83d\udd0d Step 1: Analyzing user prompt\")"
+      },
+      "context_lines_after": {
+        "495": "# Line 495: placeholder content",
+        "496": "# Line 496: placeholder content"
+      },
+      "replacement_content": "\"\ud83d\udd0d Step 1: Analyzing user prompt\"",
+      "original_line": "        print(f\"\ud83d\udd0d Step 1: Analyzing user prompt\")",
+      "original_segment": " 1: Analyzing user prompt\")",
+      "modified_line": "        print(f\"\ud83d\udd0d Step\"\ud83d\udd0d Step 1: Analyzing user prompt\"",
+      "lines_after_edit": 509
+    },
+    "content_preview": "# Line 1: placeholder content\n# Line 2: placeholder content\n# Line 3: placeholder content\n# Line 4: placeholder content\n# Line 5: placeholder content\n# Line 6: placeholder content\n# Line 7: placeholder content\nimport re\n# Line 9: placeholder content\n# Line 10: placeholder content\nfrom pathlib import Path\n# Line 12: placeholder content\n# Line 13: placeholder content\n# Line 14: placeholder content\n# Line 15: placeholder content\n# Line 16: placeholder content\n# Line 17: placeholder content\n# Line 1..."
+  },
+  "results_match": false
+}
