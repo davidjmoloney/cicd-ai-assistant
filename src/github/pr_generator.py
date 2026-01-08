@@ -97,8 +97,8 @@ def _apply_edit(lines: list[str], edit: CodeEdit) -> list[str]:
     # Convert to 0-based index
     start_row = max(0, edit.span.start.row - 1)
     end_row = max(0, edit.span.end.row - 1)
-    start_col = edit.span.start.column
-    end_col = edit.span.end.column
+    start_col = max(0, edit.span.start.column - 1)
+    end_col = max(0, edit.span.end.column -1)
 
     if not lines:
         if edit.edit_type in (EditType.INSERT, EditType.REPLACE):

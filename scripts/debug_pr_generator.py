@@ -24,9 +24,9 @@ def get_mock_content():
         if i == 8:
             lines.append("import re")
         elif i == 11:
-            lines.append("from pathlib import Path")
+            lines.append("from pathlib import Path") 
         elif i == 494:
-            lines.append('        print(f"🔍 Step 1: Analyzing user prompt")')
+            lines.append('                print(f"🔍 Step 1: Analyzing user prompt")')
         else:
             lines.append(f"# Line {i}")
     return "\n".join(lines)
@@ -59,7 +59,11 @@ def main():
     # 3. Apply edits to mock content
     print("\n[3] Applying edits to mock content...")
     mock_content = get_mock_content()
+    test_file = Path(__file__).parent / f"debug_test_context.txt"
+    with open(test_file, "w") as f:
+            f.write(mock_content)
     print(f"    Original lines: {len(mock_content.splitlines())}")
+
 
     # Show original lines around edit locations
     lines = mock_content.splitlines()
@@ -87,6 +91,9 @@ def main():
         with open(output_file, "w") as f:
             f.write(result)
         print(f"      Written to: {output_file.name}")
+        break
+    
+    return
 
     # 5. Apply ALL edits combined (what should happen)
     print("\n[5] Applying ALL edits combined:")
