@@ -21,6 +21,7 @@ import os
 import time 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Optional
 
 import httpx
@@ -40,7 +41,7 @@ TARGET_REPO_OWNER = os.getenv("TARGET_REPO_OWNER", "").strip()
 TARGET_REPO_NAME = os.getenv("TARGET_REPO_NAME", "").strip()
 TARGET_REPO_DEFAULT_BRANCH = os.getenv("TARGET_REPO_DEFAULT_BRANCH", "david/cicd-ai-assistant").strip()
 PR_BRANCH_PREFIX = os.getenv("PR_BRANCH_PREFIX", "cicd-agent-fix").strip()
-PR_LABELS = [l.strip() for l in os.getenv("PR_LABELS", "ai-generated").split(",") if l.strip()]
+PR_LABELS = [l.strip() for l in os.getenv("PR_LABELS", "cicd-agent-generated").split(",") if l.strip()]
 PR_DRAFT_MODE = os.getenv("PR_DRAFT_MODE", "false").lower() in ("true", "1", "yes")
 
 # API constants
@@ -85,8 +86,10 @@ def apply_edits_to_content(content: str, edits: list[CodeEdit]) -> str:
         key=lambda e: (e.span.start.row, e.span.start.column),
         reverse=True,
     )
-
+    print(sorted_edits)
+    # TODO:WHY is this is not working
     for edit in sorted_edits:
+        print(f"\n----- Carrying out new edit ----- \nSpan, Type, Desrciption: {edit.span}, {edit.edit_type}, {edit.description}")
         lines = _apply_edit(lines, edit)
 
     return "\n".join(lines)
@@ -95,6 +98,7 @@ def apply_edits_to_content(content: str, edits: list[CodeEdit]) -> str:
 def _apply_edit(lines: list[str], edit: CodeEdit) -> list[str]:
     """Apply a single edit to lines."""
     # Convert to 0-based index
+    print(f"applying edit")
     start_row = max(0, edit.span.start.row - 1)
     end_row = max(0, edit.span.end.row - 1)
     start_col = max(0, edit.span.start.column - 1)
@@ -241,7 +245,7 @@ class PRGenerator:
                 # 3. Apply edits and commit each file
                 files_changed: list[str] = []
                 for file_edit in fix_plan.file_edits:
-                    if self._commit_file_edit(client, owner, repo, file_edit, branch_name, base):
+                    if self.commit_file_edit(client, owner, repo, file_edit, branch_name, base):
                         files_changed.append(file_edit.file_path)
 
                 if not files_changed:
@@ -287,7 +291,7 @@ class PRGenerator:
         except Exception as e:
             return PRResult(success=False, error=f"Unexpected error: {e}")
 
-    def _commit_file_edit(
+    def commit_file_edit(
         self,
         client: httpx.Client,
         owner: str,
@@ -298,16 +302,20 @@ class PRGenerator:
     ) -> bool:
         """Apply a FileEdit and commit it. Returns True if successful."""
         try:
-            # Get current file content
+            # Get current file content from the branch being built (to chain commits)
             file_data = _github_request(
                 client, "GET",
-                f"/repos/{owner}/{repo}/contents/{file_edit.file_path}?ref={base_branch}"
+                f"/repos/{owner}/{repo}/contents/{file_edit.file_path}?ref={branch}"
             )
             original_content = base64.b64decode(file_data["content"]).decode("utf-8")
             file_sha = file_data["sha"]
 
             # Apply edits
             new_content = apply_edits_to_content(original_content, file_edit.edits)
+
+            debug_file_path = Path(f"/home/devel/cicd-ai-assistant/debug/debug_{file_edit.edits[0].span.start.row}.py")
+            with open(debug_file_path, 'w') as f:
+                f.write(new_content)
 
             if new_content == original_content:
                 return False  # No changes

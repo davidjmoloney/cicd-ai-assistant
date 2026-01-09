@@ -58,15 +58,15 @@ def main():
 
     # 3. Apply edits to mock content
     print("\n[3] Applying edits to mock content...")
-    mock_content = get_mock_content()
+    mock_content_r1 = get_mock_content()
     test_file = Path(__file__).parent / f"debug_test_context.txt"
     with open(test_file, "w") as f:
-            f.write(mock_content)
-    print(f"    Original lines: {len(mock_content.splitlines())}")
+            f.write(mock_content_r1)
+    print(f"    Original lines: {len(mock_content_r1.splitlines())}")
 
 
     # Show original lines around edit locations
-    lines = mock_content.splitlines()
+    lines = mock_content_r1.splitlines()
     print("\n    Original content at edit locations:")
     for row in [8, 11, 494]:
         if row <= len(lines):
@@ -75,10 +75,10 @@ def main():
     # Apply each FileEdit separately (as pr_generator does)
     print("\n[4] Applying each FileEdit separately:")
     for i, fe in enumerate(fix_plan.file_edits):
-        result = apply_edits_to_content(mock_content, fe.edits)
+        result = apply_edits_to_content(mock_content_r1, fe.edits)
         result_lines = result.splitlines()
         print(f"\n    After FileEdit #{i+1}:")
-        print(f"      Lines changed: {len(mock_content.splitlines())} -> {len(result_lines)}")
+        print(f"      Lines changed: {len(mock_content_r1.splitlines())} -> {len(result_lines)}")
 
         # Show diff at edit location
         edit = fe.edits[0]
@@ -91,19 +91,17 @@ def main():
         with open(output_file, "w") as f:
             f.write(result)
         print(f"      Written to: {output_file.name}")
-        break
-    
-    return
 
     # 5. Apply ALL edits combined (what should happen)
     print("\n[5] Applying ALL edits combined:")
     all_edits = []
     for fe in fix_plan.file_edits:
         all_edits.extend(fe.edits)
-
-    combined_result = apply_edits_to_content(mock_content, all_edits)
+    
+    mock_content_r2 = get_mock_content()
+    combined_result = apply_edits_to_content(mock_content_r2, all_edits)
     combined_lines = combined_result.splitlines()
-    print(f"    Lines: {len(mock_content.splitlines())} -> {len(combined_lines)}")
+    print(f"    Lines: {len(mock_content_r2.splitlines())} -> {len(combined_lines)}")
 
     # Show results at edit locations
     print("\n    Content at edit locations after ALL edits:")
@@ -121,6 +119,8 @@ def main():
     with open(output_file, "w") as f:
         f.write(combined_result)
     print(f"\n    Written to: {output_file.name}")
+
+    
 
     print("\n" + "=" * 60)
     print("Debug complete! Check debug_*.txt files for results.")
