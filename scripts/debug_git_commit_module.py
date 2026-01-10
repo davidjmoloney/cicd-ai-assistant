@@ -51,8 +51,11 @@ with httpx.Client(headers=_github_headers(), timeout=30.0) as client:
         "sha": base_sha,
     })
 
-    # 3. Apply edits and commit each file
+    # 3. Group edits by file (to handle multiple FileEdits for same file)
+    merged_file_edits = pr_generator._merge_file_edits(generated_fix_plan.file_edits)
+
+    # 4. Apply edits and commit each unique file
     files_changed: list[str] = []
-    for file_edit in generated_fix_plan.file_edits:
+    for file_edit in merged_file_edits:
         if pr_generator.commit_file_edit(client, owner, repo, file_edit, branch_name, base):
             files_changed.append(file_edit.file_path)

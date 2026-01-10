@@ -242,16 +242,19 @@ class PRGenerator:
                     "sha": base_sha,
                 })
 
-                # 3. Apply edits and commit each file
+                # 3. Group edits by file (to handle multiple FileEdits for same file)
+                merged_file_edits = self._merge_file_edits(fix_plan.file_edits)
+
+                # 4. Apply edits and commit each unique file
                 files_changed: list[str] = []
-                for file_edit in fix_plan.file_edits:
+                for file_edit in merged_file_edits:
                     if self.commit_file_edit(client, owner, repo, file_edit, branch_name, base):
                         files_changed.append(file_edit.file_path)
 
                 if not files_changed:
                     return PRResult(success=False, error="No files were modified", branch_name=branch_name)
 
-                # 4. Create pull request
+                # 5. Create pull request
                 title = self._generate_title(fix_plan)
                 body = self._generate_body(fix_plan, files_changed)
 
@@ -266,7 +269,7 @@ class PRGenerator:
                 pr_number = pr_data.get("number")
                 pr_url = pr_data.get("html_url")
 
-                # 5. Add labels
+                # 6. Add labels
                 if pr_number and PR_LABELS:
                     labels = list(PR_LABELS)
                     if fix_plan.group_signal_type:
@@ -332,6 +335,44 @@ class PRGenerator:
 
         except GitHubError:
             return False
+
+    def _merge_file_edits(self, file_edits: list[FileEdit]) -> list[FileEdit]:
+        """
+        Merge multiple FileEdit objects for the same file into a single FileEdit.
+
+        This prevents line number conflicts when multiple edits target the same file.
+        All edits for a file are combined and will be applied in a single commit.
+        """
+        from collections import defaultdict
+
+        # Group edits by file path
+        edits_by_file: dict[str, list[FileEdit]] = defaultdict(list)
+        for file_edit in file_edits:
+            edits_by_file[file_edit.file_path].append(file_edit)
+
+        # Merge edits for each file
+        merged: list[FileEdit] = []
+        for file_path, edits_list in edits_by_file.items():
+            if len(edits_list) == 1:
+                # Only one FileEdit for this file, use as-is
+                merged.append(edits_list[0])
+            else:
+                # Multiple FileEdits for same file - merge them
+                all_edits: list[CodeEdit] = []
+                reasonings: list[str] = []
+
+                for file_edit in edits_list:
+                    all_edits.extend(file_edit.edits)
+                    if file_edit.reasoning:
+                        reasonings.append(file_edit.reasoning)
+
+                merged.append(FileEdit(
+                    file_path=file_path,
+                    edits=all_edits,
+                    reasoning=" | ".join(reasonings) if reasonings else ""
+                ))
+
+        return merged
 
     def _generate_branch_name(self, fix_plan: FixPlan) -> str:
         """Generate unique branch name."""
