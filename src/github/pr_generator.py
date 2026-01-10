@@ -324,7 +324,7 @@ class PRGenerator:
                 return False  # No changes
 
             # Commit updated file
-            commit_msg = f"fix: {file_edit.edits[0].description}" if file_edit.edits else "fix: apply automated fixes"
+            commit_msg = self._generate_commit_message(file_edit)
             _github_request(client, "PUT", f"/repos/{owner}/{repo}/contents/{file_edit.file_path}", {
                 "message": commit_msg,
                 "content": base64.b64encode(new_content.encode("utf-8")).decode("utf-8"),
@@ -373,6 +373,26 @@ class PRGenerator:
                 ))
 
         return merged
+
+    def _generate_commit_message(self, file_edit: FileEdit) -> str:
+        """
+        Generate commit message that includes all edit descriptions.
+
+        For merged FileEdits with multiple fixes, lists each one.
+        """
+        if not file_edit.edits:
+            return "fix: apply automated fixes"
+
+        if len(file_edit.edits) == 1:
+            return f"fix: {file_edit.edits[0].description}"
+
+        # Multiple edits - create a structured commit message
+        title = f"fix: {len(file_edit.edits)} lint fixes in {file_edit.file_path}"
+        details = []
+        for edit in file_edit.edits:
+            details.append(f"- Line {edit.span.start.row}: {edit.description}")
+
+        return f"{title}\n\n{chr(10).join(details)}"
 
     def _generate_branch_name(self, fix_plan: FixPlan) -> str:
         """Generate unique branch name."""
