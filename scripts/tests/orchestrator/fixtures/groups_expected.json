@@ -1,0 +1,7 @@
+[
+  {
+    "tool_id": "ruff",
+    "signal_type": "lint",
+    "signals_count": 3
+  }
+]

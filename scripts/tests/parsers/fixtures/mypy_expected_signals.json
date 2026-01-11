@@ -1,0 +1,28 @@
+[
+  {
+    "signal_type": "type_check",
+    "severity": "medium",
+    "rule_code": "no-untyped-def",
+    "message": "Function is missing a type annotation",
+    "docs_url": null,
+    "file_path": "app/main.py",
+    "span": {
+      "start": {"row": 42, "column": 15},
+      "end": {"row": 42, "column": 15}
+    },
+    "fix": null
+  },
+  {
+    "signal_type": "type_check",
+    "severity": "medium",
+    "rule_code": "return-value",
+    "message": "Incompatible return value type (got \"str\", expected \"int\")",
+    "docs_url": null,
+    "file_path": "app/utils.py",
+    "span": {
+      "start": {"row": 128, "column": 8},
+      "end": {"row": 128, "column": 8}
+    },
+    "fix": null
+  }
+]

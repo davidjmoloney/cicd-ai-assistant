@@ -1,0 +1,28 @@
+[
+  {
+    "signal_type": "security",
+    "severity": "medium",
+    "rule_code": "B501",
+    "message": "Probable use of insecure TLS/SSL version. Consider using TLS 1.2 or higher.",
+    "docs_url": "https://bandit.readthedocs.io/en/latest/plugins/b501_request_with_no_cert_validation.html",
+    "file_path": "app/security.py",
+    "span": {
+      "start": {"row": 67, "column": 1},
+      "end": {"row": 67, "column": 1}
+    },
+    "fix": null
+  },
+  {
+    "signal_type": "security",
+    "severity": "high",
+    "rule_code": "B102",
+    "message": "Use of exec detected.",
+    "docs_url": "https://bandit.readthedocs.io/en/latest/plugins/b102_exec_used.html",
+    "file_path": "app/auth.py",
+    "span": {
+      "start": {"row": 42, "column": 1},
+      "end": {"row": 42, "column": 1}
+    },
+    "fix": null
+  }
+]

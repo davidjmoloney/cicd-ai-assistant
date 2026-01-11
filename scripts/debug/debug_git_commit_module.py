@@ -1,8 +1,12 @@
+import sys
+from pathlib import Path
+
+# Add src to path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 import httpx
 import os
 import json
-from pathlib import Path
 from datetime import datetime, timezone
 from github.pr_generator import _github_headers, _github_request, PRGenerator
 from agents.agent_handler import FixPlan
@@ -31,7 +35,7 @@ repo = TARGET_REPO_NAME
 
 
 
-DEBUG_FILE_EDITS = Path(__file__).parent / "commit_debug_file_edits.json"
+DEBUG_FILE_EDITS = Path(__file__).parent.parent / "tests" / "github" / "fixtures" / "fixplan_input.json"
 
 with open(DEBUG_FILE_EDITS) as f:
     generated_fix_plan = FixPlan.from_dict(json.load(f))

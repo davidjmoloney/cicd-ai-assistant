@@ -7,14 +7,14 @@ from pathlib import Path
 
 # Add src to path
 import sys
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 from agents.agent_handler import FixPlan
 from github.pr_generator import apply_edits_to_content
 
 # Config
-AGENT_OUTPUT = Path(__file__).parent / "agent_output.json"
-DEBUG_OUTPUT = Path(__file__).parent / "debug_output.txt"
+AGENT_OUTPUT = Path(__file__).parent.parent / "tests" / "agents" / "fixtures" / "fixplan_expected.json"
+DEBUG_OUTPUT = Path(__file__).parent / "outputs" / "debug_output.txt"
 
 # Mock file content (simulates the target file)
 MOCK_FILE_LINES = 500

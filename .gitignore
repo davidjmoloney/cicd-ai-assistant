@@ -215,3 +215,13 @@ CLAUDE.md
 
 # Test repo stripped
 test-repo-stripped/
+
+# Scripts debug outputs
+scripts/debug/outputs/
+scripts/debug/debug_*.txt
+
+# Old test files (deprecated after refactoring)
+scripts/test_parsing.py
+scripts/test_agent_handler.py
+scripts/test_pr_generator.py
+scripts/*.json

@@ -1,0 +1,113 @@
+[
+  {
+    "signal_type": "lint",
+    "severity": "low",
+    "rule_code": "F401",
+    "message": "`re` imported but unused",
+    "docs_url": "https://docs.astral.sh/ruff/rules/unused-import",
+    "file_path": "app/agents/prospecting_orchestrator.py",
+    "span": {
+      "start": {
+        "row": 8,
+        "column": 8
+      },
+      "end": {
+        "row": 8,
+        "column": 10
+      }
+    },
+    "fix": {
+      "applicability": "safe",
+      "message": "Remove unused import: `re`",
+      "edits": [
+        {
+          "content": "",
+          "span": {
+            "start": {
+              "row": 8,
+              "column": 1
+            },
+            "end": {
+              "row": 9,
+              "column": 1
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "signal_type": "lint",
+    "severity": "low",
+    "rule_code": "F401",
+    "message": "`pathlib.Path` imported but unused",
+    "docs_url": "https://docs.astral.sh/ruff/rules/unused-import",
+    "file_path": "app/agents/prospecting_orchestrator.py",
+    "span": {
+      "start": {
+        "row": 11,
+        "column": 21
+      },
+      "end": {
+        "row": 11,
+        "column": 25
+      }
+    },
+    "fix": {
+      "applicability": "safe",
+      "message": "Remove unused import: `pathlib.Path`",
+      "edits": [
+        {
+          "content": "",
+          "span": {
+            "start": {
+              "row": 11,
+              "column": 1
+            },
+            "end": {
+              "row": 12,
+              "column": 1
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "signal_type": "lint",
+    "severity": "low",
+    "rule_code": "F541",
+    "message": "f-string without any placeholders",
+    "docs_url": "https://docs.astral.sh/ruff/rules/f-string-missing-placeholders",
+    "file_path": "app/agents/prospecting_orchestrator.py",
+    "span": {
+      "start": {
+        "row": 494,
+        "column": 23
+      },
+      "end": {
+        "row": 494,
+        "column": 57
+      }
+    },
+    "fix": {
+      "applicability": "safe",
+      "message": "Remove extraneous `f` prefix",
+      "edits": [
+        {
+          "content": "\"\ud83d\udd0d Step 1: Analyzing user prompt\"",
+          "span": {
+            "start": {
+              "row": 494,
+              "column": 23
+            },
+            "end": {
+              "row": 494,
+              "column": 57
+            }
+          }
+        }
+      ]
+    }
+  }
+]

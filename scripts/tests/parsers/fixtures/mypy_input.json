@@ -1,0 +1,18 @@
+[
+  {
+    "file": "app/main.py",
+    "line": 42,
+    "column": 15,
+    "message": "Function is missing a type annotation",
+    "error_code": "no-untyped-def",
+    "severity": "error"
+  },
+  {
+    "file": "app/utils.py",
+    "line": 128,
+    "column": 8,
+    "message": "Incompatible return value type (got \"str\", expected \"int\")",
+    "error_code": "return-value",
+    "severity": "error"
+  }
+]

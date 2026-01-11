@@ -1,0 +1,28 @@
+{
+  "results": [
+    {
+      "code": "501 B501",
+      "filename": "app/security.py",
+      "issue_confidence": "HIGH",
+      "issue_severity": "MEDIUM",
+      "issue_text": "Probable use of insecure TLS/SSL version. Consider using TLS 1.2 or higher.",
+      "line_number": 67,
+      "line_range": [67],
+      "more_info": "https://bandit.readthedocs.io/en/latest/plugins/b501_request_with_no_cert_validation.html",
+      "test_id": "B501",
+      "test_name": "request_with_no_cert_validation"
+    },
+    {
+      "code": "102 B102",
+      "filename": "app/auth.py",
+      "issue_confidence": "HIGH",
+      "issue_severity": "HIGH",
+      "issue_text": "Use of exec detected.",
+      "line_number": 42,
+      "line_range": [42],
+      "more_info": "https://bandit.readthedocs.io/en/latest/plugins/b102_exec_used.html",
+      "test_id": "B102",
+      "test_name": "exec_used"
+    }
+  ]
+}
