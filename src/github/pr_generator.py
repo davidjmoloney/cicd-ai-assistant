@@ -86,10 +86,8 @@ def apply_edits_to_content(content: str, edits: list[CodeEdit]) -> str:
         key=lambda e: (e.span.start.row, e.span.start.column),
         reverse=True,
     )
-    print(sorted_edits)
-    # TODO:WHY is this is not working
+
     for edit in sorted_edits:
-        print(f"\n----- Carrying out new edit ----- \nSpan, Type, Desrciption: {edit.span}, {edit.edit_type}, {edit.description}")
         lines = _apply_edit(lines, edit)
 
     return "\n".join(lines)
@@ -98,7 +96,6 @@ def apply_edits_to_content(content: str, edits: list[CodeEdit]) -> str:
 def _apply_edit(lines: list[str], edit: CodeEdit) -> list[str]:
     """Apply a single edit to lines."""
     # Convert to 0-based index
-    print(f"applying edit")
     start_row = max(0, edit.span.start.row - 1)
     end_row = max(0, edit.span.end.row - 1)
     start_col = max(0, edit.span.start.column - 1)
@@ -248,7 +245,7 @@ class PRGenerator:
                 # 4. Apply edits and commit each unique file
                 files_changed: list[str] = []
                 for file_edit in merged_file_edits:
-                    if self.commit_file_edit(client, owner, repo, file_edit, branch_name, base):
+                    if self._commit_file_edit(client, owner, repo, file_edit, branch_name, base):
                         files_changed.append(file_edit.file_path)
 
                 if not files_changed:
@@ -294,7 +291,7 @@ class PRGenerator:
         except Exception as e:
             return PRResult(success=False, error=f"Unexpected error: {e}")
 
-    def commit_file_edit(
+    def _commit_file_edit(
         self,
         client: httpx.Client,
         owner: str,
@@ -315,10 +312,6 @@ class PRGenerator:
 
             # Apply edits
             new_content = apply_edits_to_content(original_content, file_edit.edits)
-
-            debug_file_path = Path(f"/home/devel/cicd-ai-assistant/debug/debug_{file_edit.edits[0].span.start.row}.py")
-            with open(debug_file_path, 'w') as f:
-                f.write(new_content)
 
             if new_content == original_content:
                 return False  # No changes
@@ -387,12 +380,12 @@ class PRGenerator:
             return f"fix: {file_edit.edits[0].description}"
 
         # Multiple edits - create a structured commit message
-        title = f"fix: {len(file_edit.edits)} lint fixes in {file_edit.file_path}"
+        title = f"fix: {len(file_edit.edits)} fixes in {file_edit.file_path}"
         details = []
         for edit in file_edit.edits:
             details.append(f"- Line {edit.span.start.row}: {edit.description}")
 
-        return f"{title}\n\n{chr(10).join(details)}"
+        return f"{title}\n{chr(10).join(details)}"
 
     def _generate_branch_name(self, fix_plan: FixPlan) -> str:
         """Generate unique branch name."""
