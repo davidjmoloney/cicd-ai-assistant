@@ -7,7 +7,14 @@ from typing import Optional, Sequence
 
 
 class SignalType(str, Enum):
+    """
+    Types of CI/CD signals that can be processed.
+
+    Priority order (highest to lowest): SECURITY > TYPE_CHECK > LINT > FORMAT
+    FORMAT is always lowest priority as formatting changes are cosmetic and safe.
+    """
     LINT = "lint"
+    FORMAT = "format"  # Formatting signals (e.g., ruff format) - always lowest priority
     TYPE_CHECK = "type_check"
     SECURITY = "security"
     # Later:
