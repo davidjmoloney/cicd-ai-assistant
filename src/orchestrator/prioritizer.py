@@ -72,7 +72,7 @@ class SignalGroup:
 
 def default_tool_resolver(sig: FixSignal) -> str:
     """
-    v1 heuristic resolver (because only Ruff exists right now).
+    v1 heuristic resolver for mapping signals to their source tools.
 
     FUTURE (preferred):
       - Add `tool_id: str` onto FixSignal and return it directly:
@@ -82,10 +82,16 @@ def default_tool_resolver(sig: FixSignal) -> str:
     if sig.signal_type == SignalType.FORMAT:
         return "ruff-format"
 
+    # Handle TYPE_CHECK signals from mypy
+    if sig.signal_type == SignalType.TYPE_CHECK:
+        return "mypy"
+
+    # Handle LINT signals from ruff
     if sig.docs_url and "docs.astral.sh/ruff" in sig.docs_url:
         return "ruff"
     if sig.fix is not None:
         return "ruff"
+
     return "unknown"
 
 
