@@ -48,10 +48,47 @@ def severity_for_bandit(issue_severity: str, issue_confidence: str) -> Severity:
     raise NotImplementedError
 
 
+# MyPy error codes that indicate higher severity issues
+# These are codes where type errors are more likely to cause runtime failures
+_MYPY_HIGH_SEVERITY_CODES: set[str] = {
+    "return-value",      # Incompatible return value - can cause unexpected behavior
+    "arg-type",          # Argument type mismatch - can cause runtime errors
+    "call-arg",          # Unexpected/missing argument - runtime TypeError
+    "index",             # Invalid index type - runtime TypeError/KeyError
+    "attr-defined",      # Attribute not defined - runtime AttributeError
+    "union-attr",        # Attribute access on union with None - potential AttributeError
+    "operator",          # Unsupported operand types - runtime TypeError
+    "override",          # Incompatible override - can break polymorphism
+    "assignment",        # Incompatible assignment - can cause downstream errors
+}
+
+
 def severity_for_mypy(mypy_severity: str, error_code: str | None) -> Severity:
     """
-    PSEUDOCODE:
-      if mypy_severity == "error": return MEDIUM (or HIGH for certain codes)
-      if mypy_severity == "note": return LOW
+    Map MyPy severity and error codes to Severity enum.
+
+    Severity mapping:
+      - severity="note" -> LOW (informational messages)
+      - severity="error" with high-severity code -> HIGH
+      - severity="error" (default) -> MEDIUM
+
+    High-severity codes are those more likely to cause runtime errors:
+      - arg-type, return-value, call-arg, index, attr-defined, etc.
+
+    Args:
+        mypy_severity: MyPy severity field ("error" or "note")
+        error_code: MyPy error code (e.g., "arg-type", "var-annotated")
+
+    Returns:
+        Severity enum value
     """
-    raise NotImplementedError
+    # Notes are informational, low priority
+    if mypy_severity == "note":
+        return Severity.LOW
+
+    # Check for high-severity error codes
+    if error_code and error_code in _MYPY_HIGH_SEVERITY_CODES:
+        return Severity.HIGH
+
+    # Default for errors is MEDIUM
+    return Severity.MEDIUM
