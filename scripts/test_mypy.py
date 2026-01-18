@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 """
-Parse a Ruff --diff (format) output file into FixSignals and write a readable TXT dump.
+Parse MyPy JSON output into FixSignals and write a readable TXT dump.
 
 Run from your repo root (so imports resolve), e.g.:
-  python tools/dump_ruff_format_signals_txt.py \
-    --in ruff-format-output-short.txt \
-    --out ruff-format-signals.txt
+  python scripts/test_mypy.py
 """
 
 from __future__ import annotations
@@ -17,105 +15,109 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 import json
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(levelname)s: %(message)s'
+)
 
 from signals.models import FixSignal, SignalType
 from orchestrator.prioritizer import Prioritizer, SignalGroup
 from orchestrator.fix_planner import FixPlanner
-from signals.parsers.ruff import parse_ruff_format_diff 
+from signals.parsers.mypy import parse_mypy_results
 from github.pr_generator import PRGenerator
 from agents.agent_handler import FixPlan
 
 
-# Path to your Ruff format txt
-ruff_json_path = Path("/home/devel/cicd-ai-assistant/sample-cicd-artifacts/ruff-format-cicd-short.txt")
+# Path to your MyPy JSON output
+mypy_json_path = Path("/home/devel/cicd-ai-assistant/sample-cicd-artifacts/mypy-results-short-debug.json")
 
 # Output file paths
 output_dir = Path(__file__).parent / "test-outputs"
-context_output = output_dir / "ruff-format-fix-signals.txt"
-fix_planner_output = output_dir / "ruff-format-fix-plan.json"
+context_output = output_dir / "mypy-fix-signals-debug.txt"
+fix_planner_output = output_dir / "mypy-fix-plan.json"
 
 # Test Settings
-OUTPUT_RUFF_FIX_SIGNALS=False
-CREATE_RUFF_FIXPLANS=True
-OUTPUT_RUFF_FIXPLANS=True
-CREATE_RUFF_PR=True
-
-def _to_plain(obj: Any) -> Any:
-    """Convert dataclasses/enums/paths to plain Python types for pretty-printing."""
-    if is_dataclass(obj):
-        return {k: _to_plain(v) for k, v in asdict(obj).items()}
-    if isinstance(obj, Enum):
-        return obj.value
-    if isinstance(obj, Path):
-        return str(obj)
-    if isinstance(obj, dict):
-        return {str(k): _to_plain(v) for k, v in obj.items()}
-    if isinstance(obj, (list, tuple)):
-        return [_to_plain(v) for v in obj]
-    return obj
+OUTPUT_MYPY_FIX_SIGNALS=True
+CREATE_MYPY_FIXPLANS=False
+OUTPUT_MYPY_FIXPLANS=False
+LOAD_FIXPLAN_FROM_DICT_FILE= True
+CREATE_MYPY_PR=True
 
 
 def main() -> int:
+    # Ensure output directory exists
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--in", dest="in_path", default=ruff_json_path)
-    ap.add_argument("--out", dest="out_path", default=context_output)
-    ap.add_argument(
-        "--group-by-file",
-        action="store_true",
-        default=True,
-        help="Group hunks into one FixSignal per file (default: true)",
-    )
-    ap.add_argument(
-        "--no-group-by-file",
-        dest="group_by_file",
-        action="store_false",
-        help="Emit one FixSignal per hunk instead",
-    )
-    args = ap.parse_args()
+    # Parse MyPy JSON output
+    mypy_output = Path(mypy_json_path).read_text(encoding="utf-8")
+    signals = parse_mypy_results(mypy_output)
 
-    diff_text = Path(args.in_path).read_text(encoding="utf-8")
-    signals = parse_ruff_format_diff(diff_text, group_by_file=args.group_by_file)
+    if OUTPUT_MYPY_FIX_SIGNALS:
+        # Output fix signals to a file for inspection
+        out_lines = [f"Parsed {len(signals)} MyPy FixSignals:\n"]
 
-    if OUTPUT_RUFF_FIX_SIGNALS:
-        out_lines: list[str] = []
-        out_lines.append(f"input_file: {args.in_path}")
-        out_lines.append(f"group_by_file: {args.group_by_file}")
-        out_lines.append(f"count: {len(signals)}")
-        out_lines.append("")
-
-        for i, s in enumerate(signals, start=1):
-            out_lines.append(f"=== FixSignal {i}/{len(signals)} ===")
-            out_lines.append(pprint.pformat(_to_plain(s), width=120, sort_dicts=False))
+        for i, sig in enumerate(signals, start=1):
+            out_lines.append(f"Signal #{i}")
+            out_lines.append(f"  Type: {sig.signal_type}")
+            out_lines.append(f"  Severity: {sig.severity}")
+            out_lines.append(f"  File: {sig.file_path}")
+            out_lines.append(f"  Location: line {sig.span.start.row}, column {sig.span.start.column}")
+            out_lines.append(f"  Rule Code: {sig.rule_code}")
+            out_lines.append(f"  Message: {sig.message}")
+            if sig.docs_url:
+                out_lines.append(f"  Docs: {sig.docs_url}")
+            out_lines.append(f"  Fix: {sig.fix or 'None (requires LLM)'}")
             out_lines.append("")
 
-        Path(args.out_path).write_text("\n".join(out_lines), encoding="utf-8")
-        print(f"Wrote {len(signals)} FixSignals to {args.out_path}")
-    
-    if  CREATE_RUFF_FIXPLANS:
+        Path(context_output).write_text("\n".join(out_lines), encoding="utf-8")
+        print(f"Wrote {len(signals)} FixSignals to {context_output}")
+
+
+    fix_plans_for_pr_gen: list[FixPlan] = []
+
+    if CREATE_MYPY_FIXPLANS:
         # Use prioritize to create SignalGroups
         prioritizer = Prioritizer()
         signal_groups = prioritizer.prioritize(signals=signals)
-
-        fix_plans_for_pr_gen: list[FixPlan] = []
         planner = FixPlanner()
 
-        for i, group in enumerate(signal_groups):
-
+        for group in signal_groups:
             plan_result = planner.create_fix_plan(group)
             fix_plans_for_pr_gen.append(plan_result.fix_plan)
-
-            if OUTPUT_RUFF_FIXPLANS:
-                print("\n--- Writing Ruff Fix Plan to JSON ---")
-                with (fix_planner_output).open("a", encoding="utf-8") as f:
-                    json.dump(plan_result.fix_plan.to_dict(), f, indent=2, default=str)
-
-
-    if CREATE_RUFF_PR:
+        
+        if OUTPUT_MYPY_FIXPLANS:
+            with (fix_planner_output).open("w", encoding="utf-8") as f:
+                f.write("[")
+                for i, plan in enumerate(fix_plans_for_pr_gen):
+                    print(f"\n--- Writing MyPy Fix Plan {i} to JSON ---")
+                    json.dump(plan.to_dict(), f, indent=2, default=str)
+                    if i != (len(fix_plans_for_pr_gen) - 1): 
+                        f.write(",\n")
+                f.write("]")
+    
+    if LOAD_FIXPLAN_FROM_DICT_FILE:
+        file_content: dict = []
+        with open(fix_planner_output) as f:
+            file_content = json.load(f)
+        for dict_entry in file_content:
+            fix_plan = FixPlan.from_dict(dict_entry)
+            fix_plans_for_pr_gen.append(fix_plan)
+ 
+    if CREATE_MYPY_PR:
         # result.fix_plan is ready for PRGenerator
         pr_generator = PRGenerator()
-        for plan in fix_plans_for_pr_gen:
-            pr_result = pr_generator.create_pr(plan)
+        # for i, plan in enumerate(fix_plans_for_pr_gen, start = 1):
+        pr_result = pr_generator.create_pr(fix_plans_for_pr_gen[1])
+        print(f"------ Results for PR {i} -------")
+        print(f"PR Generation success: {pr_result.success}")
+        print(f"PR URL: {pr_result.pr_url}")
+        for file in pr_result.files_changed:
+            print(f"   File changed {file}")
+        print("\n\n")
+
 
     return 0
 
