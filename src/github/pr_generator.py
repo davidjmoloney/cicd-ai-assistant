@@ -18,7 +18,9 @@ from __future__ import annotations
 import base64
 import hashlib
 import os
-import time 
+import time
+import logging
+
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -48,6 +50,9 @@ PR_DRAFT_MODE = os.getenv("PR_DRAFT_MODE", "false").lower() in ("true", "1", "ye
 GITHUB_API_URL = "https://api.github.com"
 MAX_RETRIES = 4
 RETRY_DELAYS = [2, 4, 8, 16]
+
+# Logging Mode Environment Settings
+DEBUG_MODE_ON = os.getenv("DEBUG_MODE_ON", "false").lower() in ("true", "1", "yes")
 
 
 # ============================================================================
@@ -310,21 +315,45 @@ class PRGenerator:
             original_content = base64.b64decode(file_data["content"]).decode("utf-8")
             file_sha = file_data["sha"]
 
+            with (Path("/home/devel/cicd-ai-assistant/scripts/debug/original_content.txt")).open("w", encoding="utf-8") as f:
+                    f.write(original_content)
+
             # Apply edits
             new_content = apply_edits_to_content(original_content, file_edit.edits)
+
+            with (Path("/home/devel/cicd-ai-assistant/scripts/debug/new_content.txt")).open("w", encoding="utf-8") as f:
+                    f.write(new_content)
 
             if new_content == original_content:
                 return False  # No changes
 
+            # Log the details before committing
+            if DEBUG_MODE_ON: 
+                logging.info(f"Attempting to commit {file_edit.file_path}")
+                logging.info(f"  Branch: {branch}")
+                logging.info(f"  File SHA: {file_sha}")
+                logging.info(f"  Original length: {len(original_content)} bytes")
+                logging.info(f"  New length: {len(new_content)} bytes")
+                logging.info(f"  Content changed: {original_content != new_content}")
+
             # Commit updated file
             commit_msg = self._generate_commit_message(file_edit)
-            _github_request(client, "PUT", f"/repos/{owner}/{repo}/contents/{file_edit.file_path}", {
-                "message": commit_msg,
-                "content": base64.b64encode(new_content.encode("utf-8")).decode("utf-8"),
-                "sha": file_sha,
-                "branch": branch,
-            })
-            return True
+
+            encoded_content = base64.b64encode(new_content.encode("utf-8")).decode("utf-8")
+
+            try:
+                _github_request(client, "PUT", f"/repos/{owner}/{repo}/contents/{file_edit.file_path}", {
+                    "message": commit_msg,
+                    "content": encoded_content,
+                    "sha": file_sha,
+                    "branch": branch,
+                })
+                logging.info(f"✓ Successfully committed {file_edit.file_path}")
+                return True
+            except GitHubError as e:
+                logging.error(f"✗ Failed to commit {file_edit.file_path}: {e}")
+                # Re-raise to preserve original behavior
+                raise
 
         except GitHubError:
             return False

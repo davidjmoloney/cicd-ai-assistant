@@ -10,16 +10,21 @@ def to_repo_relative(path: str, repo_root: str | Path | None) -> str:
 
     v1 policy:
     - If repo_root is provided and `path` is under it -> return relative path.
-    - Otherwise return the original (normalized) path unchanged.
+    - Otherwise return the original (normalized) path with leading slash stripped.
 
-    This avoids the brittle "guess where app/src is" behaviour.
+    This avoids the brittle "guess where app/src is" behaviour and ensures
+    paths are always relative (required by GitHub API).
     """
     p = Path(path)
     if repo_root is None:
-        return str(p)
+        # Strip leading slash to ensure relative path
+        path_str = str(p)
+        return path_str.lstrip('/')
 
     root = Path(repo_root)
     try:
-        return str(p.relative_to(root))     # relative_to returns an exception ValueError if fails to deduce relative path 
+        return str(p.relative_to(root))     # relative_to returns an exception ValueError if fails to deduce relative path
     except ValueError:
-        return str(p)
+        # Strip leading slash to ensure relative path
+        path_str = str(p)
+        return path_str.lstrip('/')
