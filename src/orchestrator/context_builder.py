@@ -37,7 +37,7 @@ class ContextBuilder:
         self,
         *,
         repo_root: str | Path | None = None,
-        window_lines: int = 20,
+        window_lines: int = 30,
         max_file_bytes: int = 512_000,  # safety cap: 512KB per file read
     ) -> None:
         self._repo_root = Path(repo_root) if repo_root is not None else None
@@ -54,9 +54,19 @@ class ContextBuilder:
             "signals": [ {... per-signal context ...} ]
           }
         """
+        import logging
+        import os
+
+        debug_mode = os.getenv("DEBUG_MODE_ON", "false").lower() in ("true", "1", "yes")
+        if debug_mode:
+            logging.info(f"\n=== Building context for {len(group.signals)} signals ===")
+
         items: list[dict[str, Any]] = []
 
-        for sig in group.signals:
+        for idx, sig in enumerate(group.signals, 1):
+            if debug_mode:
+                logging.info(f"\nSignal {idx}/{len(group.signals)}: {sig.file_path}:{sig.span.start.row if sig.span else '?'}")
+
             file_text, lines, file_error = self._read_file(sig.file_path)
 
             span = sig.span
@@ -103,7 +113,19 @@ class ContextBuilder:
         Returns (file_text, lines, error).
         lines are 1-based in concept but stored as a 0-based list of strings.
         """
+        import logging
+        import os
+
         path = self._resolve_path(file_path)
+
+        # Debug logging
+        debug_mode = os.getenv("DEBUG_MODE_ON", "false").lower() in ("true", "1", "yes")
+        if debug_mode:
+            logging.info(f"ContextBuilder: Reading file_path='{file_path}'")
+            logging.info(f"  Resolved to: {path}")
+            logging.info(f"  Repo root: {self._repo_root}")
+            logging.info(f"  File exists: {path.exists()}")
+
         try:
             data = path.read_bytes()
             if len(data) > self._max_file_bytes:
@@ -111,8 +133,14 @@ class ContextBuilder:
             text = data.decode("utf-8")
             # keepends=True so line reconstruction preserves exact text
             lines = text.splitlines(keepends=True)
+
+            if debug_mode:
+                logging.info(f"  ✓ Successfully read {len(lines)} lines ({len(data)} bytes)")
+
             return text, lines, None
         except Exception as e:
+            if debug_mode:
+                logging.error(f"  ✗ Failed to read: {e}")
             return None, None, str(e)
 
     def _snippet_around_span(
