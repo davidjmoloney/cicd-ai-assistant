@@ -24,6 +24,7 @@ from agents.llm_provider import (
     LLMResponse,
     get_provider,
 )
+from agents.tool_prompts import get_system_prompt
 
 
 # ============================================================================
@@ -174,56 +175,8 @@ class AgentResult:
 # ============================================================================
 # System prompt for fix generation
 # ============================================================================
-
-FIX_GENERATION_SYSTEM_PROMPT = """You are an expert code repair agent. Your task is to analyze linting/type/security signals and generate precise code fixes.
-
-IMPORTANT: You must respond with valid JSON only. No markdown, no explanations outside the JSON.
-
-Given context about code issues (signals), you will:
-1. Analyze each signal and its surrounding code context
-2. Determine the correct fix
-3. Output a structured fix plan as JSON
-
-The fix plan JSON schema:
-{
-  "summary": "Brief description of all fixes",
-  "confidence": 0.0-1.0,
-  "warnings": ["any caveats or things to check"],
-  "file_edits": [
-    {
-      "file_path": "path/to/file.py",
-      "reasoning": "Why these edits fix the issue",
-      "edits": [
-        {
-          "edit_type": "replace|insert|delete",
-          "span": {
-            "start": {"row": 1, "column": 0},
-            "end": {"row": 1, "column": 10}
-          },
-          "content": "new code to insert (empty string for delete)",
-          "description": "What this edit does"
-        }
-      ]
-    }
-  ]
-}
-
-Guidelines:
-- Row numbers are 1-based (first line is row 1)
-- Column numbers are 0-based (first character is column 0)
-- For REPLACE: span covers text to replace, content is the replacement
-- For INSERT: span.start = span.end = insertion point, content is text to insert
-- For DELETE: span covers text to delete, content should be empty string
-- Order edits top-to-bottom within each file
-- If a tool-provided fix exists and is marked "safe", prefer using it
-- If you cannot determine a safe fix, set confidence < 0.5 and add a warning
-- Be precise with line/column numbers - incorrect positions break the fix
-
-When the signal includes fix_context with existing tool edits:
-- If applicability is "safe", use those edits directly
-- If applicability is "unsafe", review carefully and adjust if needed
-- Always verify the edit positions match the actual code shown in code_context
-"""
+# NOTE: System prompts are now in agents/tool_prompts.py
+# This allows tool-specific guidance (mypy, ruff, bandit, etc.)
 
 
 # ============================================================================
@@ -259,7 +212,7 @@ class AgentHandler:
             provider: LLM provider name ('openai', 'anthropic') or LLMProvider instance
             temperature: Sampling temperature (0.0 for deterministic)
             max_tokens: Maximum tokens in response
-            system_prompt: Custom system prompt (uses default if None)
+            system_prompt: Custom system prompt override (if None, uses tool-specific prompts)
         """
         if isinstance(provider, str):
             self._provider = get_provider(provider)
@@ -268,12 +221,26 @@ class AgentHandler:
 
         self._temperature = temperature
         self._max_tokens = max_tokens
-        self._system_prompt = system_prompt or FIX_GENERATION_SYSTEM_PROMPT
+        self._system_prompt_override = system_prompt  # Store override, but use tool-specific by default
 
     @property
     def provider(self) -> LLMProvider:
         """Get the current LLM provider."""
         return self._provider
+
+    def get_prompt_for_tool(self, tool_id: str | None = None) -> str:
+        """
+        Get the system prompt that would be used for a given tool.
+
+        Useful for debugging and testing.
+
+        Args:
+            tool_id: Tool identifier (e.g., "mypy", "ruff", "bandit")
+
+        Returns:
+            Complete system prompt with tool-specific guidance
+        """
+        return self._system_prompt_override or get_system_prompt(tool_id)
 
     def set_provider(self, provider: str | LLMProvider) -> None:
         """
@@ -311,12 +278,18 @@ class AgentHandler:
                 error=f"Provider {self._provider.provider_name} is not configured. Set API key.",
             )
 
+        # Extract tool_id from context to get tool-specific prompt
+        tool_id = context.get("group", {}).get("tool_id")
+
+        # Use override if provided, otherwise get tool-specific prompt
+        system_prompt = self._system_prompt_override or get_system_prompt(tool_id)
+
         # Build user prompt from context
         user_prompt = self._build_user_prompt(context)
 
-        # Call LLM
+        # Call LLM with tool-specific guidance
         response = self._provider.generate(
-            system_prompt=self._system_prompt,
+            system_prompt=system_prompt,
             user_prompt=user_prompt,
             temperature=temperature if temperature is not None else self._temperature,
             max_tokens=max_tokens if max_tokens is not None else self._max_tokens,
@@ -366,7 +339,50 @@ class AgentHandler:
         data["group_tool_id"] = group_info.get("tool_id", "unknown")
         data["group_signal_type"] = group_info.get("signal_type", "unknown")
 
-        return FixPlan.from_dict(data)
+        fix_plan = FixPlan.from_dict(data)
+
+        # Validate the fix plan
+        validation_warnings = self._validate_fix_plan(fix_plan)
+        if validation_warnings:
+            # Add validation warnings to the fix plan
+            fix_plan.warnings.extend(validation_warnings)
+
+        return fix_plan
+
+    def _validate_fix_plan(self, fix_plan: FixPlan) -> list[str]:
+        """
+        Validate fix plan for common LLM mistakes.
+
+        Returns list of warning messages for issues found.
+        """
+        warnings = []
+
+        for file_edit in fix_plan.file_edits:
+            for edit in file_edit.edits:
+                # Check for zero-width REPLACE spans
+                if edit.edit_type == EditType.REPLACE:
+                    if edit.span.start.row == edit.span.end.row:
+                        if edit.span.start.column == edit.span.end.column:
+                            warnings.append(
+                                f"Zero-width REPLACE span in {file_edit.file_path} at "
+                                f"row {edit.span.start.row}, column {edit.span.start.column}. "
+                                f"This will act as INSERT. Consider fixing the span or using INSERT instead."
+                            )
+
+                # Check for negative or invalid spans
+                if edit.span.end.row < edit.span.start.row:
+                    warnings.append(
+                        f"Invalid span in {file_edit.file_path}: end row {edit.span.end.row} "
+                        f"< start row {edit.span.start.row}"
+                    )
+                elif edit.span.end.row == edit.span.start.row:
+                    if edit.span.end.column < edit.span.start.column:
+                        warnings.append(
+                            f"Invalid span in {file_edit.file_path} at row {edit.span.start.row}: "
+                            f"end column {edit.span.end.column} < start column {edit.span.start.column}"
+                        )
+
+        return warnings
 
 
 # ============================================================================
