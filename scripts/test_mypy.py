@@ -40,10 +40,11 @@ context_output = output_dir / "mypy-fix-signals-debug.txt"
 fix_planner_output = output_dir / "mypy-fix-plan.json"
 
 # Test Settings
-OUTPUT_MYPY_FIX_SIGNALS=True
+PARSE_MYPY_FIX_SIGNALS=False
+OUTPUT_MYPY_FIX_SIGNALS=False
 CREATE_MYPY_FIXPLANS=False
 OUTPUT_MYPY_FIXPLANS=False
-LOAD_FIXPLAN_FROM_DICT_FILE= True
+LOAD_FIXPLAN_FROM_DICT_FILE=True
 CREATE_MYPY_PR=True
 
 
@@ -51,9 +52,10 @@ def main() -> int:
     # Ensure output directory exists
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Parse MyPy JSON output
-    mypy_output = Path(mypy_json_path).read_text(encoding="utf-8")
-    signals = parse_mypy_results(mypy_output)
+    if PARSE_MYPY_FIX_SIGNALS:
+        # Parse MyPy JSON output
+        mypy_output = Path(mypy_json_path).read_text(encoding="utf-8")
+        signals = parse_mypy_results(mypy_output, repo_root="/home/devel/cicd-ai-assistant/test-repo-stripped/")
 
     if OUTPUT_MYPY_FIX_SIGNALS:
         # Output fix signals to a file for inspection
@@ -82,7 +84,7 @@ def main() -> int:
         # Use prioritize to create SignalGroups
         prioritizer = Prioritizer()
         signal_groups = prioritizer.prioritize(signals=signals)
-        planner = FixPlanner()
+        planner = FixPlanner(repo_root="/home/devel/cicd-ai-assistant/test-repo-stripped/")
 
         for group in signal_groups:
             plan_result = planner.create_fix_plan(group)
@@ -109,14 +111,14 @@ def main() -> int:
     if CREATE_MYPY_PR:
         # result.fix_plan is ready for PRGenerator
         pr_generator = PRGenerator()
-        # for i, plan in enumerate(fix_plans_for_pr_gen, start = 1):
-        pr_result = pr_generator.create_pr(fix_plans_for_pr_gen[1])
-        print(f"------ Results for PR {i} -------")
-        print(f"PR Generation success: {pr_result.success}")
-        print(f"PR URL: {pr_result.pr_url}")
-        for file in pr_result.files_changed:
-            print(f"   File changed {file}")
-        print("\n\n")
+        for i, plan in enumerate(fix_plans_for_pr_gen, start = 1):    
+            pr_result = pr_generator.create_pr(fix_plans_for_pr_gen[i-1])
+            print(f"\n------ Results for PR {i} -------")
+            print(f"PR Generation success: {pr_result.success}")
+            print(f"PR URL: {pr_result.pr_url}")
+            for file in pr_result.files_changed:
+                print(f"   File changed {file}")
+            print("\n\n")
 
 
     return 0

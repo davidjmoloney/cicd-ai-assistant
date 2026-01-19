@@ -215,3 +215,9 @@ CLAUDE.md
 
 # Test repo stripped
 test-repo-stripped/
+
+# Test and Debug files
+scripts/debug/*
+scripts/test-outputs/*
+
+
