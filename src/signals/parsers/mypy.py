@@ -125,7 +125,9 @@ def _parse_mypy_entry(
 
     # Create span (MyPy provides line and column, but no end position)
     # Use same position for start and end since MyPy doesn't provide range
-    position = Position(row=int(line), column=int(column))
+    # NOTE: MyPy uses 1-based lines but 0-based columns, so we add 1 to column
+    # to normalize to 1-based for consistency with other tools (e.g., ruff)
+    position = Position(row=int(line), column=int(column) + 1)
     span = Span(start=position, end=position)
 
     # Determine severity
