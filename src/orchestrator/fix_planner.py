@@ -156,15 +156,15 @@ def _dump_llm_data_to_file(
             debug_output["_debug_metadata"]["system_prompt_length"] = len(prompts.get("system_prompt", ""))
             debug_output["_debug_metadata"]["user_prompt_length"] = len(prompts.get("user_prompt", ""))
 
+        if result.success:
+            llm_response = result.llm_response.content.splitlines(keepends=True)
+            debug_output["llm_response"] = llm_response
+        else:
+            debug_output["llm_error"] = result.error
+
         # Write to file
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(debug_output, f, indent=2, default=str)
-            if result.success:
-                f.write("========== LLM RESULT FROM ABOVE CONTEXT ===========")
-                f.write(f"LLM Content:\n{result.llm_response.content}")
-            else:
-                f.write(f"LLM Error:\n{result.error}")
-
 
         print(f"[DEBUG] Context and prompts dumped to: {filepath}")
 
