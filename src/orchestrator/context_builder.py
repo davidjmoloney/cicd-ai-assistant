@@ -58,7 +58,7 @@ class ContextBuilder:
         *,
         repo_root: str | Path | None = None,
         window_lines: int = 30,
-        snippet_window_lines: int = 6,  # Lines on each side of error for edit snippets
+        snippet_window_lines: int = 3,  # Lines on each side of error for edit snippets
         max_file_bytes: int = 512_000,  # safety cap: 512KB per file read
     ) -> None:
         self._repo_root = Path(repo_root) if repo_root is not None else None

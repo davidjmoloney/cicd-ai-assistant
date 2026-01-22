@@ -449,8 +449,10 @@ def get_provider(provider_name: str = "openai", **kwargs: Any) -> LLMProvider:
     name = provider_name.lower()
 
     if name == "openai":
+        print("INFO:  Using OpenAI Provider")
         return OpenAIProvider(**kwargs)
     elif name in ("anthropic", "claude"):
+        print("INFO:  Using Anthropic Provider")
         return ClaudeProvider(**kwargs)
     else:
         raise ValueError(f"Unknown provider: {provider_name}. Use 'openai' or 'anthropic'.")
