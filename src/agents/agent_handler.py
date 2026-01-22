@@ -434,17 +434,14 @@ class AgentHandler:
         fix_pattern = re.compile(
             r"={5,}\s*FIX FOR:\s*(.+?)\s*={5,}\s*"
             r"CONFIDENCE:\s*([\d.]+)\s*"
-            r"REASONING:\s*(.+?)\s*"
+            r"REASONING:\s*([\s\S]+?)\s*"
             r"```FIXED_CODE[ \t]*\r?\n([\s\S]*?)\r?\n```[ \t]*\s*"
-            r"WARNINGS:\s*(.+?)\s*"
+            r"WARNINGS:\s*([\s\S]+?)\s*"
             r"={5,}\s*END FIX\s*={5,}",
             re.IGNORECASE
         )
 
         matches = fix_pattern.findall(content)
-
-        for m in matches:
-            print(f"{m}\n")
 
         if not matches:
             raise ValueError(
