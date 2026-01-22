@@ -1,0 +1,129 @@
+# Sample Test Cases for CICD AI Assistant Evaluation
+#
+# This file demonstrates the test case format. In practice, you would:
+# 1. Copy your frozen CICD artifacts to evaluation/artifacts/
+# 2. Generate test cases using: python scripts/evaluate.py --generate-cases <artifact> --generate-tool <tool>
+# 3. Or manually create test cases like these
+#
+# Each test case represents a single CICD error to evaluate.
+
+test_cases:
+  # Ruff Lint - Unused Import (F401)
+  - id: ruff-F401-1
+    tool: ruff
+    signal_type: lint
+    artifact_path: artifacts/ruff-lint-results.json
+    error_code: F401
+    file_path: app/agents/prospecting_orchestrator.py
+    line_number: 8
+    message: "`re` imported but unused"
+    description: "Ruff: Remove unused import 're'"
+    expected_outcome: fix
+    tags:
+      - unused-import
+      - safe-fix
+
+  - id: ruff-F401-2
+    tool: ruff
+    signal_type: lint
+    artifact_path: artifacts/ruff-lint-results.json
+    error_code: F401
+    file_path: app/agents/prospecting_orchestrator.py
+    line_number: 11
+    message: "`pathlib.Path` imported but unused"
+    description: "Ruff: Remove unused import 'pathlib.Path'"
+    expected_outcome: fix
+    tags:
+      - unused-import
+      - safe-fix
+
+  # Ruff Lint - f-string without placeholders (F541)
+  - id: ruff-F541-1
+    tool: ruff
+    signal_type: lint
+    artifact_path: artifacts/ruff-lint-results.json
+    error_code: F541
+    file_path: app/agents/prospecting_orchestrator.py
+    line_number: 494
+    message: "f-string without any placeholders"
+    description: "Ruff: Remove unnecessary f-string prefix"
+    expected_outcome: fix
+    tags:
+      - f-string
+      - safe-fix
+
+  # MyPy Type Check - arg-type
+  - id: mypy-arg-type-1
+    tool: mypy
+    signal_type: type_check
+    artifact_path: artifacts/mypy-results.json
+    error_code: arg-type
+    file_path: app/services/database.py
+    line_number: 45
+    message: "Argument 1 to 'execute' has incompatible type"
+    description: "MyPy: Fix argument type mismatch in database call"
+    expected_outcome: fix
+    tags:
+      - type-error
+      - requires-llm
+
+  # MyPy Type Check - return-value
+  - id: mypy-return-value-1
+    tool: mypy
+    signal_type: type_check
+    artifact_path: artifacts/mypy-results.json
+    error_code: return-value
+    file_path: app/utils/helpers.py
+    line_number: 123
+    message: "Incompatible return value type"
+    description: "MyPy: Fix return type annotation"
+    expected_outcome: fix
+    tags:
+      - type-error
+      - requires-llm
+
+  # Ruff Lint - Line too long (E501)
+  - id: ruff-E501-1
+    tool: ruff
+    signal_type: lint
+    artifact_path: artifacts/ruff-lint-results.json
+    error_code: E501
+    file_path: app/config/settings.py
+    line_number: 78
+    message: "Line too long (145 > 120)"
+    description: "Ruff: Split long line"
+    expected_outcome: fix
+    tags:
+      - line-length
+      - formatting
+
+  # Ruff Lint - Undefined name (F821)
+  - id: ruff-F821-1
+    tool: ruff
+    signal_type: lint
+    artifact_path: artifacts/ruff-lint-results.json
+    error_code: F821
+    file_path: app/services/api_client.py
+    line_number: 234
+    message: "Undefined name 'logger'"
+    description: "Ruff: Fix undefined name - may need import"
+    expected_outcome: fix
+    tags:
+      - undefined-name
+      - requires-llm
+
+  # Bandit Security - Hardcoded password (B105)
+  - id: bandit-B105-1
+    tool: bandit
+    signal_type: security
+    artifact_path: artifacts/bandit-results.json
+    error_code: B105
+    file_path: app/config/defaults.py
+    line_number: 15
+    message: "Possible hardcoded password"
+    description: "Bandit: Remove hardcoded password, use environment variable"
+    expected_outcome: fix
+    tags:
+      - security
+      - hardcoded-secret
+      - requires-llm
