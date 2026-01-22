@@ -1,6 +1,7 @@
 # context/context_builder.py
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
@@ -15,6 +16,25 @@ class FileSnippet:
     start_row: int
     end_row: int
     text: str
+
+
+@dataclass(frozen=True)
+class EditSnippet:
+    """
+    A code snippet specifically for LLM editing.
+
+    Contains the snippet text plus metadata about where the error is located
+    within the snippet, allowing precise replacement in the original file.
+    """
+    file_path: str
+    start_row: int              # 1-based line number where snippet starts
+    end_row: int                # 1-based line number where snippet ends (inclusive)
+    text: str                   # The actual code snippet (with base indent stripped)
+    original_text: str          # The original snippet text (with full indentation)
+    error_line: int             # 1-based line number in ORIGINAL file where error is
+    error_line_in_snippet: int  # 1-based position within snippet (e.g., 4 of 7)
+    snippet_length: int         # Total lines in snippet
+    base_indent: str            # The base indentation that was stripped (e.g., "    ")
 
 
 class ContextBuilder:
@@ -38,10 +58,12 @@ class ContextBuilder:
         *,
         repo_root: str | Path | None = None,
         window_lines: int = 30,
+        snippet_window_lines: int = 3,  # Lines on each side of error for edit snippets
         max_file_bytes: int = 512_000,  # safety cap: 512KB per file read
     ) -> None:
         self._repo_root = Path(repo_root) if repo_root is not None else None
         self._window_lines = window_lines
+        self._snippet_window_lines = snippet_window_lines
         self._max_file_bytes = max_file_bytes
 
     def build_group_context(self, group: SignalGroup) -> dict[str, Any]:
@@ -71,6 +93,7 @@ class ContextBuilder:
 
             span = sig.span
             snippet = self._snippet_around_span(sig.file_path, lines, span) if lines else None
+            edit_snippet = self._build_edit_snippet(sig.file_path, lines, span) if lines else None
             imports = self._extract_import_block(sig.file_path, lines) if lines else None
             enclosing = self._extract_enclosing_function(sig.file_path, lines, span) if (lines and span) else None
 
@@ -83,6 +106,7 @@ class ContextBuilder:
                         "imports": imports.__dict__ if imports else None,
                         "enclosing_function": enclosing.__dict__ if enclosing else None,
                     },
+                    "edit_snippet": edit_snippet.__dict__ if edit_snippet else None,
                     "fix_context": self._fix_metadata(sig),
                 }
             )
@@ -159,6 +183,111 @@ class ContextBuilder:
         # Convert rows (1-based) -> indices (0-based)
         snippet_text = "".join(lines[start_row - 1 : end_row])
         return FileSnippet(file_path=file_path, start_row=start_row, end_row=end_row, text=snippet_text)
+
+    def _build_edit_snippet(
+        self,
+        file_path: str,
+        lines: list[str],
+        span: Optional[Span],
+    ) -> Optional[EditSnippet]:
+        """
+        Build an edit snippet with a smaller window for LLM editing.
+
+        Uses snippet_window_lines (default 3) on each side of the error line.
+        This creates focused snippets that the LLM can edit and return in full.
+
+        The snippet has its base indentation stripped to make it easier for the
+        LLM to work with. The base_indent is stored so it can be re-applied
+        when parsing the LLM response.
+
+        Returns:
+            EditSnippet with position metadata for precise replacement
+        """
+        if span is None:
+            return None
+
+        total = len(lines)
+        error_line = span.start.row
+
+        # Calculate snippet bounds using the smaller snippet window
+        start_row = max(1, error_line - self._snippet_window_lines)
+        end_row = min(total, error_line + self._snippet_window_lines)
+
+        # Calculate where the error line falls within the snippet (1-based)
+        error_line_in_snippet = error_line - start_row + 1
+        snippet_length = end_row - start_row + 1
+
+        # Extract the snippet lines (0-based indexing for list access)
+        snippet_lines = lines[start_row - 1 : end_row]
+        original_text = "".join(snippet_lines)
+
+        # Calculate base indentation (minimum indentation of non-empty lines)
+        base_indent = self._calculate_base_indent(snippet_lines)
+
+        # Strip base indentation from all lines
+        stripped_text = self._strip_base_indent(snippet_lines, base_indent)
+
+        return EditSnippet(
+            file_path=file_path,
+            start_row=start_row,
+            end_row=end_row,
+            text=stripped_text,
+            original_text=original_text,
+            error_line=error_line,
+            error_line_in_snippet=error_line_in_snippet,
+            snippet_length=snippet_length,
+            base_indent=base_indent,
+        )
+
+    def _calculate_base_indent(self, lines: list[str]) -> str:
+        """
+        Calculate the base (minimum) indentation across non-empty lines.
+
+        Returns the common leading whitespace that can be stripped from all lines.
+        """
+        min_indent: str | None = None
+
+        for line in lines:
+            # Skip empty lines or lines with only whitespace
+            stripped = line.rstrip('\n\r')
+            if not stripped.strip():
+                continue
+
+            # Calculate leading whitespace
+            leading = stripped[:len(stripped) - len(stripped.lstrip())]
+
+            if min_indent is None:
+                min_indent = leading
+            elif len(leading) < len(min_indent):
+                min_indent = leading
+
+        return min_indent or ""
+
+    def _strip_base_indent(self, lines: list[str], base_indent: str) -> str:
+        """
+        Strip base indentation from all lines.
+
+        Preserves relative indentation within the snippet.
+        Empty lines are preserved as-is.
+        """
+        if not base_indent:
+            return "".join(lines)
+
+        indent_len = len(base_indent)
+        result_lines = []
+
+        for line in lines:
+            # Preserve empty lines
+            if not line.strip():
+                result_lines.append(line)
+            # Strip base indent if line starts with it
+            elif line.startswith(base_indent):
+                result_lines.append(line[indent_len:])
+            else:
+                # Line has less indent than base (shouldn't happen, but handle gracefully)
+                result_lines.append(line.lstrip())
+
+        return "".join(result_lines)
 
     # ----------------------------
     # Imports context

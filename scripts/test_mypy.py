@@ -16,12 +16,16 @@ from pathlib import Path
 from typing import Any
 import json
 import logging
+import os
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(levelname)s: %(message)s'
 )
+
+# Enable LLM context debugging - dumps context to scripts/debug/llm-contexts/                                                                                                                                                
+os.environ["DEBUG_LLM"] = "true"  
 
 from signals.models import FixSignal, SignalType
 from orchestrator.prioritizer import Prioritizer, SignalGroup
@@ -40,24 +44,18 @@ context_output = output_dir / "mypy-fix-signals-debug.txt"
 fix_planner_output = output_dir / "mypy-fix-plan.json"
 
 # Test Settings
-PARSE_MYPY_FIX_SIGNALS=False
-OUTPUT_MYPY_FIX_SIGNALS=False
-CREATE_MYPY_FIXPLANS=False
-OUTPUT_MYPY_FIXPLANS=False
-LOAD_FIXPLAN_FROM_DICT_FILE=True
-CREATE_MYPY_PR=True
-
+PARSE_MYPY_AND_OUTPUT=True
+CREATE_PR_FROM_FIXPLAN=True
 
 def main() -> int:
     # Ensure output directory exists
     output_dir.mkdir(parents=True, exist_ok=True)
-
-    if PARSE_MYPY_FIX_SIGNALS:
+    
+    if PARSE_MYPY_AND_OUTPUT:
         # Parse MyPy JSON output
         mypy_output = Path(mypy_json_path).read_text(encoding="utf-8")
         signals = parse_mypy_results(mypy_output, repo_root="/home/devel/cicd-ai-assistant/test-repo-stripped/")
 
-    if OUTPUT_MYPY_FIX_SIGNALS:
         # Output fix signals to a file for inspection
         out_lines = [f"Parsed {len(signals)} MyPy FixSignals:\n"]
 
@@ -77,38 +75,35 @@ def main() -> int:
         Path(context_output).write_text("\n".join(out_lines), encoding="utf-8")
         print(f"Wrote {len(signals)} FixSignals to {context_output}")
 
-
-    fix_plans_for_pr_gen: list[FixPlan] = []
-
-    if CREATE_MYPY_FIXPLANS:
         # Use prioritize to create SignalGroups
         prioritizer = Prioritizer()
         signal_groups = prioritizer.prioritize(signals=signals)
         planner = FixPlanner(repo_root="/home/devel/cicd-ai-assistant/test-repo-stripped/")
+        fix_plans_from_llm: list[FixPlan] = []
 
         for group in signal_groups:
             plan_result = planner.create_fix_plan(group)
-            fix_plans_for_pr_gen.append(plan_result.fix_plan)
+            fix_plans_from_llm.append(plan_result.fix_plan)
         
-        if OUTPUT_MYPY_FIXPLANS:
-            with (fix_planner_output).open("w", encoding="utf-8") as f:
-                f.write("[")
-                for i, plan in enumerate(fix_plans_for_pr_gen):
-                    print(f"\n--- Writing MyPy Fix Plan {i} to JSON ---")
-                    json.dump(plan.to_dict(), f, indent=2, default=str)
-                    if i != (len(fix_plans_for_pr_gen) - 1): 
-                        f.write(",\n")
-                f.write("]")
-    
-    if LOAD_FIXPLAN_FROM_DICT_FILE:
+        with (fix_planner_output).open("w", encoding="utf-8") as f:
+            f.write("[")
+            for i, plan in enumerate(fix_plans_from_llm):
+                print(f"\n--- Writing MyPy Fix Plan {i} to JSON ---")
+                json.dump(plan.to_dict(), f, indent=2, default=str)
+                if i != (len(fix_plans_from_llm) - 1): 
+                    f.write(",\n")
+            f.write("]")
+
+
+    if CREATE_PR_FROM_FIXPLAN:
         file_content: dict = []
+        fix_plans_for_pr_gen: list[FixPlan] = []
         with open(fix_planner_output) as f:
             file_content = json.load(f)
         for dict_entry in file_content:
             fix_plan = FixPlan.from_dict(dict_entry)
             fix_plans_for_pr_gen.append(fix_plan)
  
-    if CREATE_MYPY_PR:
         # result.fix_plan is ready for PRGenerator
         pr_generator = PRGenerator()
         for i, plan in enumerate(fix_plans_for_pr_gen, start = 1):    
@@ -119,7 +114,6 @@ def main() -> int:
             for file in pr_result.files_changed:
                 print(f"   File changed {file}")
             print("\n\n")
-
 
     return 0
 
