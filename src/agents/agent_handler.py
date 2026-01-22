@@ -254,6 +254,29 @@ class AgentHandler:
         else:
             self._provider = provider
 
+    def get_prompts_for_context(self, context: dict[str, Any]) -> dict[str, str]:
+        """
+        Get the exact prompts that would be sent to the LLM for debugging.
+
+        This method returns both the system prompt and user prompt without
+        actually calling the LLM. Useful for debugging and understanding
+        exactly what the LLM receives.
+
+        Args:
+            context: Output from ContextBuilder.build_group_context()
+
+        Returns:
+            Dict with 'system_prompt' and 'user_prompt' keys
+        """
+        tool_id = context.get("group", {}).get("tool_id")
+        system_prompt = self._system_prompt_override or get_system_prompt(tool_id)
+        user_prompt = self._build_user_prompt(context)
+
+        return {
+            "system_prompt": system_prompt,
+            "user_prompt": user_prompt,
+        }
+
     def generate_fix_plan(
         self,
         context: dict[str, Any],
@@ -318,40 +341,204 @@ class AgentHandler:
             )
         
     def _build_user_prompt(self, context: dict[str, Any]) -> str:
-        """Build the user prompt from context."""
-        return f"Generate a fix plan for the following signals:\n\n{json.dumps(context, indent=2)}"
+        """Build the user prompt from context with clear snippet presentation."""
+        parts = []
+
+        group_info = context.get("group", {})
+        parts.append(f"Tool: {group_info.get('tool_id', 'unknown')}")
+        parts.append(f"Signal Type: {group_info.get('signal_type', 'unknown')}")
+        parts.append(f"Number of Signals: {group_info.get('group_size', 0)}")
+        parts.append("")
+
+        for idx, signal_data in enumerate(context.get("signals", []), 1):
+            signal = signal_data.get("signal", {})
+            edit_snippet = signal_data.get("edit_snippet")
+            code_context = signal_data.get("code_context", {})
+
+            parts.append(f"{'='*60}")
+            parts.append(f"SIGNAL {idx}")
+            parts.append(f"{'='*60}")
+            parts.append("")
+
+            # Error information
+            parts.append("## Error Information")
+            parts.append(f"- File: {signal.get('file_path', 'unknown')}")
+            parts.append(f"- Message: {signal.get('message', 'No message')}")
+            parts.append(f"- Rule Code: {signal.get('rule_code', 'N/A')}")
+            parts.append(f"- Severity: {signal.get('severity', 'unknown')}")
+            if signal.get('span'):
+                span = signal['span']
+                parts.append(f"- Location: Line {span['start']['row']}, Column {span['start']['column']}")
+            parts.append("")
+
+            # Edit snippet - this is what they need to fix and return
+            if edit_snippet:
+                parts.append("## Edit Snippet (FIX AND RETURN THIS)")
+                parts.append(f"Lines {edit_snippet['start_row']}-{edit_snippet['end_row']} "
+                           f"(error on line {edit_snippet['error_line_in_snippet']} of {edit_snippet['snippet_length']})")
+                parts.append("```python")
+                parts.append(edit_snippet['text'].rstrip('\n'))
+                parts.append("```")
+                parts.append("")
+
+            # Context window - for understanding only
+            window = code_context.get("window")
+            if window:
+                parts.append("## Context Window (for understanding, DO NOT return)")
+                parts.append(f"Lines {window['start_row']}-{window['end_row']}")
+                parts.append("```python")
+                parts.append(window['text'].rstrip('\n'))
+                parts.append("```")
+                parts.append("")
+
+            # Imports context
+            imports = code_context.get("imports")
+            if imports:
+                parts.append("## Imports")
+                parts.append("```python")
+                parts.append(imports['text'].rstrip('\n'))
+                parts.append("```")
+                parts.append("")
+
+            # Enclosing function context
+            enclosing = code_context.get("enclosing_function")
+            if enclosing:
+                parts.append("## Enclosing Function")
+                parts.append(f"Lines {enclosing['start_row']}-{enclosing['end_row']}")
+                parts.append("```python")
+                parts.append(enclosing['text'].rstrip('\n'))
+                parts.append("```")
+                parts.append("")
+
+            parts.append("")
+
+        parts.append("Please provide fixes for the above signals using the specified response format.")
+
+        return "\n".join(parts)
+    
+
+    def _restore_base_indent(self, code: str, base_indent: str) -> str:
+        lines = code.splitlines(keepends=True)
+        out = []
+        for line in lines:
+            if line.strip():
+                out.append(base_indent + line)
+            else:
+                out.append(line)
+        return "".join(out)
+
 
     def _parse_response(self, content: str, context: dict[str, Any]) -> FixPlan:
-        """Parse LLM response into FixPlan."""
-        # Try to extract JSON from response
-        # Handle case where LLM wraps in markdown code block
-        json_match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", content)
-        if json_match:
-            json_str = json_match.group(1)
-        else:
-            # Assume entire content is JSON
-            json_str = content.strip()
+        """Parse LLM response with delimited snippets into FixPlan."""
+        # Parse the new format: ===== FIX FOR: <path> ===== ... ===== END FIX =====
+        fix_pattern = re.compile(
+            r"={5,}\s*FIX FOR:\s*(.+?)\s*={5,}\s*"
+            r"CONFIDENCE:\s*([\d.]+)\s*"
+            r"REASONING:\s*(.+?)\s*"
+            r"```FIXED_CODE[ \t]*\r?\n([\s\S]*?)\r?\n```[ \t]*\s*"
+            r"WARNINGS:\s*(.+?)\s*"
+            r"={5,}\s*END FIX\s*={5,}",
+            re.IGNORECASE
+        )
 
-        data = json.loads(json_str)
+        matches = fix_pattern.findall(content)
 
-        # Add group info from context
+        for m in matches:
+            print(f"{m}\n")
+
+        if not matches:
+            raise ValueError(
+                "Could not parse LLM response. Expected format with "
+                "===== FIX FOR: <path> ===== ... ```FIXED_CODE ... ``` ... ===== END FIX ====="
+            )
+
+        # Build file edits from parsed fixes
+        file_edits: list[FileEdit] = []
+        all_warnings: list[str] = []
+        total_confidence = 0.0
+
+        # Get signals from context for position information
+        signals = context.get("signals", [])
+
+        for idx, match in enumerate(matches):
+            file_path, confidence_str, reasoning, fixed_code, warnings_str = match
+            file_path = file_path.strip()
+
+            try:
+                confidence = float(confidence_str.strip())
+            except ValueError:
+                confidence = 0.5
+
+            total_confidence += confidence
+
+            # Parse warnings
+            warnings_str = warnings_str.strip()
+            if warnings_str.lower() != "none" and warnings_str:
+                all_warnings.append(f"{file_path}: {warnings_str}")
+
+            # Get the edit snippet position from context
+            # Match by file path
+            edit_snippet = None
+            for sig_data in signals:
+                sig_file = sig_data.get("signal", {}).get("file_path", "")
+                if sig_file.endswith(file_path) or file_path.endswith(sig_file) or sig_file == file_path:
+                    edit_snippet = sig_data.get("edit_snippet")
+                    break
+
+            if not edit_snippet:
+                all_warnings.append(f"Could not find position info for {file_path}, skipping")
+                continue
+
+            # Build the edit using snippet positions
+            # Use line-based replacement: start at column 1, end at large column on last line
+            # This effectively replaces entire lines from start_row to end_row inclusive
+            start_row = edit_snippet["start_row"]
+            end_row = edit_snippet["end_row"]
+            base_indent = edit_snippet.get("base_indent", "")
+
+            # Re-apply base indentation to all lines in the fixed code
+            fixed_code = self._restore_base_indent(fixed_code, base_indent)
+
+            # Ensure fixed_code ends with newline for clean replacement
+            # fixed_code = fixed_code.rstrip('\n') + '\n'
+
+            code_edit = CodeEdit(
+                edit_type=EditType.REPLACE,
+                span=Span(
+                    start=Position(row=start_row, column=1),
+                    # Use large column number to capture entire last line
+                    # _apply_edit will take suffix as empty since we're past line end
+                    end=Position(row=end_row, column=99999),
+                ),
+                content=fixed_code,
+                description=reasoning.strip(),
+            )
+
+            file_edits.append(FileEdit(
+                file_path=file_path,
+                edits=[code_edit],
+                reasoning=reasoning.strip(),
+            ))
+
+        # Calculate average confidence
+        avg_confidence = total_confidence / len(matches) if matches else 0.5
+
+        # Build summary
         group_info = context.get("group", {})
-        data["group_tool_id"] = group_info.get("tool_id", "unknown")
-        data["group_signal_type"] = group_info.get("signal_type", "unknown")
+        summary = f"Fixed {len(file_edits)} file(s) for {group_info.get('tool_id', 'unknown')} signals"
 
-        fix_plan = FixPlan.from_dict(data)
-
-        # Validate the fix plan
-        validation_warnings = self._validate_fix_plan(fix_plan)
-        if validation_warnings:
-            # Add validation warnings to the fix plan
-            fix_plan.warnings.extend(validation_warnings)
-
-        return fix_plan
+        return FixPlan(
+            group_tool_id=group_info.get("tool_id", "unknown"),
+            group_signal_type=group_info.get("signal_type", "unknown"),
+            file_edits=file_edits,
+            summary=summary,
+            warnings=all_warnings,
+            confidence=avg_confidence,
+        )
 
     def _validate_fix_plan(self, fix_plan: FixPlan) -> list[str]:
         """
-        Validate fix plan for common LLM mistakes.
+        Validate fix plan for common issues.
 
         Returns list of warning messages for issues found.
         """
@@ -359,28 +546,20 @@ class AgentHandler:
 
         for file_edit in fix_plan.file_edits:
             for edit in file_edit.edits:
-                # Check for zero-width REPLACE spans
-                if edit.edit_type == EditType.REPLACE:
-                    if edit.span.start.row == edit.span.end.row:
-                        if edit.span.start.column == edit.span.end.column:
-                            warnings.append(
-                                f"Zero-width REPLACE span in {file_edit.file_path} at "
-                                f"row {edit.span.start.row}, column {edit.span.start.column}. "
-                                f"This will act as INSERT. Consider fixing the span or using INSERT instead."
-                            )
-
-                # Check for negative or invalid spans
+                # Check for invalid spans (end before start)
                 if edit.span.end.row < edit.span.start.row:
                     warnings.append(
                         f"Invalid span in {file_edit.file_path}: end row {edit.span.end.row} "
                         f"< start row {edit.span.start.row}"
                     )
-                elif edit.span.end.row == edit.span.start.row:
-                    if edit.span.end.column < edit.span.start.column:
-                        warnings.append(
-                            f"Invalid span in {file_edit.file_path} at row {edit.span.start.row}: "
-                            f"end column {edit.span.end.column} < start column {edit.span.start.column}"
-                        )
+
+                # Check for empty content on REPLACE
+                if edit.edit_type == EditType.REPLACE and not edit.content.strip():
+                    warnings.append(
+                        f"Empty content for REPLACE in {file_edit.file_path} at "
+                        f"rows {edit.span.start.row}-{edit.span.end.row}. "
+                        f"This will delete the lines. Was this intended?"
+                    )
 
         return warnings
 

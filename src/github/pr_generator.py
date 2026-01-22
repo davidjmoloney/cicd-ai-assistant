@@ -127,13 +127,15 @@ def _apply_edit(lines: list[str], edit: CodeEdit) -> list[str]:
     elif edit.edit_type == EditType.INSERT:
         line = lines[start_row]
         new_content = line[:start_col] + edit.content + line[start_col:]
-        lines[start_row:start_row + 1] = new_content.split("\n")
+        # Use splitlines() to avoid empty trailing element from trailing \n
+        lines[start_row:start_row + 1] = new_content.splitlines()
 
     elif edit.edit_type == EditType.REPLACE:
         prefix = lines[start_row][:start_col]
         suffix = lines[end_row][end_col:]
         new_content = prefix + edit.content + suffix
-        lines[start_row:end_row + 1] = new_content.split("\n")
+        # Use splitlines() to avoid empty trailing element from trailing \n
+        lines[start_row:end_row + 1] = new_content.splitlines()
 
     return lines
 
