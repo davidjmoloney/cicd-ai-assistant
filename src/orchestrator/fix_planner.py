@@ -33,8 +33,11 @@ Usage:
 """
 from __future__ import annotations
 
+import json
 import os
 from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
 from typing import Any, Optional
 
 # Optional dotenv support for local development
@@ -84,6 +87,91 @@ def _get_auto_apply_format_fixes() -> bool:
 
 # Module-level config (evaluated once at import time)
 AUTO_APPLY_FORMAT_FIXES = _get_auto_apply_format_fixes()
+
+
+def _should_debug_llm() -> bool:
+    """
+    Check if context should be dumped for debugging.
+
+    Environment variable: DEBUG_LLM_CONTEXT
+        - "true", "1", "yes": Enable context debugging
+        - "false", "0", "no" (default): Disabled
+    """
+    value = os.getenv("DEBUG_LLM", "false").lower().strip()
+    return value in ("true", "1", "yes")
+
+
+def _dump_llm_data_to_file(
+    context: dict[str, Any],
+    group: SignalGroup,
+    result: AgentResult,
+    prompts: dict[str, str] | None = None,
+    output_dir: str | Path = "scripts/debug/llm-contexts",
+) -> None:
+    """
+    Dump LLM context and prompts to a JSON file for debugging.
+
+    Creates one file per signal group with a timestamp and group identifier.
+    Includes both the context data AND the exact prompts sent to the LLM.
+
+    Args:
+        context: The context dictionary being sent to the LLM
+        group: The SignalGroup being processed
+        prompts: Dict with 'system_prompt' and 'user_prompt' (optional)
+        output_dir: Directory to save context files (created if doesn't exist)
+    """
+    try:
+        # Create output directory
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        # Generate filename with timestamp and group info
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        tool_id = group.tool_id.replace("/", "-")  # Sanitize tool_id for filename
+        signal_type = group.signal_type.value
+        num_signals = len(group.signals)
+
+        filename = f"context_{tool_id}_{signal_type}_{num_signals}signals_{timestamp}.json"
+        filepath = output_path / filename
+
+        # Add metadata to context for better debugging
+        debug_output = {
+            "_debug_metadata": {
+                "timestamp": timestamp,
+                "tool_id": group.tool_id,
+                "signal_type": signal_type,
+                "num_signals": num_signals,
+                "signal_files": list(set(s.file_path for s in group.signals if s.file_path)),
+            },
+            "context": context,
+        }
+
+        # Add prompts if provided
+        if prompts:
+            debug_output["prompts"] = {
+                "system_prompt": prompts.get("system_prompt", ""),
+                "user_prompt": prompts.get("user_prompt", ""),
+            }
+            # Also add prompt stats for quick reference
+            debug_output["_debug_metadata"]["system_prompt_length"] = len(prompts.get("system_prompt", ""))
+            debug_output["_debug_metadata"]["user_prompt_length"] = len(prompts.get("user_prompt", ""))
+
+        if result.success:
+            llm_response = result.llm_response.content.splitlines(keepends=True)
+            debug_output["llm_response"] = llm_response
+        else:
+            debug_output["llm_error"] = result.error
+
+        # Write to file
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(debug_output, f, indent=2, default=str)
+
+        print(f"[DEBUG] Context and prompts dumped to: {filepath}")
+
+    except Exception as e:
+        # Don't fail the entire process if debug dumping fails
+        print(f"[WARNING] Failed to dump context for debugging: {e}")
+
 
 
 # =============================================================================
@@ -280,6 +368,9 @@ class FixPlanner:
 
             # Generate fix plan via LLM
             agent_result = self._agent_handler.generate_fix_plan(context)
+
+            if _should_debug_llm():
+                _dump_llm_data_to_file(context=context, group=group, result=agent_result)
 
             if not agent_result.success:
                 return PlannerResult(

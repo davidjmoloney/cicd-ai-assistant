@@ -8,6 +8,7 @@ Run from your repo root (so imports resolve), e.g.:
 
 from __future__ import annotations
 
+import os
 import argparse
 import pprint
 from dataclasses import asdict, is_dataclass
@@ -39,11 +40,13 @@ output_dir = Path(__file__).parent / "test-outputs"
 context_output = output_dir / "mypy-fix-signals-debug.txt"
 fix_planner_output = output_dir / "mypy-fix-plan.json"
 
+os.environ["DEBUG_LLM"] = "true"  
+
 # Test Settings
-PARSE_MYPY_FIX_SIGNALS=False
-OUTPUT_MYPY_FIX_SIGNALS=False
-CREATE_MYPY_FIXPLANS=False
-OUTPUT_MYPY_FIXPLANS=False
+PARSE_MYPY_FIX_SIGNALS=True
+OUTPUT_MYPY_FIX_SIGNALS=True
+CREATE_MYPY_FIXPLANS=True
+OUTPUT_MYPY_FIXPLANS=True
 LOAD_FIXPLAN_FROM_DICT_FILE=True
 CREATE_MYPY_PR=True
 
@@ -77,14 +80,13 @@ def main() -> int:
         Path(context_output).write_text("\n".join(out_lines), encoding="utf-8")
         print(f"Wrote {len(signals)} FixSignals to {context_output}")
 
-
     fix_plans_for_pr_gen: list[FixPlan] = []
 
     if CREATE_MYPY_FIXPLANS:
         # Use prioritize to create SignalGroups
         prioritizer = Prioritizer()
         signal_groups = prioritizer.prioritize(signals=signals)
-        planner = FixPlanner(repo_root="/home/devel/cicd-ai-assistant/test-repo-stripped/")
+        planner = FixPlanner(llm_provider = "anthropic",  repo_root="/home/devel/cicd-ai-assistant/test-repo-stripped/")
 
         for group in signal_groups:
             plan_result = planner.create_fix_plan(group)
