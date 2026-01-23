@@ -78,7 +78,7 @@ The application processes CI/CD tool output (linter results, formatter diffs, et
 
 ### Stage 1: Parsing
 
-**Module:** `src/signals/parsers/ruff.py`
+**Modules:** `src/signals/parsers/ruff.py`, `src/signals/parsers/mypy.py`
 
 **Input:** Raw tool output (JSON or unified diff)
 
@@ -89,6 +89,7 @@ The application processes CI/CD tool output (linter results, formatter diffs, et
 |--------|--------------|--------|
 | `parse_ruff_lint_results()` | JSON from `ruff check --output-format=json` | FixSignal per violation |
 | `parse_ruff_format_diff()` | Unified diff from `ruff format --diff` | FixSignal per file |
+| `parse_mypy_results()` | Newline-delimited JSON from `mypy --output=json` | FixSignal per error (fix=None) |
 
 **Artifacts produced:**
 ```python
@@ -140,7 +141,7 @@ SignalGroup(
 
 ### Stage 3: Fix Planning
 
-**Module:** `src/orchestrator/fix_planner.py`
+**Modules:** `src/orchestrator/fix_planner.py`, `src/agents/tool_prompts.py`
 
 **Input:** `SignalGroup`
 
@@ -151,7 +152,13 @@ SignalGroup(
 | Condition | Pathway | Cost |
 |-----------|---------|------|
 | FORMAT + `AUTO_APPLY_FORMAT_FIXES=true` | Direct conversion | Free, instant |
-| All other signals | LLM via AgentHandler | API cost, latency |
+| All other signals (LINT, TYPE_CHECK, SECURITY) | LLM via AgentHandler | API cost, latency |
+
+**Tool-Specific Prompts:** The LLM receives customized guidance based on tool type:
+- `mypy` - Type annotation strategies, validation preservation
+- `ruff`/`ruff-lint` - Lint fix patterns, side-effect awareness
+- `bandit` - Security-focused guidance with high caution
+- `ruff-format` - Simple formatting (rarely used, auto-applied)
 
 **Environment Variable:**
 ```bash
