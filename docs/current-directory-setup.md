@@ -5,10 +5,9 @@ This document shows the current implemented state of the repository.
 ```
 cicd-ai-assistant/
 ├── docs/
-│   ├── architectural-design.md              # High level architecture description
 │   ├── current-application-setup.md         # Current pipeline architecture and data flow
 │   ├── current-directory-setup.md           # This file
-│   └── directory-plan.md                    # Planned future directory structure
+│   └── TOOL_SPECIFIC_PROMPTS.md             # LLM prompt documentation for each tool
 │
 ├── sample-cicd-artifacts/                   # Sample results files from CI/CD pipeline runs
 │   ├── bandit-results.json                  # Security scan results (Bandit)
@@ -21,13 +20,13 @@ cicd-ai-assistant/
 │   └── ruff-lint-results.json               # Lint violations (JSON)
 │
 ├── scripts/                                 # Development and testing scripts
-│   ├── agent_output.json                    # Sample agent output for debugging
-│   ├── commit_debug_file_edits.json         # Debug data for PR commits
-│   ├── context_output.json                  # Sample context builder output
 │   ├── debug_pr_generator.py                # PR generator debugging script
 │   ├── test_agent_handler.py                # Agent handler test script
+│   ├── test_mypy.py                         # MyPy parser test script
 │   ├── test_parsing.py                      # Signal parsing test script
-│   └── test_pr_generator.py                 # PR generator test script
+│   ├── test_pr_generator.py                 # PR generator test script
+│   ├── test_ruff_format.py                  # Ruff format parser test script
+│   └── verify_tool_prompts.py               # Tool prompts verification script
 │
 ├── src/
 │   ├── __init__.py
@@ -40,15 +39,15 @@ cicd-ai-assistant/
 │   │   │
 │   │   ├── parsers/
 │   │   │   ├── __init__.py
+│   │   │   ├── mypy.py                      # MyPy parser: parse_mypy_results() for JSON output
 │   │   │   └── ruff.py                      # Ruff parsers:
 │   │   │                                    #   - parse_ruff_lint_results() for JSON lint output
 │   │   │                                    #   - parse_ruff_format_diff() for unified diff output
-│   │   │                                    #   - DiffHunk, FileDiff dataclasses
 │   │   │
 │   │   └── policy/
 │   │       ├── __init__.py
 │   │       ├── path.py                      # Path normalization (to_repo_relative)
-│   │       └── severity.py                  # Severity mappings (severity_for_ruff)
+│   │       └── severity.py                  # Severity mappings (severity_for_ruff, severity_for_mypy)
 │   │
 │   ├── orchestrator/                        # Signal processing coordination
 │   │   ├── __init__.py
@@ -69,14 +68,11 @@ cicd-ai-assistant/
 │   │
 │   ├── agents/                              # LLM-based fix generation
 │   │   ├── __init__.py
-│   │   ├── agent_handler.py                 # AgentHandler class:
-│   │   │                                    #   - Sends context to LLM
-│   │   │                                    #   - Parses response into FixPlan
-│   │   │                                    #   - FixPlan, FileEdit, CodeEdit models
-│   │   │
-│   │   └── llm_provider.py                  # LLM provider abstraction:
-│   │                                        #   - OpenAI and Anthropic support
-│   │                                        #   - get_provider() factory function
+│   │   ├── agent_handler.py                 # AgentHandler: sends context to LLM, parses response
+│   │   ├── llm_provider.py                  # LLM provider abstraction (OpenAI/Anthropic)
+│   │   └── tool_prompts.py                  # Tool-specific LLM prompts:
+│   │                                        #   - get_system_prompt(tool_id) combines base + tool guidance
+│   │                                        #   - MYPY_TYPE_CHECK_GUIDANCE, RUFF_LINT_GUIDANCE, etc.
 │   │
 │   └── github/                              # GitHub integration
 │       ├── __init__.py
@@ -95,19 +91,22 @@ cicd-ai-assistant/
 ## Module Dependencies
 
 ```
-signals/models.py          ← Base data types (no dependencies)
+signals/models.py              ← Base data types (no dependencies)
         ↑
-signals/parsers/ruff.py    ← Depends on models, policy
+signals/parsers/ruff.py        ← Depends on models, policy
+signals/parsers/mypy.py        ← Depends on models, policy
         ↑
-orchestrator/prioritizer.py ← Depends on models
+orchestrator/prioritizer.py    ← Depends on models
         ↑
 orchestrator/context_builder.py ← Depends on prioritizer, models
         ↑
-orchestrator/fix_planner.py ← Depends on context_builder, prioritizer, agents
+agents/tool_prompts.py         ← No dependencies (pure prompt strings)
         ↑
-agents/agent_handler.py    ← Depends on llm_provider
+agents/agent_handler.py        ← Depends on llm_provider, tool_prompts
         ↑
-github/pr_generator.py     ← Depends on agent_handler (for FixPlan types)
+orchestrator/fix_planner.py    ← Depends on context_builder, agents
+        ↑
+github/pr_generator.py         ← Depends on agent_handler (for FixPlan types)
 ```
 
 ## Environment Variables
