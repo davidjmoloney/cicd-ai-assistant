@@ -78,7 +78,7 @@ def main() -> int:
         # Use prioritize to create SignalGroups
         prioritizer = Prioritizer()
         signal_groups = prioritizer.prioritize(signals=signals)
-        planner = FixPlanner(repo_root="/home/devel/cicd-ai-assistant/test-repo-stripped/")
+        planner = FixPlanner(llm_provider="anthropic", repo_root="/home/devel/cicd-ai-assistant/test-repo-stripped/")
         fix_plans_from_llm: list[FixPlan] = []
 
         for group in signal_groups:
