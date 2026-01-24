@@ -410,6 +410,43 @@ class AgentHandler:
                 parts.append("```")
                 parts.append("")
 
+            # Additional context blocks
+            class_def = code_context.get("class_definition")
+            if class_def:
+                parts.append("## Class Definition")
+                parts.append(f"Lines {class_def['start_row']}-{class_def['end_row']}")
+                parts.append("```python")
+                parts.append(class_def['text'])
+                parts.append("```")
+                parts.append("")
+
+            type_aliases = code_context.get("type_aliases")
+            if type_aliases:
+                parts.append("## Type Aliases")
+                parts.append(f"Lines {type_aliases['start_row']}-{type_aliases['end_row']}")
+                parts.append("```python")
+                parts.append(type_aliases['text'])
+                parts.append("```")
+                parts.append("")
+
+            related_func = code_context.get("related_function")
+            if related_func:
+                parts.append("## Related Function Signature")
+                parts.append(f"Lines {related_func['start_row']}-{related_func['end_row']}")
+                parts.append("```python")
+                parts.append(related_func['text'])
+                parts.append("```")
+                parts.append("")
+
+            module_constants = code_context.get("module_constants")
+            if module_constants:
+                parts.append("## Module Constants")
+                parts.append(f"Lines {module_constants['start_row']}-{module_constants['end_row']}")
+                parts.append("```python")
+                parts.append(module_constants['text'])
+                parts.append("```")
+                parts.append("")
+
             parts.append("")
 
         parts.append("Please provide fixes for the above signals using the specified response format.")

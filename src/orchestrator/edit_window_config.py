@@ -134,31 +134,34 @@ def get_edit_window_spec(signal: FixSignal) -> EditWindowSpec:
 
 
 # ===================================================================
-# FUTURE: ADDITIONAL CONTEXT REQUIREMENTS
+# ADDITIONAL CONTEXT REQUIREMENTS
 # ===================================================================
 
 @dataclass(frozen=True)
 class ContextRequirements:
     """
-    PLACEHOLDER: Future context requirements beyond edit window.
+    Additional context requirements beyond standard window/imports/function.
 
-    Will specify additional context to gather for specific signal types:
-    - Class definition (for method errors)
+    Specifies what extra context to gather for specific signal types:
+    - Class definition (for method-level type errors)
     - Type aliases (for mypy errors referencing custom types)
     - Related function definitions (for cross-function type flow)
-    - Module-level constants (for validation logic)
+    - Module-level constants (for validation logic understanding)
+    - Function name to search for (if needs_related_functions is True)
     """
     needs_class_definition: bool = False
     needs_type_aliases: bool = False
     needs_related_functions: bool = False
     needs_module_constants: bool = False
+    related_function_name: str | None = None
 
 
 def get_context_requirements(signal: FixSignal) -> ContextRequirements:
     """
-    PLACEHOLDER: Get additional context requirements for a signal.
+    Get additional context requirements for a signal.
 
-    To be implemented later when we add more sophisticated context gathering.
+    Determines what extra context beyond standard window/imports/function
+    should be gathered based on the signal's rule code and error message.
 
     Args:
         signal: The FixSignal to determine context needs for
@@ -166,5 +169,47 @@ def get_context_requirements(signal: FixSignal) -> ContextRequirements:
     Returns:
         ContextRequirements specifying what additional context to gather
     """
-    # Placeholder - return default (no additional context)
+    rule_code = signal.rule_code or ""
+    message = signal.message  # Keep original case for type detection
+    message_lower = message.lower()
+
+    # ===================================================================
+    # MYPY TYPE ERRORS - Context Requirements
+    # ===================================================================
+
+    # Errors in methods/attributes often need class definition
+    if rule_code in ["attr-defined", "override", "assignment"] and "self." in message_lower:
+        return ContextRequirements(needs_class_definition=True)
+
+    # Errors mentioning custom types need type aliases
+    if rule_code in ["arg-type", "return-value", "assignment"]:
+        # Check if error mentions likely custom types (CamelCase/PascalCase words)
+        import re
+        # Find potential type names (word characters starting with uppercase)
+        potential_types = re.findall(r'\b[A-Z]\w+', message)
+        # Filter out common non-type words
+        common_words = {"Argument", "None", "Optional", "Union", "List", "Dict", "Tuple", "Type", "Missing", "Expected", "Incompatible"}
+        custom_types = [t for t in potential_types if t not in common_words]
+        if custom_types:
+            return ContextRequirements(needs_type_aliases=True)
+
+    # Call-site errors could benefit from function definition
+    # But mypy error message includes signature, so only needed if unclear
+    # For now, skip this as error messages are usually sufficient
+
+    # ===================================================================
+    # RUFF LINT ERRORS - Context Requirements
+    # ===================================================================
+
+    # Complexity warnings might benefit from seeing constants
+    if rule_code == "C901":  # Too complex
+        return ContextRequirements(needs_module_constants=True)
+
+    # Undefined names need to check if it's a constant
+    if rule_code == "F821":  # Undefined name
+        return ContextRequirements(needs_module_constants=True)
+
+    # ===================================================================
+    # DEFAULT - No additional context needed
+    # ===================================================================
     return ContextRequirements()

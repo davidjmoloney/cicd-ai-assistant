@@ -9,6 +9,7 @@ from typing import Any, Optional
 from orchestrator.edit_window_config import (
     EditWindowSpec,
     get_edit_window_spec,
+    get_context_requirements,
 )
 from orchestrator.prioritizer import SignalGroup
 from signals.models import FixSignal, Span, TextEdit
@@ -111,6 +112,25 @@ class ContextBuilder:
             enclosing = self._extract_enclosing_function(sig.file_path, lines, span) if (lines and span) else None
             try_except = self._extract_try_except_block(sig.file_path, lines, span) if (lines and span) else None
 
+            # Gather additional context based on signal requirements
+            context_req = get_context_requirements(sig)
+            class_def = None
+            type_aliases = None
+            related_func = None
+            module_constants = None
+
+            if lines:
+                if context_req.needs_class_definition and span:
+                    class_def = self._extract_class_definition(sig.file_path, lines, span)
+                if context_req.needs_type_aliases:
+                    type_aliases = self._extract_type_aliases(sig.file_path, lines)
+                if context_req.needs_related_functions and context_req.related_function_name:
+                    related_func = self._extract_related_function_definitions(
+                        sig.file_path, lines, context_req.related_function_name
+                    )
+                if context_req.needs_module_constants:
+                    module_constants = self._extract_module_constants(sig.file_path, lines)
+
             items.append(
                 {
                     "signal": self._signal_metadata(sig, group_tool_id=group.tool_id),
@@ -120,6 +140,10 @@ class ContextBuilder:
                         "imports": imports.__dict__ if imports else None,
                         "enclosing_function": enclosing.__dict__ if enclosing else None,
                         "try_except_block": try_except.__dict__ if try_except else None,
+                        "class_definition": class_def.__dict__ if class_def else None,
+                        "type_aliases": type_aliases.__dict__ if type_aliases else None,
+                        "related_function": related_func.__dict__ if related_func else None,
+                        "module_constants": module_constants.__dict__ if module_constants else None,
                     },
                     "edit_snippet": edit_snippet.__dict__ if edit_snippet else None,
                     "edit_window_type": edit_spec.window_type,
@@ -588,20 +612,100 @@ class ContextBuilder:
         span: Span,
     ) -> Optional[FileSnippet]:
         """
-        PLACEHOLDER: Extract class definition for method errors.
+        Extract class definition for method errors.
 
-        For mypy errors in class methods, this would extract:
+        Finds the enclosing class by walking upwards to find 'class ' statement,
+        then extracts just the class header including:
         - Class signature (class Foo(Base):)
-        - Type variables/generics
-        - Class-level attributes with types
-        - Parent class references
+        - Decorators on the class
+        - Docstring (first line only)
+        - Class-level variable annotations (without implementations)
 
-        To be implemented when needed for better method-level type error fixes.
+        Args:
+            file_path: Path to the file
+            lines: File lines
+            span: Error location
 
         Returns:
-            FileSnippet containing class definition or None
+            FileSnippet containing class definition header or None
         """
-        raise NotImplementedError("Class definition extraction not yet implemented")
+        if not lines:
+            return None
+
+        target_row = span.start.row
+        if target_row < 1 or target_row > len(lines):
+            return None
+
+        class_line_row: Optional[int] = None
+        class_indent: Optional[int] = None
+
+        # 1) Find nearest enclosing class above target
+        for r in range(target_row, 0, -1):
+            line = lines[r - 1]
+            stripped = line.lstrip()
+            if stripped.startswith("class "):
+                class_line_row = r
+                class_indent = len(line) - len(stripped)
+                break
+
+        if class_line_row is None or class_indent is None:
+            return None
+
+        # 2) Include decorators above class
+        start_row = class_line_row
+        for r in range(class_line_row - 1, 0, -1):
+            line = lines[r - 1]
+            stripped = line.lstrip()
+            # Include decorators and blank lines
+            if stripped.startswith("@") or stripped == "":
+                start_row = r
+            else:
+                break
+
+        # 3) Extract class header (class line + docstring if present)
+        end_row = class_line_row
+        in_docstring = False
+        docstring_quote = None
+
+        for r in range(class_line_row + 1, min(class_line_row + 20, len(lines) + 1)):
+            line = lines[r - 1]
+            stripped = line.lstrip()
+            indent = len(line) - len(stripped)
+
+            # Check for docstring start
+            if not in_docstring and (stripped.startswith('"""') or stripped.startswith("'''")):
+                docstring_quote = stripped[:3]
+                in_docstring = True
+                end_row = r
+                # Check if docstring ends on same line
+                if stripped.count(docstring_quote) >= 2:
+                    in_docstring = False
+                    break
+                continue
+
+            # Check for docstring end
+            if in_docstring:
+                if docstring_quote in stripped:
+                    end_row = r
+                    break
+                end_row = r
+                continue
+
+            # Include class-level annotations
+            if indent > class_indent and ":" in stripped and "=" not in stripped:
+                end_row = r
+                continue
+
+            # Stop at first method or code at class level
+            if indent > class_indent:
+                break
+
+            # Stop if we hit another class/def at same level
+            if indent == class_indent and (stripped.startswith("def ") or stripped.startswith("class ")):
+                break
+
+        text = "".join(lines[start_row - 1 : end_row])
+        return FileSnippet(file_path=file_path, start_row=start_row, end_row=end_row, text=text)
 
     def _extract_type_aliases(
         self,
@@ -609,20 +713,76 @@ class ContextBuilder:
         lines: list[str],
     ) -> Optional[FileSnippet]:
         """
-        PLACEHOLDER: Extract type alias definitions from a file.
+        Extract type alias definitions from a file.
 
-        For mypy errors referencing custom types, this would extract:
-        - Type alias definitions (MyType = Union[str, int])
-        - TypedDict definitions
-        - Protocol definitions
-        - NewType definitions
+        Scans the file for module-level type definitions:
+        - Type alias assignments (MyType = Union[str, int])
+        - TypedDict classes
+        - Protocol classes
+        - NewType calls
+        - TypeVar definitions
 
-        To be implemented when needed for better type error context.
+        Args:
+            file_path: Path to the file
+            lines: File lines
 
         Returns:
-            FileSnippet containing type aliases or None
+            FileSnippet containing all type aliases or None if none found
         """
-        raise NotImplementedError("Type alias extraction not yet implemented")
+        if not lines:
+            return None
+
+        type_alias_lines = []
+        i = 0
+
+        while i < len(lines):
+            line = lines[i]
+            stripped = line.strip()
+
+            # Skip empty lines, comments, imports, and docstrings
+            if not stripped or stripped.startswith("#") or stripped.startswith(("import ", "from ")):
+                i += 1
+                continue
+
+            # Check for type alias patterns (at module level, indent = 0)
+            if line and line[0] not in (' ', '\t'):
+                # TypeVar, NewType, type aliases with Union/Optional/etc
+                if any(keyword in stripped for keyword in ["TypeVar(", "NewType(", "Union[", "Optional[", "Literal[", "TypeAlias"]):
+                    type_alias_lines.append((i + 1, line))
+
+                # TypedDict class definition
+                elif stripped.startswith("class ") and "TypedDict" in stripped:
+                    # Include the full TypedDict class
+                    start = i + 1
+                    class_lines = [line]
+                    i += 1
+                    while i < len(lines):
+                        next_line = lines[i]
+                        # Continue if indented or blank
+                        if next_line and (next_line[0] in (' ', '\t') or next_line.strip() == ""):
+                            class_lines.append(next_line)
+                            i += 1
+                        else:
+                            break
+                    type_alias_lines.append((start, "".join(class_lines)))
+                    continue
+
+                # Protocol class definition
+                elif stripped.startswith("class ") and "Protocol" in stripped:
+                    # Include just the class signature
+                    type_alias_lines.append((i + 1, line))
+
+            i += 1
+
+        if not type_alias_lines:
+            return None
+
+        # Combine all type aliases into a snippet
+        start_row = type_alias_lines[0][0]
+        end_row = type_alias_lines[-1][0]
+        text = "".join(alias_text for _, alias_text in type_alias_lines)
+
+        return FileSnippet(file_path=file_path, start_row=start_row, end_row=end_row, text=text)
 
     def _extract_related_function_definitions(
         self,
@@ -631,23 +791,43 @@ class ContextBuilder:
         function_name: str,
     ) -> Optional[FileSnippet]:
         """
-        PLACEHOLDER: Extract function definition for cross-function references.
+        Extract function definition for cross-function references.
 
-        For mypy arg-type/call-arg errors, this would find and extract
-        the function signature being called, even if it's defined elsewhere
-        in the file.
+        Searches for a function by name and extracts just its signature
+        (the def line with parameters and return type).
 
         Args:
             file_path: Path to file
             lines: File lines
             function_name: Name of function to find
 
-        To be implemented when simple error messages aren't sufficient.
-
         Returns:
-            FileSnippet containing function definition or None
+            FileSnippet containing function signature or None
         """
-        raise NotImplementedError("Related function extraction not yet implemented")
+        if not lines or not function_name:
+            return None
+
+        # Search for function definition
+        for i, line in enumerate(lines):
+            stripped = line.lstrip()
+            # Look for def function_name( or async def function_name(
+            if stripped.startswith(f"def {function_name}(") or stripped.startswith(f"async def {function_name}("):
+                start_row = i + 1
+
+                # Extract full signature (might span multiple lines)
+                signature_lines = [line]
+                j = i + 1
+
+                # Continue if line doesn't end with ):
+                while j < len(lines) and not signature_lines[-1].rstrip().endswith(":"):
+                    signature_lines.append(lines[j])
+                    j += 1
+
+                end_row = j
+                text = "".join(signature_lines)
+                return FileSnippet(file_path=file_path, start_row=start_row, end_row=end_row, text=text)
+
+        return None
 
     def _extract_module_constants(
         self,
@@ -655,19 +835,55 @@ class ContextBuilder:
         lines: list[str],
     ) -> Optional[FileSnippet]:
         """
-        PLACEHOLDER: Extract module-level constants.
+        Extract module-level constants.
 
-        For validation logic understanding, this would extract:
-        - Module-level constant definitions
-        - Enum definitions
-        - Configuration constants
+        Finds module-level constant assignments, typically:
+        - UPPER_CASE variable assignments
+        - Enum class definitions
+        - Configuration dictionaries/lists
 
-        To be implemented when needed for better validation-aware fixes.
+        Args:
+            file_path: Path to the file
+            lines: File lines
 
         Returns:
             FileSnippet containing module constants or None
         """
-        raise NotImplementedError("Module constant extraction not yet implemented")
+        if not lines:
+            return None
+
+        constant_lines = []
+        i = 0
+
+        while i < len(lines):
+            line = lines[i]
+            stripped = line.strip()
+
+            # Skip empty lines, comments, imports
+            if not stripped or stripped.startswith("#") or stripped.startswith(("import ", "from ", "def ", "class ", "async def")):
+                i += 1
+                continue
+
+            # Check for module-level assignments (indent = 0)
+            if line and line[0] not in (' ', '\t'):
+                # UPPER_CASE constants
+                if "=" in stripped:
+                    var_name = stripped.split("=")[0].strip().rstrip(":")
+                    # Check if it's an UPPER_CASE name (constant convention)
+                    if var_name.isupper() and var_name.replace("_", "").isalnum():
+                        constant_lines.append((i + 1, line))
+
+            i += 1
+
+        if not constant_lines:
+            return None
+
+        # Combine all constants into a snippet
+        start_row = constant_lines[0][0]
+        end_row = constant_lines[-1][0]
+        text = "".join(const_text for _, const_text in constant_lines)
+
+        return FileSnippet(file_path=file_path, start_row=start_row, end_row=end_row, text=text)
 
     def _extract_parent_class_method(
         self,
