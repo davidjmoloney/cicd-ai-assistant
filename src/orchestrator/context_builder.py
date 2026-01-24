@@ -9,7 +9,6 @@ from typing import Any, Optional
 from orchestrator.edit_window_config import (
     EditWindowSpec,
     get_edit_window_spec,
-    should_skip_signal,
 )
 from orchestrator.prioritizer import SignalGroup
 from signals.models import FixSignal, Span, TextEdit
@@ -94,23 +93,6 @@ class ContextBuilder:
             if debug_mode:
                 logging.info(f"\nSignal {idx}/{len(group.signals)}: {sig.file_path}:{sig.span.start.row if sig.span else '?'}")
 
-            # Check if this signal should be skipped
-            if should_skip_signal(sig):
-                if debug_mode:
-                    logging.info(f"  Skipping signal {sig.rule_code} (excluded from auto-fix)")
-                items.append(
-                    {
-                        "signal": self._signal_metadata(sig, group_tool_id=group.tool_id),
-                        "file_read_error": None,
-                        "skipped": True,
-                        "skip_reason": f"Signal type {sig.rule_code} is excluded from auto-fix",
-                        "code_context": {},
-                        "edit_snippet": None,
-                        "fix_context": self._fix_metadata(sig),
-                    }
-                )
-                continue
-
             file_text, lines, file_error = self._read_file(sig.file_path)
 
             span = sig.span
@@ -133,7 +115,6 @@ class ContextBuilder:
                 {
                     "signal": self._signal_metadata(sig, group_tool_id=group.tool_id),
                     "file_read_error": file_error,
-                    "skipped": False,
                     "code_context": {
                         "window": snippet.__dict__ if snippet else None,
                         "imports": imports.__dict__ if imports else None,
