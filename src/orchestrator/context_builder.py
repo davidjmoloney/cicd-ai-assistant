@@ -6,6 +6,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
+from orchestrator.edit_window_config import (
+    EditWindowSpec,
+    get_edit_window_spec,
+    should_skip_signal,
+)
 from orchestrator.prioritizer import SignalGroup
 from signals.models import FixSignal, Span, TextEdit
 
@@ -89,24 +94,54 @@ class ContextBuilder:
             if debug_mode:
                 logging.info(f"\nSignal {idx}/{len(group.signals)}: {sig.file_path}:{sig.span.start.row if sig.span else '?'}")
 
+            # Check if this signal should be skipped
+            if should_skip_signal(sig):
+                if debug_mode:
+                    logging.info(f"  Skipping signal {sig.rule_code} (excluded from auto-fix)")
+                items.append(
+                    {
+                        "signal": self._signal_metadata(sig, group_tool_id=group.tool_id),
+                        "file_read_error": None,
+                        "skipped": True,
+                        "skip_reason": f"Signal type {sig.rule_code} is excluded from auto-fix",
+                        "code_context": {},
+                        "edit_snippet": None,
+                        "fix_context": self._fix_metadata(sig),
+                    }
+                )
+                continue
+
             file_text, lines, file_error = self._read_file(sig.file_path)
 
             span = sig.span
+
+            # Get edit window specification for this signal
+            edit_spec = get_edit_window_spec(sig)
+
+            # Build context window (always ±10 minimum)
             snippet = self._snippet_around_span(sig.file_path, lines, span) if lines else None
-            edit_snippet = self._build_edit_snippet(sig.file_path, lines, span) if lines else None
+
+            # Build edit snippet based on signal type
+            edit_snippet = self._build_edit_snippet_for_signal(sig, lines, span, edit_spec) if lines else None
+
+            # Always gather standard context
             imports = self._extract_import_block(sig.file_path, lines) if lines else None
             enclosing = self._extract_enclosing_function(sig.file_path, lines, span) if (lines and span) else None
+            try_except = self._extract_try_except_block(sig.file_path, lines, span) if (lines and span) else None
 
             items.append(
                 {
                     "signal": self._signal_metadata(sig, group_tool_id=group.tool_id),
                     "file_read_error": file_error,
+                    "skipped": False,
                     "code_context": {
                         "window": snippet.__dict__ if snippet else None,
                         "imports": imports.__dict__ if imports else None,
                         "enclosing_function": enclosing.__dict__ if enclosing else None,
+                        "try_except_block": try_except.__dict__ if try_except else None,
                     },
                     "edit_snippet": edit_snippet.__dict__ if edit_snippet else None,
+                    "edit_window_type": edit_spec.window_type,
                     "fix_context": self._fix_metadata(sig),
                 }
             )
@@ -184,21 +219,27 @@ class ContextBuilder:
         snippet_text = "".join(lines[start_row - 1 : end_row])
         return FileSnippet(file_path=file_path, start_row=start_row, end_row=end_row, text=snippet_text)
 
-    def _build_edit_snippet(
+    def _build_edit_snippet_for_signal(
         self,
-        file_path: str,
+        signal: FixSignal,
         lines: list[str],
         span: Optional[Span],
+        edit_spec: EditWindowSpec,
     ) -> Optional[EditSnippet]:
         """
-        Build an edit snippet with a smaller window for LLM editing.
+        Build an edit snippet based on the signal's edit window specification.
 
-        Uses snippet_window_lines (default 3) on each side of the error line.
-        This creates focused snippets that the LLM can edit and return in full.
+        Dispatches to the appropriate snippet builder based on window_type:
+        - 'lines': Line-based window with specified size
+        - 'function': Full enclosing function
+        - 'imports': Full import block
+        - 'try_except': Full try/except block
 
-        The snippet has its base indentation stripped to make it easier for the
-        LLM to work with. The base_indent is stored so it can be re-applied
-        when parsing the LLM response.
+        Args:
+            signal: The FixSignal being processed
+            lines: File lines
+            span: Error location
+            edit_spec: Edit window specification
 
         Returns:
             EditSnippet with position metadata for precise replacement
@@ -206,12 +247,44 @@ class ContextBuilder:
         if span is None:
             return None
 
+        file_path = signal.file_path
+
+        if edit_spec.window_type == "function":
+            return self._build_function_edit_snippet(file_path, lines, span)
+        elif edit_spec.window_type == "imports":
+            return self._build_imports_edit_snippet(file_path, lines, span)
+        elif edit_spec.window_type == "try_except":
+            return self._build_try_except_edit_snippet(file_path, lines, span)
+        else:  # window_type == "lines"
+            # Use max of specified lines and minimum edit lines
+            window_lines = max(edit_spec.lines, edit_spec.min_edit_lines)
+            return self._build_line_edit_snippet(file_path, lines, span, window_lines)
+
+    def _build_line_edit_snippet(
+        self,
+        file_path: str,
+        lines: list[str],
+        span: Span,
+        window_lines: int,
+    ) -> Optional[EditSnippet]:
+        """
+        Build an edit snippet with a line-based window.
+
+        Args:
+            file_path: Path to the file
+            lines: File lines
+            span: Error location
+            window_lines: Number of lines on each side of error
+
+        Returns:
+            EditSnippet with position metadata for precise replacement
+        """
         total = len(lines)
         error_line = span.start.row
 
-        # Calculate snippet bounds using the smaller snippet window
-        start_row = max(1, error_line - self._snippet_window_lines)
-        end_row = min(total, error_line + self._snippet_window_lines)
+        # Calculate snippet bounds
+        start_row = max(1, error_line - window_lines)
+        end_row = min(total, error_line + window_lines)
 
         # Calculate where the error line falls within the snippet (1-based)
         error_line_in_snippet = error_line - start_row + 1
@@ -230,6 +303,268 @@ class ContextBuilder:
         return EditSnippet(
             file_path=file_path,
             start_row=start_row,
+            end_row=end_row,
+            text=stripped_text,
+            original_text=original_text,
+            error_line=error_line,
+            error_line_in_snippet=error_line_in_snippet,
+            snippet_length=snippet_length,
+            base_indent=base_indent,
+        )
+
+    def _build_function_edit_snippet(
+        self,
+        file_path: str,
+        lines: list[str],
+        span: Span,
+    ) -> Optional[EditSnippet]:
+        """
+        Build an edit snippet containing the full enclosing function.
+
+        Uses the same logic as _extract_enclosing_function but returns
+        an EditSnippet instead of FileSnippet.
+
+        Args:
+            file_path: Path to the file
+            lines: File lines
+            span: Error location
+
+        Returns:
+            EditSnippet with the full function as editable content
+        """
+        target_row = span.start.row
+        if target_row < 1 or target_row > len(lines):
+            return None
+
+        def_line_row: Optional[int] = None
+        def_indent: Optional[int] = None
+
+        # Find nearest enclosing def/async def above target
+        for r in range(target_row, 0, -1):
+            line = lines[r - 1]
+            stripped = line.lstrip()
+            if stripped.startswith("def ") or stripped.startswith("async def "):
+                def_line_row = r
+                def_indent = len(line) - len(stripped)
+                break
+
+        if def_line_row is None or def_indent is None:
+            # Fallback to line-based snippet if no function found
+            return self._build_line_edit_snippet(file_path, lines, span, 7)
+
+        # Extend downwards until scope ends
+        end_row = def_line_row
+        for r in range(def_line_row + 1, len(lines) + 1):
+            line = lines[r - 1]
+            stripped = line.lstrip()
+
+            # Keep blank lines/comments inside block
+            if stripped.strip() == "" or stripped.startswith("#"):
+                end_row = r
+                continue
+
+            indent = len(line) - len(stripped)
+
+            # If indentation drops to <= def indent, block ended
+            if indent <= def_indent and not stripped.startswith((")", "]", "}")):
+                break
+
+            end_row = r
+
+        # Extract function lines
+        snippet_lines = lines[def_line_row - 1 : end_row]
+        original_text = "".join(snippet_lines)
+
+        # Calculate base indentation
+        base_indent = self._calculate_base_indent(snippet_lines)
+
+        # Strip base indentation
+        stripped_text = self._strip_base_indent(snippet_lines, base_indent)
+
+        # Calculate error line position within snippet
+        error_line = span.start.row
+        error_line_in_snippet = error_line - def_line_row + 1
+        snippet_length = end_row - def_line_row + 1
+
+        return EditSnippet(
+            file_path=file_path,
+            start_row=def_line_row,
+            end_row=end_row,
+            text=stripped_text,
+            original_text=original_text,
+            error_line=error_line,
+            error_line_in_snippet=error_line_in_snippet,
+            snippet_length=snippet_length,
+            base_indent=base_indent,
+        )
+
+    def _build_imports_edit_snippet(
+        self,
+        file_path: str,
+        lines: list[str],
+        span: Span,
+    ) -> Optional[EditSnippet]:
+        """
+        Build an edit snippet containing the full import block.
+
+        Uses the same logic as _extract_import_block but returns
+        an EditSnippet instead of FileSnippet.
+
+        Args:
+            file_path: Path to the file
+            lines: File lines
+            span: Error location
+
+        Returns:
+            EditSnippet with the full import block as editable content
+        """
+        if not lines:
+            return None
+
+        start = 1
+        end = 0
+        seen_import = False
+        in_docstring = False
+
+        for idx, line in enumerate(lines, start=1):
+            stripped = line.strip()
+
+            if stripped.startswith(('"""', "'''")):
+                in_docstring = not in_docstring
+                continue
+
+            if in_docstring:
+                continue
+
+            if stripped == "" or stripped.startswith("#"):
+                # allow leading comments/blank lines before/within import block
+                if not seen_import:
+                    continue
+                # once imports started, allow blank/comment lines and keep extending
+                end = idx
+                continue
+
+            if stripped.startswith("import ") or stripped.startswith("from "):
+                seen_import = True
+                end = idx
+                continue
+
+            # first real non-import statement ends the import block
+            break
+
+        if not seen_import or end == 0:
+            # Fallback to line-based snippet if no imports found
+            return self._build_line_edit_snippet(file_path, lines, span, 3)
+
+        # Extract import lines
+        snippet_lines = lines[start - 1 : end]
+        original_text = "".join(snippet_lines)
+
+        # Calculate base indentation (should be 0 for imports, but be safe)
+        base_indent = self._calculate_base_indent(snippet_lines)
+
+        # Strip base indentation
+        stripped_text = self._strip_base_indent(snippet_lines, base_indent)
+
+        # Calculate error line position within snippet
+        error_line = span.start.row
+        error_line_in_snippet = error_line - start + 1
+        snippet_length = end - start + 1
+
+        return EditSnippet(
+            file_path=file_path,
+            start_row=start,
+            end_row=end,
+            text=stripped_text,
+            original_text=original_text,
+            error_line=error_line,
+            error_line_in_snippet=error_line_in_snippet,
+            snippet_length=snippet_length,
+            base_indent=base_indent,
+        )
+
+    def _build_try_except_edit_snippet(
+        self,
+        file_path: str,
+        lines: list[str],
+        span: Span,
+    ) -> Optional[EditSnippet]:
+        """
+        Build an edit snippet containing the full try/except block.
+
+        Uses the same logic as _extract_try_except_block but returns
+        an EditSnippet instead of FileSnippet.
+
+        Args:
+            file_path: Path to the file
+            lines: File lines
+            span: Error location
+
+        Returns:
+            EditSnippet with the full try/except block as editable content
+        """
+        target_row = span.start.row
+        if target_row < 1 or target_row > len(lines):
+            return None
+
+        try_line_row: Optional[int] = None
+        try_indent: Optional[int] = None
+
+        # Find nearest enclosing try: above target
+        for r in range(target_row, 0, -1):
+            line = lines[r - 1]
+            stripped = line.lstrip()
+            if stripped.startswith("try:"):
+                try_line_row = r
+                try_indent = len(line) - len(stripped)
+                break
+
+        if try_line_row is None or try_indent is None:
+            # Fallback to line-based snippet if no try block found
+            return self._build_line_edit_snippet(file_path, lines, span, 5)
+
+        # Extend downwards to include entire try/except/else/finally block
+        end_row = try_line_row
+        for r in range(try_line_row + 1, len(lines) + 1):
+            line = lines[r - 1]
+            stripped = line.lstrip()
+
+            # Keep blank lines/comments inside block
+            if stripped.strip() == "" or stripped.startswith("#"):
+                end_row = r
+                continue
+
+            indent = len(line) - len(stripped)
+
+            # Keep except/else/finally at same level as try
+            if indent == try_indent and stripped.startswith(("except", "else:", "finally:")):
+                end_row = r
+                continue
+
+            # If indentation drops to <= try indent (and not except/else/finally), block ended
+            if indent <= try_indent and not stripped.startswith((")", "]", "}")):
+                break
+
+            end_row = r
+
+        # Extract try/except lines
+        snippet_lines = lines[try_line_row - 1 : end_row]
+        original_text = "".join(snippet_lines)
+
+        # Calculate base indentation
+        base_indent = self._calculate_base_indent(snippet_lines)
+
+        # Strip base indentation
+        stripped_text = self._strip_base_indent(snippet_lines, base_indent)
+
+        # Calculate error line position within snippet
+        error_line = span.start.row
+        error_line_in_snippet = error_line - try_line_row + 1
+        snippet_length = end_row - try_line_row + 1
+
+        return EditSnippet(
+            file_path=file_path,
+            start_row=try_line_row,
             end_row=end_row,
             text=stripped_text,
             original_text=original_text,
@@ -400,6 +735,72 @@ class ContextBuilder:
         return FileSnippet(file_path=file_path, start_row=def_line_row, end_row=end_row, text=text)
 
     # ----------------------------
+    # Try/except block context
+    # ----------------------------
+
+    def _extract_try_except_block(
+        self,
+        file_path: str,
+        lines: list[str],
+        span: Span,
+    ) -> Optional[FileSnippet]:
+        """
+        v1 heuristic (no AST):
+          - walk upwards from span.start.row to find nearest 'try:'
+          - record its indentation level
+          - then include lines until indentation decreases to <= that level
+          - includes all except/else/finally blocks
+        """
+        if not lines:
+            return None
+
+        target_row = span.start.row
+        if target_row < 1 or target_row > len(lines):
+            return None
+
+        try_line_row: Optional[int] = None
+        try_indent: Optional[int] = None
+
+        # 1) find nearest enclosing try: above target
+        for r in range(target_row, 0, -1):
+            line = lines[r - 1]
+            stripped = line.lstrip()
+            if stripped.startswith("try:"):
+                try_line_row = r
+                try_indent = len(line) - len(stripped)
+                break
+
+        if try_line_row is None or try_indent is None:
+            return None
+
+        # 2) extend downwards to include entire try/except/else/finally block
+        end_row = try_line_row
+        for r in range(try_line_row + 1, len(lines) + 1):
+            line = lines[r - 1]
+            stripped = line.lstrip()
+
+            # Keep blank lines/comments inside block
+            if stripped.strip() == "" or stripped.startswith("#"):
+                end_row = r
+                continue
+
+            indent = len(line) - len(stripped)
+
+            # Keep except/else/finally at same level as try
+            if indent == try_indent and stripped.startswith(("except", "else:", "finally:")):
+                end_row = r
+                continue
+
+            # If indentation drops to <= try indent (and not except/else/finally), block ended
+            if indent <= try_indent and not stripped.startswith((")", "]", "}")):
+                break
+
+            end_row = r
+
+        text = "".join(lines[try_line_row - 1 : end_row])
+        return FileSnippet(file_path=file_path, start_row=try_line_row, end_row=end_row, text=text)
+
+    # ----------------------------
     # Metadata shaping
     # ----------------------------
 
@@ -444,6 +845,127 @@ class ContextBuilder:
             "tool_message": sig.fix.message,
             "edits": edits,
         }
+
+
+    # ----------------------------
+    # PLACEHOLDERS: Future context gathering mechanisms
+    # ----------------------------
+
+    def _extract_class_definition(
+        self,
+        file_path: str,
+        lines: list[str],
+        span: Span,
+    ) -> Optional[FileSnippet]:
+        """
+        PLACEHOLDER: Extract class definition for method errors.
+
+        For mypy errors in class methods, this would extract:
+        - Class signature (class Foo(Base):)
+        - Type variables/generics
+        - Class-level attributes with types
+        - Parent class references
+
+        To be implemented when needed for better method-level type error fixes.
+
+        Returns:
+            FileSnippet containing class definition or None
+        """
+        raise NotImplementedError("Class definition extraction not yet implemented")
+
+    def _extract_type_aliases(
+        self,
+        file_path: str,
+        lines: list[str],
+    ) -> Optional[FileSnippet]:
+        """
+        PLACEHOLDER: Extract type alias definitions from a file.
+
+        For mypy errors referencing custom types, this would extract:
+        - Type alias definitions (MyType = Union[str, int])
+        - TypedDict definitions
+        - Protocol definitions
+        - NewType definitions
+
+        To be implemented when needed for better type error context.
+
+        Returns:
+            FileSnippet containing type aliases or None
+        """
+        raise NotImplementedError("Type alias extraction not yet implemented")
+
+    def _extract_related_function_definitions(
+        self,
+        file_path: str,
+        lines: list[str],
+        function_name: str,
+    ) -> Optional[FileSnippet]:
+        """
+        PLACEHOLDER: Extract function definition for cross-function references.
+
+        For mypy arg-type/call-arg errors, this would find and extract
+        the function signature being called, even if it's defined elsewhere
+        in the file.
+
+        Args:
+            file_path: Path to file
+            lines: File lines
+            function_name: Name of function to find
+
+        To be implemented when simple error messages aren't sufficient.
+
+        Returns:
+            FileSnippet containing function definition or None
+        """
+        raise NotImplementedError("Related function extraction not yet implemented")
+
+    def _extract_module_constants(
+        self,
+        file_path: str,
+        lines: list[str],
+    ) -> Optional[FileSnippet]:
+        """
+        PLACEHOLDER: Extract module-level constants.
+
+        For validation logic understanding, this would extract:
+        - Module-level constant definitions
+        - Enum definitions
+        - Configuration constants
+
+        To be implemented when needed for better validation-aware fixes.
+
+        Returns:
+            FileSnippet containing module constants or None
+        """
+        raise NotImplementedError("Module constant extraction not yet implemented")
+
+    def _extract_parent_class_method(
+        self,
+        file_path: str,
+        class_name: str,
+        method_name: str,
+        repo_root: str,
+    ) -> Optional[FileSnippet]:
+        """
+        PLACEHOLDER: Extract parent class method definition.
+
+        For mypy override errors, this would:
+        1. Find the parent class definition (could be in another file)
+        2. Extract the method signature being overridden
+        3. Return both locations for comparison
+
+        This is complex because it requires:
+        - Import resolution
+        - Cross-file symbol lookup
+        - Potentially reading from installed packages
+
+        To be implemented if override errors become common enough to warrant
+        the complexity.
+
+        Returns:
+            FileSnippet containing parent method or None
+        """
+        raise NotImplementedError("Parent class method extraction not yet implemented")
 
 
 # -------------------------------------------------------------------------
