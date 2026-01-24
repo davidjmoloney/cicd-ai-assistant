@@ -134,37 +134,6 @@ def get_edit_window_spec(signal: FixSignal) -> EditWindowSpec:
 
 
 # ===================================================================
-# RULE FILTERING - EXCLUSIONS
-# ===================================================================
-
-def should_skip_signal(signal: FixSignal) -> bool:
-    """
-    Determine if a signal should be skipped (not attempted to fix).
-
-    Some error types are too difficult or risky to auto-fix:
-    - override: Requires cross-file parent class lookup
-    - E999: Syntax errors are often too complex
-
-    Args:
-        signal: The FixSignal to check
-
-    Returns:
-        True if this signal should be skipped, False otherwise
-    """
-    rule_code = signal.rule_code or ""
-
-    # Skip mypy override errors (requires cross-file analysis)
-    if rule_code == "override":
-        return True
-
-    # Skip syntax errors (too variable/complex)
-    if rule_code == "E999":
-        return True
-
-    return False
-
-
-# ===================================================================
 # FUTURE: ADDITIONAL CONTEXT REQUIREMENTS
 # ===================================================================
 
