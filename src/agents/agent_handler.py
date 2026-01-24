@@ -377,7 +377,7 @@ class AgentHandler:
                 parts.append(f"Lines {edit_snippet['start_row']}-{edit_snippet['end_row']} "
                            f"(error on line {edit_snippet['error_line_in_snippet']} of {edit_snippet['snippet_length']})")
                 parts.append("```python")
-                parts.append(edit_snippet['text'].rstrip('\n'))
+                parts.append(edit_snippet['text'])
                 parts.append("```")
                 parts.append("")
 
@@ -387,7 +387,7 @@ class AgentHandler:
                 parts.append("## Context Window (for understanding, DO NOT return)")
                 parts.append(f"Lines {window['start_row']}-{window['end_row']}")
                 parts.append("```python")
-                parts.append(window['text'].rstrip('\n'))
+                parts.append(window['text'])
                 parts.append("```")
                 parts.append("")
 
@@ -396,7 +396,7 @@ class AgentHandler:
             if imports:
                 parts.append("## Imports")
                 parts.append("```python")
-                parts.append(imports['text'].rstrip('\n'))
+                parts.append(imports['text'])
                 parts.append("```")
                 parts.append("")
 
@@ -406,7 +406,7 @@ class AgentHandler:
                 parts.append("## Enclosing Function")
                 parts.append(f"Lines {enclosing['start_row']}-{enclosing['end_row']}")
                 parts.append("```python")
-                parts.append(enclosing['text'].rstrip('\n'))
+                parts.append(enclosing['text'])
                 parts.append("```")
                 parts.append("")
 
