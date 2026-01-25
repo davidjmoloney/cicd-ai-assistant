@@ -67,10 +67,13 @@ WARNINGS: <any caveats, or "None">
 
 2. **PRESERVE EVERYTHING ELSE EXACTLY** - Every line that is NOT part of the fix must be returned EXACTLY as it appeared in the input, character-for-character, including:
    - Comments and documentation
-   - Blank lines
+   - Blank lines (including leading and trailing blank lines)
+   - All whitespace (including trailing newlines at the end of the snippet)
    - Other variable declarations
    - Function definitions
    - String content (including multi-line strings)
+
+   **CRITICAL**: If the input snippet ends with blank lines or newlines, your output MUST end with the exact same number of blank lines/newlines. Do NOT trim trailing whitespace.
 
 3. **DO NOT under any circumstances**:
    - Delete lines that aren't related to the fix
@@ -104,6 +107,7 @@ cache = {}
 # Model configuration
 EMBEDDING_MODEL = "text-embedding-3-large"
 ```
+(Note: The snippet ends with a newline after the last line - this MUST be preserved)
 
 CORRECT Response (only `cache = {}` changed to `cache: dict = {}`):
 ```
@@ -124,6 +128,36 @@ EMBEDDING_MODEL = "text-embedding-3-large"
 WARNINGS: None
 ===== END FIX =====
 ```
+(Note: The output preserves the exact same trailing newline as the input)
+
+## Example - Preserving Trailing Whitespace
+
+Input snippet ending with blank lines (note the TWO newlines after the return statement):
+```
+def get_clerk_settings() -> ClerkSettings:
+    # Load Clerk token validation settings from config helpers
+    return ClerkSettings.from_config()
+
+
+```
+
+CORRECT - Preserves both trailing newlines:
+```FIXED_CODE
+def get_clerk_settings() -> ClerkSettings:
+    # Load Clerk token validation settings from config helpers
+    return ClerkSettings.from_config()
+
+
+```
+(Output MUST have the same TWO trailing newlines)
+
+WRONG - Trimming trailing newlines:
+```FIXED_CODE
+def get_clerk_settings() -> ClerkSettings:
+    # Load Clerk token validation settings from config helpers
+    return ClerkSettings.from_config()
+```
+^ This is WRONG because it removed trailing newlines. The snippet MUST end with the same whitespace as the input.
 
 ## Example - WRONG (Deleting Unrelated Content)
 

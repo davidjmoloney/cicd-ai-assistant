@@ -377,7 +377,7 @@ class AgentHandler:
                 parts.append(f"Lines {edit_snippet['start_row']}-{edit_snippet['end_row']} "
                            f"(error on line {edit_snippet['error_line_in_snippet']} of {edit_snippet['snippet_length']})")
                 parts.append("```python")
-                parts.append(edit_snippet['text'].rstrip('\n'))
+                parts.append(edit_snippet['text'])
                 parts.append("```")
                 parts.append("")
 
@@ -387,7 +387,7 @@ class AgentHandler:
                 parts.append("## Context Window (for understanding, DO NOT return)")
                 parts.append(f"Lines {window['start_row']}-{window['end_row']}")
                 parts.append("```python")
-                parts.append(window['text'].rstrip('\n'))
+                parts.append(window['text'])
                 parts.append("```")
                 parts.append("")
 
@@ -396,7 +396,7 @@ class AgentHandler:
             if imports:
                 parts.append("## Imports")
                 parts.append("```python")
-                parts.append(imports['text'].rstrip('\n'))
+                parts.append(imports['text'])
                 parts.append("```")
                 parts.append("")
 
@@ -406,7 +406,44 @@ class AgentHandler:
                 parts.append("## Enclosing Function")
                 parts.append(f"Lines {enclosing['start_row']}-{enclosing['end_row']}")
                 parts.append("```python")
-                parts.append(enclosing['text'].rstrip('\n'))
+                parts.append(enclosing['text'])
+                parts.append("```")
+                parts.append("")
+
+            # Additional context blocks
+            class_def = code_context.get("class_definition")
+            if class_def:
+                parts.append("## Class Definition")
+                parts.append(f"Lines {class_def['start_row']}-{class_def['end_row']}")
+                parts.append("```python")
+                parts.append(class_def['text'])
+                parts.append("```")
+                parts.append("")
+
+            type_aliases = code_context.get("type_aliases")
+            if type_aliases:
+                parts.append("## Type Aliases")
+                parts.append(f"Lines {type_aliases['start_row']}-{type_aliases['end_row']}")
+                parts.append("```python")
+                parts.append(type_aliases['text'])
+                parts.append("```")
+                parts.append("")
+
+            related_func = code_context.get("related_function")
+            if related_func:
+                parts.append("## Related Function Signature")
+                parts.append(f"Lines {related_func['start_row']}-{related_func['end_row']}")
+                parts.append("```python")
+                parts.append(related_func['text'])
+                parts.append("```")
+                parts.append("")
+
+            module_constants = code_context.get("module_constants")
+            if module_constants:
+                parts.append("## Module Constants")
+                parts.append(f"Lines {module_constants['start_row']}-{module_constants['end_row']}")
+                parts.append("```python")
+                parts.append(module_constants['text'])
                 parts.append("```")
                 parts.append("")
 
