@@ -499,11 +499,10 @@ class ContextBuilder:
         span: Span,
     ) -> Optional[FileSnippet]:
         """
-        v1 heuristic (no AST):
-          - walk upwards from span.start.row to find nearest 'try:'
-          - record its indentation level
-          - then include lines until indentation decreases to <= that level
-          - includes all except/else/finally blocks
+        Extract nearest enclosing try/except block within the same function scope.
+
+        Walks upwards to find 'try:', but stops at function/class boundaries
+        to avoid returning try blocks from different functions.
         """
         if not lines:
             return None
@@ -512,13 +511,37 @@ class ContextBuilder:
         if target_row < 1 or target_row > len(lines):
             return None
 
-        try_line_row: Optional[int] = None
-        try_indent: Optional[int] = None
-
-        # 1) find nearest enclosing try: above target
+        # Find the starting indentation level to detect scope boundaries
+        start_indent: Optional[int] = None
         for r in range(target_row, 0, -1):
             line = lines[r - 1]
             stripped = line.lstrip()
+            if stripped and not stripped.startswith("#"):
+                start_indent = len(line) - len(stripped)
+                break
+
+        if start_indent is None:
+            return None
+
+        try_line_row: Optional[int] = None
+        try_indent: Optional[int] = None
+
+        # Walk upwards to find nearest enclosing try:
+        for r in range(target_row, 0, -1):
+            line = lines[r - 1]
+            stripped = line.lstrip()
+            indent = len(line) - len(stripped)
+
+            # Stop if we hit a function definition at same/lower indent
+            # This means we've left the current function scope
+            if (stripped.startswith("def ") or stripped.startswith("async def ")) and indent <= start_indent:
+                break
+
+            # Stop if we hit a class definition at same/lower indent
+            # This means we've left the current class scope
+            if stripped.startswith("class ") and indent <= start_indent:
+                break
+
             if stripped.startswith("try:"):
                 try_line_row = r
                 try_indent = len(line) - len(stripped)
@@ -527,7 +550,7 @@ class ContextBuilder:
         if try_line_row is None or try_indent is None:
             return None
 
-        # 2) extend downwards to include entire try/except/else/finally block
+        # Extend downwards to include entire try/except/else/finally block
         end_row = try_line_row
         for r in range(try_line_row + 1, len(lines) + 1):
             line = lines[r - 1]
@@ -550,6 +573,11 @@ class ContextBuilder:
                 break
 
             end_row = r
+
+        # Verify that the target line is actually inside the try/except block
+        # If the target is below the block, this isn't an enclosing try
+        if target_row > end_row:
+            return None
 
         text = "".join(lines[try_line_row - 1 : end_row])
         return FileSnippet(file_path=file_path, start_row=try_line_row, end_row=end_row, text=text)
