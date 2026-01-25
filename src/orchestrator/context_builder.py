@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
-from orchestrator.edit_window_config import (
+from orchestrator.signal_requirements import (
     EditWindowSpec,
     get_edit_window_spec,
     get_context_requirements,
