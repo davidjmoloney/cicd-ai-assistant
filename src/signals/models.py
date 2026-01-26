@@ -10,13 +10,14 @@ class SignalType(str, Enum):
     """
     Types of CI/CD signals that can be processed.
 
-    Priority order (highest to lowest): SECURITY > TYPE_CHECK > LINT > FORMAT
-    FORMAT is always lowest priority as formatting changes are cosmetic and safe.
+    Priority order (highest to lowest): SECURITY > TYPE_CHECK > LINT > DOCSTRING > FORMAT
+    DOCSTRING and FORMAT are lowest priority as they're quality/cosmetic and safe.
     """
     LINT = "lint"
     FORMAT = "format"  # Formatting signals (e.g., ruff format) - always lowest priority
     TYPE_CHECK = "type_check"
     SECURITY = "security"
+    DOCSTRING = "docstring"  # Documentation quality (pydocstyle) - low priority, quality improvement
     # Later:
     # UNIT_TEST = "unit_test"
     # COVERAGE = "coverage"

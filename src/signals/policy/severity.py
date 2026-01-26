@@ -92,3 +92,30 @@ def severity_for_mypy(mypy_severity: str, error_code: str | None) -> Severity:
 
     # Default for errors is MEDIUM
     return Severity.MEDIUM
+
+
+# -------------------------------------------------------------------------
+# Pydocstyle - Documentation Quality
+# -------------------------------------------------------------------------
+
+# All pydocstyle errors are LOW severity - documentation quality doesn't affect runtime
+# Missing docstrings and formatting issues are important for maintainability but not critical
+def severity_for_pydocstyle(code: str) -> Severity:
+    """
+    Map pydocstyle error codes to severity levels.
+
+    All docstring issues are LOW severity as they:
+    - Don't affect runtime behavior
+    - Don't cause bugs or errors
+    - Are quality/maintainability improvements only
+
+    Args:
+        code: Pydocstyle error code (e.g., "D101", "D212")
+
+    Returns:
+        Severity.LOW for all pydocstyle codes
+    """
+    # All documentation issues are low severity
+    # We could differentiate (missing docstrings vs formatting)
+    # but for v1, keep it simple: all LOW
+    return Severity.LOW
