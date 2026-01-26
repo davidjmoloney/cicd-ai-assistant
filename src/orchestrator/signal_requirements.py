@@ -238,13 +238,26 @@ def get_context_requirements(signal: FixSignal) -> ContextRequirements:
     # DOCSTRING ERRORS - Need full function/class as context
     # ===================================================================
 
-    if rule_code in ["D101", "D102", "D103"]:
-        # Docstring errors: send full function/class as CONTEXT (via enclosing_function)
+    # D101: Missing docstring in public class
+    if rule_code == "D101":
+        # Class docstring: extract full class as CONTEXT (via needs_class_definition)
         # Edit snippet is just opening lines (±3) where docstring will be added
-        # Need imports for type hints in docstring
+        # Note: include_enclosing_function won't work for classes (looks for 'def', not 'class')
         return ContextRequirements(
             include_imports=True,
-            include_enclosing_function=True,  # Full function/class as read-only context
+            include_enclosing_function=False,  # Classes don't have enclosing functions
+            include_try_except=False,
+            needs_class_definition=True,  # Full class as read-only context
+        )
+
+    # D102: Missing docstring in public method
+    # D103: Missing docstring in public function
+    if rule_code in ["D102", "D103"]:
+        # Method/function docstring: extract full function as CONTEXT
+        # Edit snippet is just opening lines (±3) where docstring will be added
+        return ContextRequirements(
+            include_imports=True,
+            include_enclosing_function=True,  # Full method/function as read-only context
             include_try_except=False,
         )
 
