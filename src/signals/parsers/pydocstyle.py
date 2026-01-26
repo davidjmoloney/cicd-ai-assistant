@@ -9,6 +9,16 @@ This module provides parsing for pydocstyle text output format:
 The parser converts pydocstyle output into normalized FixSignal objects
 that can be processed by the rest of the pipeline.
 
+SUPPORTED ERROR CODES:
+  - D101: Missing docstring in public class
+  - D102: Missing docstring in public method
+  - D103: Missing docstring in public function
+
+All other pydocstyle error codes are filtered out and ignored.
+
+Recommended pydocstyle command:
+  pydocstyle app/ --select=D101,D102,D103 --match='(?!test_).*\\.py'
+
 Pydocstyle does not provide auto-fixes, so all signals will have fix=None
 and require LLM-assisted fix generation or manual review.
 """
@@ -38,6 +48,9 @@ def parse_pydocstyle_results(
     """
     Parse pydocstyle text output to normalized FixSignals.
 
+    Only processes D101, D102, D103 error codes (missing docstrings).
+    All other pydocstyle error codes are filtered out.
+
     Pydocstyle output format:
         {file_path}:{line} at module level:
                 {code}: {message}
@@ -45,17 +58,19 @@ def parse_pydocstyle_results(
                 {code}: {message}
 
     Examples:
-        app/main.py:1 at module level:
-                D212: Multi-line docstring summary should start at the first line
         app/main.py:303 in public class `CORSDebugMiddleware`:
                 D101: Missing docstring in public class
+        app/main.py:304 in public method `dispatch`:
+                D102: Missing docstring in public method
+        app/api/routes.py:17 in public function `export_data`:
+                D103: Missing docstring in public function
 
     Args:
-        raw: Raw output from pydocstyle command
+        raw: Raw output from pydocstyle command (run with --select=D101,D102,D103)
         repo_root: Optional repository root for path normalization
 
     Returns:
-        List of FixSignal objects with signal_type=DOCSTRING
+        List of FixSignal objects with signal_type=DOCSTRING (only D101-D103 codes)
     """
     if not raw or not raw.strip():
         return []
@@ -101,6 +116,9 @@ def _parse_pydocstyle_entry(
     """
     Parse a single pydocstyle error entry.
 
+    Only processes D101, D102, D103 error codes (missing docstrings).
+    Other error codes are filtered out and return None.
+
     Args:
         location_line: The location line (stripped), e.g., "app/main.py:303 in public class `CORSDebugMiddleware`:"
         all_lines: All lines from the output (not stripped)
@@ -108,7 +126,7 @@ def _parse_pydocstyle_entry(
         repo_root: Optional repository root for path normalization
 
     Returns:
-        FixSignal or None if parsing fails
+        FixSignal if code is D101-D103, None if parsing fails or code is not supported
     """
     # Pattern: {file}:{line} {rest}:
     # location_line is already stripped by caller
@@ -135,6 +153,13 @@ def _parse_pydocstyle_entry(
 
     code = error_match.group(1)
     message = error_match.group(2)
+
+    # Filter: Only process missing docstring errors (D101-D103)
+    # Other pydocstyle codes are not supported in this integration
+    SUPPORTED_CODES = {"D101", "D102", "D103"}
+    if code not in SUPPORTED_CODES:
+        logger.debug(f"Skipping unsupported pydocstyle code {code} at {file_path}:{line_num}")
+        return None
 
     # Parse location info to extract target type and name
     # Pattern 1: "at module level"
