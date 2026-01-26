@@ -107,13 +107,23 @@ class ContextBuilder:
             # Build edit snippet based on signal type
             edit_snippet = self._build_edit_snippet_for_signal(sig, lines, span, edit_spec) if lines else None
 
-            # Always gather standard context
-            imports = self._extract_import_block(sig.file_path, lines) if lines else None
-            enclosing = self._extract_enclosing_function(sig.file_path, lines, span) if (lines and span) else None
-            try_except = self._extract_try_except_block(sig.file_path, lines, span) if (lines and span) else None
-
-            # Gather additional context based on signal requirements
+            # Get context requirements for this signal
             context_req = get_context_requirements(sig)
+
+            # Gather base context only if required (optimize token usage)
+            imports = None
+            enclosing = None
+            try_except = None
+
+            if lines:
+                if context_req.include_imports:
+                    imports = self._extract_import_block(sig.file_path, lines)
+                if context_req.include_enclosing_function and span:
+                    enclosing = self._extract_enclosing_function(sig.file_path, lines, span)
+                if context_req.include_try_except and span:
+                    try_except = self._extract_try_except_block(sig.file_path, lines, span)
+
+            # Gather additional specialized context based on signal requirements
             class_def = None
             type_aliases = None
             related_func = None
