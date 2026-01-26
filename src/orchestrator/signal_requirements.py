@@ -13,7 +13,7 @@ from typing import Literal
 from signals.models import FixSignal
 
 
-EditWindowType = Literal["lines", "function", "imports", "try_except"]
+EditWindowType = Literal["lines", "function", "class", "imports", "try_except"]
 
 
 @dataclass(frozen=True)
@@ -22,7 +22,7 @@ class EditWindowSpec:
     Specification for how to build an edit window for a signal.
 
     Attributes:
-        window_type: Type of edit window ('lines', 'function', 'imports', 'try_except')
+        window_type: Type of edit window ('lines', 'function', 'class', 'imports', 'try_except')
         lines: Number of lines on each side (only used if window_type='lines')
         min_context_lines: Minimum context window size (default 10)
         min_edit_lines: Minimum edit window size (default 2)
@@ -124,6 +124,21 @@ def get_edit_window_spec(signal: FixSignal) -> EditWindowSpec:
         "name-defined",  # Name not defined
     ]:
         return EditWindowSpec(window_type="lines", lines=5)
+
+    # ===================================================================
+    # PYDOCSTYLE SIGNALS (DOCSTRING)
+    # ===================================================================
+
+    # D101: Missing docstring in public class - extract full class
+    if rule_code == "D101":
+        return EditWindowSpec(window_type="class")
+
+    # D102: Missing docstring in public method - extract full method
+    # D103: Missing docstring in public function - extract full function
+    # For missing function/method docstrings, extract the full function/method
+    # so the LLM can see the signature and generate an appropriate docstring
+    if rule_code in ["D102", "D103"]:
+        return EditWindowSpec(window_type="function")
 
     # ===================================================================
     # DEFAULT
