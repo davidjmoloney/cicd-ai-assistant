@@ -92,3 +92,40 @@ def severity_for_mypy(mypy_severity: str, error_code: str | None) -> Severity:
 
     # Default for errors is MEDIUM
     return Severity.MEDIUM
+
+
+# -------------------------------------------------------------------------
+# Pydocstyle - Documentation Quality
+# -------------------------------------------------------------------------
+
+def severity_for_pydocstyle(code: str) -> Severity:
+    """
+    Map pydocstyle error codes to severity levels.
+
+    Currently only handles missing docstring errors (D101-D103):
+    - D101: Missing docstring in public class
+    - D102: Missing docstring in public method
+    - D103: Missing docstring in public function
+
+    All missing docstring issues are LOW severity as they:
+    - Don't affect runtime behavior
+    - Are quality/maintainability improvements
+    - Should be fixed but aren't critical bugs
+
+    Other pydocstyle codes (D200, D212, D400, etc.) are not supported
+    and will be filtered out by the parser.
+
+    Args:
+        code: Pydocstyle error code (should be D101, D102, or D103)
+
+    Returns:
+        Severity.LOW for D101-D103 codes
+    """
+    # Only D101, D102, D103 are expected (parser filters others)
+    # All missing docstrings are LOW severity
+    if code in ["D101", "D102", "D103"]:
+        return Severity.LOW
+
+    # Defensive: if other codes slip through, still return LOW
+    # but this shouldn't happen with parser filtering
+    return Severity.LOW

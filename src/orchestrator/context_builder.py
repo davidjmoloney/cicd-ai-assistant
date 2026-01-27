@@ -107,13 +107,23 @@ class ContextBuilder:
             # Build edit snippet based on signal type
             edit_snippet = self._build_edit_snippet_for_signal(sig, lines, span, edit_spec) if lines else None
 
-            # Always gather standard context
-            imports = self._extract_import_block(sig.file_path, lines) if lines else None
-            enclosing = self._extract_enclosing_function(sig.file_path, lines, span) if (lines and span) else None
-            try_except = self._extract_try_except_block(sig.file_path, lines, span) if (lines and span) else None
-
-            # Gather additional context based on signal requirements
+            # Get context requirements for this signal
             context_req = get_context_requirements(sig)
+
+            # Gather base context only if required (optimize token usage)
+            imports = None
+            enclosing = None
+            try_except = None
+
+            if lines:
+                if context_req.include_imports:
+                    imports = self._extract_import_block(sig.file_path, lines)
+                if context_req.include_enclosing_function and span:
+                    enclosing = self._extract_enclosing_function(sig.file_path, lines, span)
+                if context_req.include_try_except and span:
+                    try_except = self._extract_try_except_block(sig.file_path, lines, span)
+
+            # Gather additional specialized context based on signal requirements
             class_def = None
             type_aliases = None
             related_func = None
@@ -253,6 +263,9 @@ class ContextBuilder:
         # Use existing extraction functions based on window type
         if edit_spec.window_type == "function":
             file_snippet = self._extract_enclosing_function(file_path, lines, span)
+            fallback_lines = 7
+        elif edit_spec.window_type == "class":
+            file_snippet = self._extract_enclosing_class(file_path, lines, span)
             fallback_lines = 7
         elif edit_spec.window_type == "imports":
             file_snippet = self._extract_import_block(file_path, lines)
@@ -442,6 +455,7 @@ class ContextBuilder:
         v1 heuristic (no AST):
           - walk upwards from span.start.row to find nearest 'def ' or 'async def '
           - record its indentation level
+          - include decorators above the function (e.g., @dataclass, @property)
           - then include lines until indentation decreases to <= that level (and not blank/comment)
         """
         if not lines:
@@ -466,7 +480,19 @@ class ContextBuilder:
         if def_line_row is None or def_indent is None:
             return None
 
-        # 2) extend downwards until scope ends
+        # 2) Include decorators above the function definition
+        start_row = def_line_row
+        for r in range(def_line_row - 1, 0, -1):
+            line = lines[r - 1]
+            stripped = line.lstrip()
+            # Include decorators (@) and blank lines immediately before function
+            if stripped.startswith("@") or stripped == "":
+                start_row = r
+            else:
+                # Stop if we hit non-decorator, non-blank content
+                break
+
+        # 3) extend downwards until scope ends
         end_row = def_line_row
         for r in range(def_line_row + 1, len(lines) + 1):
             line = lines[r - 1]
@@ -485,8 +511,86 @@ class ContextBuilder:
 
             end_row = r
 
-        text = "".join(lines[def_line_row - 1 : end_row])
-        return FileSnippet(file_path=file_path, start_row=def_line_row, end_row=end_row, text=text)
+        text = "".join(lines[start_row - 1 : end_row])
+        return FileSnippet(file_path=file_path, start_row=start_row, end_row=end_row, text=text)
+
+    def _extract_enclosing_class(
+        self,
+        file_path: str,
+        lines: list[str],
+        span: Span,
+    ) -> Optional[FileSnippet]:
+        """
+        Extract the full enclosing class for a missing class docstring (D101).
+
+        Similar to _extract_enclosing_function but for classes:
+          - Walk upwards to find nearest 'class ' statement
+          - Include decorators above the class (e.g., @dataclass)
+          - Extend downwards until indentation drops to class level
+
+        Args:
+            file_path: Path to the file
+            lines: File lines
+            span: Error location
+
+        Returns:
+            FileSnippet containing full class or None
+        """
+        if not lines:
+            return None
+
+        target_row = span.start.row
+        if target_row < 1 or target_row > len(lines):
+            return None
+
+        class_line_row: Optional[int] = None
+        class_indent: Optional[int] = None
+
+        # 1) Find nearest enclosing class above target
+        for r in range(target_row, 0, -1):
+            line = lines[r - 1]
+            stripped = line.lstrip()
+            if stripped.startswith("class "):
+                class_line_row = r
+                class_indent = len(line) - len(stripped)
+                break
+
+        if class_line_row is None or class_indent is None:
+            return None
+
+        # 2) Include decorators above the class definition
+        start_row = class_line_row
+        for r in range(class_line_row - 1, 0, -1):
+            line = lines[r - 1]
+            stripped = line.lstrip()
+            # Include decorators (@) and blank lines immediately before class
+            if stripped.startswith("@") or stripped == "":
+                start_row = r
+            else:
+                # Stop if we hit non-decorator, non-blank content
+                break
+
+        # 3) Extend downwards until scope ends
+        end_row = class_line_row
+        for r in range(class_line_row + 1, len(lines) + 1):
+            line = lines[r - 1]
+            stripped = line.lstrip()
+
+            # Keep blank lines/comments inside block
+            if stripped.strip() == "" or stripped.startswith("#"):
+                end_row = r
+                continue
+
+            indent = len(line) - len(stripped)
+
+            # If indentation drops to <= class indent, block ended
+            if indent <= class_indent and not stripped.startswith((")", "]", "}")):
+                break
+
+            end_row = r
+
+        text = "".join(lines[start_row - 1 : end_row])
+        return FileSnippet(file_path=file_path, start_row=start_row, end_row=end_row, text=text)
 
     # ----------------------------
     # Try/except block context

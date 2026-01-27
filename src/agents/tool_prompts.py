@@ -41,8 +41,20 @@ For each error signal, you will receive:
    - The error location within the snippet is indicated (e.g., "Error on line 4 of 13")
 3. **Context Window**: A larger code window (~30 lines) around the error for understanding
    - Use this to understand the surrounding code, but DON'T return it
-4. **Imports**: The file's import block (if available) - helps understand available types/modules
-5. **Enclosing Function**: The function containing the error (if available) - helps understand scope
+
+4. **Tailored Context** (varies by signal type - optimized to reduce token usage):
+   - **Imports**: The file's import block (for type definitions, dependencies)
+     - Included for: type errors, undefined names, most issues
+     - Excluded for: import-only errors, bare except blocks
+   - **Enclosing Function**: The function containing the error (for understanding scope/logic)
+     - Included for: type errors, docstring errors, function-level issues
+     - Excluded for: import errors (global scope), bare except (sent separately)
+   - **Try/Except Block**: The try/except block containing the error
+     - Included for: bare except errors (E722)
+     - Excluded for: most other errors
+
+Note: Context is carefully selected to provide what you need while minimizing token usage.
+Not all context is present for every error - you'll only receive relevant context.
 
 ## Response Format
 
@@ -554,6 +566,160 @@ No special considerations needed - format changes never affect semantics.
 
 
 # =============================================================================
+# Pydocstyle Documentation Checker Guidance
+# =============================================================================
+
+PYDOCSTYLE_DOCSTRING_GUIDANCE = """
+## Pydocstyle Docstring Error Fixing - Specialized Guidance
+
+You are fixing MISSING DOCSTRINGS detected by pydocstyle.
+
+Risk Level: LOW
+Adding docstrings improves code maintainability without changing behavior.
+
+Supported Error Codes:
+- D101: Missing docstring in public class
+- D102: Missing docstring in public method
+- D103: Missing docstring in public function
+
+Context Structure:
+You will receive:
+1. **Edit Snippet**: Opening lines of the class/function (signature + ~6 lines)
+   - This is where you ADD the docstring
+   - Return the edit snippet with docstring inserted after signature
+2. **Enclosing Function/Class Context**: Full implementation (read-only)
+   - Use this to understand what to document
+   - See parameters, return values, logic, side effects
+3. **Imports**: For understanding type hints and dependencies
+
+Docstring Style - Google Format:
+We use Google-style docstrings. Follow this format:
+
+**For Classes (D101):**
+```python
+class ClassName:
+    \"\"\"Brief one-line summary of the class purpose.
+
+    Longer description if needed to explain the class behavior,
+    state management, or important usage notes.
+
+    Attributes:
+        attr1: Description of attribute1
+        attr2: Description of attribute2
+    \"\"\"
+```
+
+**For Functions/Methods (D102/D103):**
+```python
+def function_name(param1: str, param2: int) -> bool:
+    \"\"\"Brief one-line summary of what the function does.
+
+    Longer description if needed to explain the algorithm,
+    side effects, or important usage notes.
+
+    Args:
+        param1: Description of param1
+        param2: Description of param2
+
+    Returns:
+        Description of return value
+
+    Raises:
+        ExceptionType: When this exception is raised
+    \"\"\"
+```
+
+Docstring Writing Guidelines:
+
+1. **First Line (Summary)**:
+   - One concise sentence describing the purpose
+   - Start with a verb (imperative mood): "Calculate...", "Create...", "Process..."
+   - End with a period
+   - Should be ~50-80 characters
+
+2. **Args Section** (if function has parameters):
+   - List each parameter with its purpose
+   - Use type hints from signature (don't repeat them)
+   - Explain what the parameter represents, not just its type
+
+3. **Returns Section** (if function returns a value):
+   - Describe what is returned
+   - Explain meaning, not just the type
+
+4. **Raises Section** (only if function raises exceptions):
+   - Document exceptions explicitly raised in the code
+   - Don't document every possible exception
+
+5. **Keep It Concise**:
+   - Avoid redundant information
+   - Don't just restate the function name
+   - Focus on WHY and WHAT, not HOW (code shows how)
+
+Special Cases:
+
+**Properties**: Often just need one line
+```python
+@property
+def is_active(self) -> bool:
+    \"\"\"Check if user account is currently active.\"\"\"
+```
+
+**Simple setters/getters**: Can be very brief
+```python
+def set_name(self, name: str) -> None:
+    \"\"\"Set user's display name.\"\"\"
+```
+
+**Private methods (_method)**: Still document if non-trivial
+```python
+def _validate_email(self, email: str) -> bool:
+    \"\"\"Validate email format using regex pattern.\"\"\"
+```
+
+Fixing Strategy:
+
+1. **Analyze the Code Context**:
+   - Look at the full function/class implementation
+   - Understand parameters, return values, logic
+   - Identify any exceptions raised
+   - Note any decorators (@property, @dataclass, etc.)
+
+2. **Write Concise Documentation**:
+   - Start with clear one-line summary
+   - Add Args/Returns sections if needed
+   - Keep it brief but informative
+
+3. **Insert Docstring Correctly**:
+   - Place immediately after class/function signature
+   - Use triple quotes (\"\"\")
+   - Maintain proper indentation
+   - Add blank line after docstring (if more code follows)
+
+4. **Preserve Everything Else**:
+   - Don't modify decorators
+   - Don't change function signature
+   - Don't alter implementation
+   - Only ADD the docstring
+
+Confidence Guidelines:
+- High (>0.8): Simple functions with clear purpose from signature
+- Medium (0.5-0.8): Complex functions, multiple parameters
+- Low (<0.5): Unclear purpose, needs domain knowledge
+
+NEVER do these:
+❌ Change function signature or implementation
+❌ Remove or modify decorators
+❌ Add type hints (they should already be there)
+❌ Reformat unrelated code
+❌ Write vague docstrings like "This function does stuff"
+❌ Copy the function name into the docstring without adding value
+
+Remember: You're only adding documentation. The code behavior must not change.
+Your edit snippet should be IDENTICAL except for the added docstring.
+"""
+
+
+# =============================================================================
 # Tool-Specific Prompts Registry
 # =============================================================================
 
@@ -563,6 +729,7 @@ TOOL_SPECIFIC_PROMPTS: dict[str, str] = {
     "ruff-lint": RUFF_LINT_GUIDANCE,  # Alias
     "ruff-format": RUFF_FORMAT_GUIDANCE,
     "bandit": BANDIT_SECURITY_GUIDANCE,
+    "pydocstyle": PYDOCSTYLE_DOCSTRING_GUIDANCE,
 }
 
 
