@@ -510,17 +510,21 @@ class AgentHandler:
             if warnings_str.lower() != "none" and warnings_str:
                 all_warnings.append(f"{file_path}: {warnings_str}")
 
-            # Get the edit snippet position from context
-            # Match by file path
-            edit_snippet = None
-            for sig_data in signals:
-                sig_file = sig_data.get("signal", {}).get("file_path", "")
-                if sig_file.endswith(file_path) or file_path.endswith(sig_file) or sig_file == file_path:
-                    edit_snippet = sig_data.get("edit_snippet")
-                    break
+            # Match fix to signal by index
+            # LLM receives signals as SIGNAL 1, SIGNAL 2, etc. and responds in same order
+            # So fix at index 0 corresponds to signal at index 0, etc.
+            if idx >= len(signals):
+                all_warnings.append(
+                    f"Fix index {idx} exceeds number of signals ({len(signals)}), skipping"
+                )
+                continue
+
+            sig_data = signals[idx]
+            edit_snippet = sig_data.get("edit_snippet")
 
             if not edit_snippet:
-                all_warnings.append(f"Could not find position info for {file_path}, skipping")
+                sig_file = sig_data.get("signal", {}).get("file_path", "unknown")
+                all_warnings.append(f"No edit snippet available for signal {idx} ({sig_file}), skipping")
                 continue
 
             # Build the edit using snippet positions
