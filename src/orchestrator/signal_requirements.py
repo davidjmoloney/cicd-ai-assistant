@@ -13,7 +13,7 @@ from typing import Literal
 from signals.models import FixSignal
 
 
-EditWindowType = Literal["lines", "function", "imports", "try_except"]
+EditWindowType = Literal["lines", "function", "class", "imports", "try_except"]
 
 
 @dataclass(frozen=True)
@@ -22,7 +22,7 @@ class EditWindowSpec:
     Specification for how to build an edit window for a signal.
 
     Attributes:
-        window_type: Type of edit window ('lines', 'function', 'imports', 'try_except')
+        window_type: Type of edit window ('lines', 'function', 'class', 'imports', 'try_except')
         lines: Number of lines on each side (only used if window_type='lines')
         min_context_lines: Minimum context window size (default 10)
         min_edit_lines: Minimum edit window size (default 2)
@@ -126,6 +126,22 @@ def get_edit_window_spec(signal: FixSignal) -> EditWindowSpec:
         return EditWindowSpec(window_type="lines", lines=5)
 
     # ===================================================================
+    # PYDOCSTYLE SIGNALS (DOCSTRING)
+    # ===================================================================
+
+    # D101: Missing docstring in public class - just opening lines (±3)
+    # D102: Missing docstring in public method - just opening lines (±3)
+    # D103: Missing docstring in public function - just opening lines (±3)
+    #
+    # Strategy: Edit snippet contains ONLY the opening (signature + first few lines)
+    #           Full function/class is sent as CONTEXT (read-only) so LLM understands
+    #           what to document, but can only edit the opening to add docstring.
+    #
+    # This prevents LLM from "improving" the implementation while adding docstrings.
+    if rule_code in ["D101", "D102", "D103"]:
+        return EditWindowSpec(window_type="lines", lines=3)
+
+    # ===================================================================
     # DEFAULT
     # ===================================================================
 
@@ -140,15 +156,35 @@ def get_edit_window_spec(signal: FixSignal) -> EditWindowSpec:
 @dataclass(frozen=True)
 class ContextRequirements:
     """
-    Additional context requirements beyond standard window/imports/function.
+    Context requirements for fixing a signal.
 
-    Specifies what extra context to gather for specific signal types:
-    - Class definition (for method-level type errors)
-    - Type aliases (for mypy errors referencing custom types)
-    - Related function definitions (for cross-function type flow)
-    - Module-level constants (for validation logic understanding)
-    - Function name to search for (if needs_related_functions is True)
+    Controls both BASE context (what's always considered) and ADDITIONAL context
+    (signal-specific extras). This enables optimizing token usage by only sending
+    relevant context for each signal type.
+
+    BASE CONTEXT (sent with edit snippet):
+        - include_imports: Import statements (for type definitions, dependencies)
+        - include_enclosing_function: Full enclosing function/method (for call context)
+        - include_try_except: Enclosing try/except block (for error handling context)
+
+    ADDITIONAL CONTEXT (specialized requirements):
+        - needs_class_definition: Class header with annotations (for method context)
+        - needs_type_aliases: Type definitions like TypeVar, NewType, TypedDict (for type errors)
+        - needs_related_functions: Related function definitions (for cross-function understanding)
+        - needs_module_constants: Module-level UPPER_CASE constants (for validation logic)
+
+    The goal is to minimize token usage while providing sufficient context:
+    - Import errors need ONLY imports (not function bodies)
+    - Docstring errors need ONLY the function/class to document (in edit snippet)
+    - Type errors need imports + enclosing function
+    - Bare except needs ONLY the try/except block
     """
+    # Base context - control what standard context is included
+    include_imports: bool = True
+    include_enclosing_function: bool = True
+    include_try_except: bool = False
+
+    # Additional specialized context
     needs_class_definition: bool = False
     needs_type_aliases: bool = False
     needs_related_functions: bool = False
@@ -158,58 +194,172 @@ class ContextRequirements:
 
 def get_context_requirements(signal: FixSignal) -> ContextRequirements:
     """
-    Get additional context requirements for a signal.
+    Get context requirements for a signal.
 
-    Determines what extra context beyond standard window/imports/function
-    should be gathered based on the signal's rule code and error message.
+    Determines what context (both base and additional) should be gathered
+    based on the signal's rule code and error message. This optimizes token
+    usage by only sending relevant context for each signal type.
 
     Args:
         signal: The FixSignal to determine context needs for
 
     Returns:
-        ContextRequirements specifying what additional context to gather
+        ContextRequirements specifying what context to gather
     """
     rule_code = signal.rule_code or ""
     message = signal.message  # Keep original case for type detection
     message_lower = message.lower()
 
     # ===================================================================
-    # MYPY TYPE ERRORS - Context Requirements
+    # IMPORT ERRORS - Need ONLY imports
     # ===================================================================
 
-    # Errors in methods/attributes often need class definition
-    if rule_code in ["attr-defined", "override", "assignment"] and "self." in message_lower:
-        return ContextRequirements(needs_class_definition=True)
+    if rule_code in ["F401", "I001", "E402"]:
+        # Import errors are global - don't need function context
+        return ContextRequirements(
+            include_imports=True,
+            include_enclosing_function=False,
+            include_try_except=False,
+        )
 
-    # Errors mentioning custom types need type aliases
-    if rule_code in ["arg-type", "return-value", "assignment"]:
-        # Check if error mentions likely custom types (CamelCase/PascalCase words)
+    # ===================================================================
+    # BARE EXCEPT - Need ONLY try/except block
+    # ===================================================================
+
+    if rule_code == "E722":
+        # Bare except needs only the try/except block
+        return ContextRequirements(
+            include_imports=False,
+            include_enclosing_function=False,
+            include_try_except=True,
+        )
+
+    # ===================================================================
+    # DOCSTRING ERRORS - Need full function/class as context
+    # ===================================================================
+
+    # D101: Missing docstring in public class
+    if rule_code == "D101":
+        # Class docstring: extract full class as CONTEXT (via needs_class_definition)
+        # Edit snippet is just opening lines (±3) where docstring will be added
+        # Note: include_enclosing_function won't work for classes (looks for 'def', not 'class')
+        return ContextRequirements(
+            include_imports=True,
+            include_enclosing_function=False,  # Classes don't have enclosing functions
+            include_try_except=False,
+            needs_class_definition=True,  # Full class as read-only context
+        )
+
+    # D102: Missing docstring in public method
+    # D103: Missing docstring in public function
+    if rule_code in ["D102", "D103"]:
+        # Method/function docstring: extract full function as CONTEXT
+        # Edit snippet is just opening lines (±3) where docstring will be added
+        return ContextRequirements(
+            include_imports=True,
+            include_enclosing_function=True,  # Full method/function as read-only context
+            include_try_except=False,
+        )
+
+    # ===================================================================
+    # MYPY TYPE ERRORS - Need imports + enclosing function
+    # ===================================================================
+
+    # Function-level type issues (need to see all return paths, type guards)
+    if rule_code in ["union-attr", "return-value"]:
+        return ContextRequirements(
+            include_imports=True,
+            include_enclosing_function=True,
+            include_try_except=False,
+        )
+
+    # Call-site type mismatches (need imports for types, function for context)
+    if rule_code in ["arg-type", "call-arg"]:
+        # Check if error mentions custom types
         import re
-        # Find potential type names (word characters starting with uppercase)
         potential_types = re.findall(r'\b[A-Z]\w+', message)
-        # Filter out common non-type words
         common_words = {"Argument", "None", "Optional", "Union", "List", "Dict", "Tuple", "Type", "Missing", "Expected", "Incompatible"}
         custom_types = [t for t in potential_types if t not in common_words]
-        if custom_types:
-            return ContextRequirements(needs_type_aliases=True)
 
-    # Call-site errors could benefit from function definition
-    # But mypy error message includes signature, so only needed if unclear
-    # For now, skip this as error messages are usually sufficient
+        return ContextRequirements(
+            include_imports=True,
+            include_enclosing_function=True,
+            include_try_except=False,
+            needs_type_aliases=bool(custom_types),  # Add type aliases if custom types detected
+        )
+
+    # Attribute errors in methods
+    if rule_code in ["attr-defined", "override"] and "self." in message_lower:
+        return ContextRequirements(
+            include_imports=True,
+            include_enclosing_function=True,
+            include_try_except=False,
+            needs_class_definition=True,  # Need class context for method errors
+        )
+
+    # Assignment type errors
+    if rule_code == "assignment":
+        # Check for custom types and self. references
+        import re
+        potential_types = re.findall(r'\b[A-Z]\w+', message)
+        common_words = {"Argument", "None", "Optional", "Union", "List", "Dict", "Tuple", "Type", "Missing", "Expected", "Incompatible"}
+        custom_types = [t for t in potential_types if t not in common_words]
+        has_self = "self." in message_lower
+
+        return ContextRequirements(
+            include_imports=True,
+            include_enclosing_function=True,
+            include_try_except=False,
+            needs_type_aliases=bool(custom_types),
+            needs_class_definition=has_self,
+        )
+
+    # Other mypy errors (index, operator, name-defined)
+    if rule_code in ["index", "operator", "name-defined"]:
+        return ContextRequirements(
+            include_imports=True,
+            include_enclosing_function=True,
+            include_try_except=False,
+        )
 
     # ===================================================================
-    # RUFF LINT ERRORS - Context Requirements
+    # RUFF LINT ERRORS - Various requirements
     # ===================================================================
 
-    # Complexity warnings might benefit from seeing constants
-    if rule_code == "C901":  # Too complex
-        return ContextRequirements(needs_module_constants=True)
+    # Function-level issues (F823: variable referenced before assignment)
+    if rule_code == "F823":
+        return ContextRequirements(
+            include_imports=False,  # Local variable issue, imports not relevant
+            include_enclosing_function=True,
+            include_try_except=False,
+        )
 
-    # Undefined names need to check if it's a constant
-    if rule_code == "F821":  # Undefined name
-        return ContextRequirements(needs_module_constants=True)
+    # Undefined names (might be a constant)
+    if rule_code == "F821":
+        return ContextRequirements(
+            include_imports=True,  # Might need imports
+            include_enclosing_function=True,
+            include_try_except=False,
+            needs_module_constants=True,  # Check if it's a missing constant
+        )
+
+    # Complexity warnings
+    if rule_code == "C901":
+        return ContextRequirements(
+            include_imports=False,
+            include_enclosing_function=True,
+            include_try_except=False,
+            needs_module_constants=True,
+        )
 
     # ===================================================================
-    # DEFAULT - No additional context needed
+    # DEFAULT - Lenient context (when signal type is unknown)
     # ===================================================================
-    return ContextRequirements()
+
+    # For unknown signals, be lenient: include imports + enclosing function
+    # This ensures we have reasonable context even for unexpected signal types
+    return ContextRequirements(
+        include_imports=True,
+        include_enclosing_function=True,
+        include_try_except=False,
+    )

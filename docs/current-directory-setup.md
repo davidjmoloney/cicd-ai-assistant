@@ -7,6 +7,7 @@ cicd-ai-assistant/
 ├── docs/
 │   ├── current-application-setup.md         # Current pipeline architecture and data flow
 │   ├── current-directory-setup.md           # This file
+│   ├── SIGNAL_CONTEXT_REQUIREMENTS.md       # Signal-specific context extraction documentation
 │   └── TOOL_SPECIFIC_PROMPTS.md             # LLM prompt documentation for each tool
 │
 ├── sample-cicd-artifacts/                   # Sample results files from CI/CD pipeline runs
@@ -25,6 +26,7 @@ cicd-ai-assistant/
 │   ├── test_mypy.py                         # MyPy parser test script
 │   ├── test_parsing.py                      # Signal parsing test script
 │   ├── test_pr_generator.py                 # PR generator test script
+│   ├── test_pydocstyle.py                   # Pydocstyle parser test script
 │   ├── test_ruff_format.py                  # Ruff format parser test script
 │   └── verify_tool_prompts.py               # Tool prompts verification script
 │
@@ -34,12 +36,15 @@ cicd-ai-assistant/
 │   ├── signals/                             # Signal parsing and models
 │   │   ├── __init__.py
 │   │   ├── models.py                        # Core data classes (FixSignal, Fix, TextEdit, etc.)
-│   │   │                                    # SignalType enum: LINT, FORMAT, TYPE_CHECK, SECURITY
+│   │   │                                    # SignalType enum: LINT, FORMAT, TYPE_CHECK, SECURITY, DOCSTRING
 │   │   │                                    # Severity enum: LOW, MEDIUM, HIGH, CRITICAL
 │   │   │
 │   │   ├── parsers/
 │   │   │   ├── __init__.py
 │   │   │   ├── mypy.py                      # MyPy parser: parse_mypy_results() for JSON output
+│   │   │   ├── pydocstyle.py                # Pydocstyle parser: parse_pydocstyle_results() for text output
+│   │   │   │                                #   - Supports D101 (class), D102 (method), D103 (function)
+│   │   │   │                                #   - Filters out non-supported docstring codes
 │   │   │   └── ruff.py                      # Ruff parsers:
 │   │   │                                    #   - parse_ruff_lint_results() for JSON lint output
 │   │   │                                    #   - parse_ruff_format_diff() for unified diff output
@@ -54,17 +59,24 @@ cicd-ai-assistant/
 │   │   ├── context_builder.py               # Builds code context for LLM:
 │   │   │                                    #   - Window snippets around signals
 │   │   │                                    #   - Import block extraction
-│   │   │                                    #   - Enclosing function detection
+│   │   │                                    #   - Enclosing function/class detection
+│   │   │                                    #   - Try/except block extraction
+│   │   │                                    #   - Respects ContextRequirements for optimization
 │   │   │
 │   │   ├── fix_planner.py                   # Converts SignalGroup → FixPlan:
 │   │   │                                    #   - Direct path (no LLM) for FORMAT signals
 │   │   │                                    #   - LLM path via AgentHandler for others
 │   │   │                                    #   - AUTO_APPLY_FORMAT_FIXES env var
 │   │   │
-│   │   └── prioritizer.py                   # Groups and prioritizes signals:
-│   │                                        #   - SIGNAL_TYPE_PRIORITY ordering
-│   │                                        #   - File-based grouping for FORMAT
-│   │                                        #   - Chunked grouping (max 3) for others
+│   │   ├── prioritizer.py                   # Groups and prioritizes signals:
+│   │   │                                    #   - SIGNAL_TYPE_PRIORITY ordering
+│   │   │                                    #   - File-based grouping for FORMAT
+│   │   │                                    #   - Chunked grouping (max 3) for others
+│   │   │
+│   │   └── signal_requirements.py           # Signal-specific context configuration:
+│   │                                        #   - EditWindowSpec (lines, function, class, imports, try_except)
+│   │                                        #   - ContextRequirements (base + additional context)
+│   │                                        #   - Tailored context for each signal type (token optimization)
 │   │
 │   ├── agents/                              # LLM-based fix generation
 │   │   ├── __init__.py
@@ -72,7 +84,8 @@ cicd-ai-assistant/
 │   │   ├── llm_provider.py                  # LLM provider abstraction (OpenAI/Anthropic)
 │   │   └── tool_prompts.py                  # Tool-specific LLM prompts:
 │   │                                        #   - get_system_prompt(tool_id) combines base + tool guidance
-│   │                                        #   - MYPY_TYPE_CHECK_GUIDANCE, RUFF_LINT_GUIDANCE, etc.
+│   │                                        #   - MYPY_TYPE_CHECK_GUIDANCE, RUFF_LINT_GUIDANCE,
+│   │                                        #     PYDOCSTYLE_DOCSTRING_GUIDANCE, etc.
 │   │
 │   └── github/                              # GitHub integration
 │       ├── __init__.py

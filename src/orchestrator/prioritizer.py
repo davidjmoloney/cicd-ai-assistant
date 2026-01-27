@@ -28,12 +28,13 @@ from signals.models import FixSignal, SignalType
 # ----------------------------
 
 # Signal type priority order (lower number = higher priority)
-# FORMAT is always processed last as it's cosmetic and safe
+# DOCSTRING and FORMAT are lowest priority (quality/cosmetic, no runtime impact)
 SIGNAL_TYPE_PRIORITY: dict[SignalType, int] = {
     SignalType.SECURITY: 0,     # Security issues first
     SignalType.TYPE_CHECK: 1,   # Type errors second
     SignalType.LINT: 2,         # Lint issues third
-    SignalType.FORMAT: 3,       # Format issues last (cosmetic, always safe)
+    SignalType.DOCSTRING: 3,    # Documentation quality fourth
+    SignalType.FORMAT: 4,       # Format issues last (cosmetic, always safe)
 }
 
 
@@ -85,6 +86,10 @@ def default_tool_resolver(sig: FixSignal) -> str:
     # Handle TYPE_CHECK signals from mypy
     if sig.signal_type == SignalType.TYPE_CHECK:
         return "mypy"
+
+    # Handle DOCSTRING signals from pydocstyle
+    if sig.signal_type == SignalType.DOCSTRING:
+        return "pydocstyle"
 
     # Handle LINT signals from ruff
     if sig.docs_url and "docs.astral.sh/ruff" in sig.docs_url:
