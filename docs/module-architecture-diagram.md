@@ -1,367 +1,589 @@
 # Module Architecture & Data Flow Diagram
 
-This diagram shows the complete module structure of the CI/CD AI Assistant, including all data interfaces and connections between modules.
+Comprehensive diagram of the CI/CD AI Assistant architecture showing all modules, data structures, and processing flows.
 
-## Module Connection Diagram
+---
+
+## System Overview Diagram
 
 ```mermaid
 flowchart TB
-    subgraph Input["Input Layer"]
-        RuffLint["Ruff Lint JSON Output"]
-        RuffFormat["Ruff Format Diff Output"]
-        MyPy["MyPy JSON Output"]
+    subgraph Input["CI/CD Tool Outputs"]
+        RuffLint["Ruff Lint<br/>JSON"]
+        RuffFormat["Ruff Format<br/>Unified Diff"]
+        MyPy["MyPy<br/>JSON (NDJSON)"]
+        PyDocStyle["Pydocstyle<br/>Text Output"]
+        Bandit["Bandit<br/>JSON (planned)"]
     end
 
-    subgraph Signals["Signals Module (src/signals/)"]
-        RuffParser["parsers/ruff.py<br/>parse_ruff_lint_results()<br/>parse_ruff_format_diff()"]
-        MyPyParser["parsers/mypy.py<br/>parse_mypy_results()"]
-        SeverityPolicy["policy/severity.py<br/>Severity Mapping"]
-        PathPolicy["policy/path.py<br/>Path Normalization"]
-        SignalModels["models.py<br/>FixSignal, Fix, TextEdit<br/>Span, Position"]
+    subgraph Signals["signals/ — Data Model & Parsing"]
+        subgraph Parsers["parsers/"]
+            RuffParser["ruff.py<br/>• parse_ruff_lint_results()<br/>• parse_ruff_format_diff()"]
+            MyPyParser["mypy.py<br/>• parse_mypy_results()"]
+            PyDocStyleParser["pydocstyle.py<br/>• parse_pydocstyle_results()<br/>• Filters D101-D103 only"]
+        end
+
+        subgraph Policy["policy/"]
+            SeverityPolicy["severity.py<br/>• severity_for_ruff()<br/>• severity_for_mypy()<br/>• severity_for_pydocstyle()"]
+            PathPolicy["path.py<br/>• to_repo_relative()"]
+        end
+
+        SignalModels["models.py<br/>FixSignal, SignalType, Severity<br/>Span, Position, TextEdit, Fix"]
     end
 
-    subgraph Orchestrator["Orchestrator Module (src/orchestrator/)"]
-        Prioritizer["prioritizer.py<br/>group_and_prioritize_signals()"]
-        FixPlanner["fix_planner.py<br/>generate_fix_plans()"]
-        ContextBuilder["context_builder.py<br/>build_signal_context()"]
+    subgraph Orchestrator["orchestrator/ — Coordination Layer"]
+        Prioritizer["prioritizer.py<br/>• Prioritizer.prioritize()<br/>• SignalGroup batching<br/>• Tool resolution"]
+
+        SignalReqs["signal_requirements.py<br/>• get_edit_window_spec()<br/>• get_context_requirements()<br/>• EditWindowSpec, ContextRequirements"]
+
+        ContextBuilder["context_builder.py<br/>• ContextBuilder.build_group_context()<br/>• Edit snippets & context windows<br/>• Import/function extraction"]
+
+        FixPlanner["fix_planner.py<br/>• FixPlanner.create_fix_plan()<br/>• Routes to direct or LLM path<br/>• PlannerResult"]
     end
 
-    subgraph Agents["Agents Module (src/agents/)"]
-        AgentHandler["agent_handler.py<br/>AgentHandler.generate_fix_plan()"]
-        LLMProvider["llm_provider.py<br/>LLMProvider (Abstract)<br/>OpenAI/Anthropic"]
-        ToolPrompts["tool_prompts.py<br/>Tool-specific prompts"]
+    subgraph Agents["agents/ — LLM Integration"]
+        ToolPrompts["tool_prompts.py<br/>• BASE_SYSTEM_PROMPT<br/>• MYPY_TYPE_CHECK_GUIDANCE<br/>• RUFF_LINT_GUIDANCE<br/>• PYDOCSTYLE_DOCSTRING_GUIDANCE<br/>• get_system_prompt()"]
+
+        AgentHandler["agent_handler.py<br/>• AgentHandler.generate_fix_plan()<br/>• Prompt building<br/>• Response parsing<br/>• FixPlan, FileEdit, CodeEdit"]
+
+        LLMProvider["llm_provider.py<br/>• LLMProvider (ABC)<br/>• OpenAIProvider<br/>• ClaudeProvider<br/>• get_provider() factory"]
     end
 
-    subgraph GitHub["GitHub Module (src/github/)"]
-        PRGenerator["pr_generator.py<br/>PRGenerator.create_pr()"]
+    subgraph GitHub["github/ — PR Creation"]
+        PRGenerator["pr_generator.py<br/>• PRGenerator.create_pr()<br/>• apply_edits_to_content()<br/>• merge_file_edits()<br/>• PRResult"]
     end
 
-    subgraph Output["Output Layer"]
-        PR["GitHub Pull Request"]
+    subgraph Output["Output"]
+        PR["GitHub Pull Request<br/>with AI-generated fixes"]
     end
 
-    %% Input to Parsers
+    %% Input connections
     RuffLint --> RuffParser
     RuffFormat --> RuffParser
     MyPy --> MyPyParser
+    PyDocStyle --> PyDocStyleParser
+    Bandit -.->|"planned"| Parsers
 
-    %% Parsers use policies and models
+    %% Parser dependencies
     RuffParser --> SeverityPolicy
     RuffParser --> PathPolicy
     MyPyParser --> SeverityPolicy
     MyPyParser --> PathPolicy
+    PyDocStyleParser --> SeverityPolicy
+    PyDocStyleParser --> PathPolicy
+
     SeverityPolicy --> SignalModels
     PathPolicy --> SignalModels
 
-    %% Parsers output to Orchestrator
-    RuffParser -->|"FixSignal[]"| Prioritizer
-    MyPyParser -->|"FixSignal[]"| Prioritizer
+    %% Parser outputs
+    RuffParser -->|"list[FixSignal]"| Prioritizer
+    MyPyParser -->|"list[FixSignal]"| Prioritizer
+    PyDocStyleParser -->|"list[FixSignal]"| Prioritizer
 
     %% Orchestrator flow
-    Prioritizer -->|"SignalGroup[]"| FixPlanner
+    Prioritizer -->|"list[SignalGroup]"| FixPlanner
 
-    %% Fix Planner decision paths
-    FixPlanner -->|"FORMAT signals<br/>with auto_apply"| DirectPath["Direct Conversion<br/>FixSignal.fix → FixPlan"]
-    FixPlanner -->|"Complex signals<br/>needing LLM"| ContextBuilder
+    %% Fix Planner routing
+    FixPlanner -->|"FORMAT with auto_apply"| DirectPath["Direct Conversion<br/>FixSignal.fix → FixPlan<br/>No LLM, confidence=1.0"]
+    FixPlanner -->|"LINT, TYPE_CHECK,<br/>DOCSTRING, SECURITY"| ContextBuilder
 
-    %% LLM-Assisted path
-    ContextBuilder -->|"Context dict<br/>(code windows,<br/>imports, functions)"| AgentHandler
-    AgentHandler --> ToolPrompts
-    AgentHandler --> LLMProvider
+    %% Context building
+    SignalReqs --> ContextBuilder
+    ContextBuilder -->|"Context dict"| AgentHandler
+
+    %% Agent flow
     ToolPrompts --> AgentHandler
-    LLMProvider -->|"LLM Response"| AgentHandler
+    AgentHandler <--> LLMProvider
 
-    %% Both paths converge
+    %% Convergence to PR
     DirectPath -->|"FixPlan"| PRGenerator
     AgentHandler -->|"FixPlan"| PRGenerator
 
-    %% PR Generation
+    %% Final output
     PRGenerator -->|"PRResult"| PR
 
     %% Styling
-    classDef inputClass fill:#e1f5ff,stroke:#01579b,stroke-width:2px
-    classDef signalsClass fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-    classDef orchestratorClass fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    classDef agentsClass fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
-    classDef githubClass fill:#fce4ec,stroke:#880e4f,stroke-width:2px
-    classDef outputClass fill:#e0f2f1,stroke:#004d40,stroke-width:2px
-    classDef pathClass fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    classDef inputClass fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    classDef signalsClass fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef orchestratorClass fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    classDef agentsClass fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef githubClass fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef outputClass fill:#e0f2f1,stroke:#00695c,stroke-width:2px
+    classDef directPath fill:#fffde7,stroke:#f9a825,stroke-width:2px
 
-    class RuffLint,RuffFormat,MyPy inputClass
-    class RuffParser,MyPyParser,SeverityPolicy,PathPolicy,SignalModels signalsClass
-    class Prioritizer,FixPlanner,ContextBuilder orchestratorClass
-    class AgentHandler,LLMProvider,ToolPrompts agentsClass
+    class RuffLint,RuffFormat,MyPy,PyDocStyle,Bandit inputClass
+    class RuffParser,MyPyParser,PyDocStyleParser,SeverityPolicy,PathPolicy,SignalModels signalsClass
+    class Prioritizer,SignalReqs,ContextBuilder,FixPlanner orchestratorClass
+    class ToolPrompts,AgentHandler,LLMProvider agentsClass
     class PRGenerator githubClass
     class PR outputClass
-    class DirectPath pathClass
-```
-
-## Data Structures & Interfaces
-
-### 1. FixSignal (signals/models.py)
-**Output from parsers → Input to prioritizer**
-
-```python
-@dataclass(frozen=True)
-class FixSignal:
-    signal_type: SignalType          # LINT | FORMAT | TYPE_CHECK | SECURITY
-    severity: Severity               # CRITICAL | HIGH | MEDIUM | LOW
-    file_path: str                   # Repo-relative path
-    span: Optional[Span]             # Location (start/end Position)
-    rule_code: Optional[str]         # e.g., "E501", "unused-ignore"
-    message: str                     # Human-readable description
-    docs_url: Optional[str]          # Link to rule documentation
-    fix: Optional[Fix]               # Deterministic fix (if available)
-```
-
-**Supporting Types:**
-```python
-@dataclass(frozen=True)
-class Position:
-    row: int        # 1-based line number
-    column: int     # 0 or 1-based depending on tool
-
-@dataclass(frozen=True)
-class Span:
-    start: Position
-    end: Position
-
-@dataclass(frozen=True)
-class Fix:
-    applicability: FixApplicability  # SAFE | UNSAFE | UNKNOWN
-    message: Optional[str]
-    edits: Sequence[TextEdit]
-
-@dataclass(frozen=True)
-class TextEdit:
-    span: Span
-    content: str    # Replacement text
+    class DirectPath directPath
 ```
 
 ---
 
-### 2. SignalGroup (orchestrator/prioritizer.py)
-**Output from prioritizer → Input to fix planner**
+## Detailed Module Diagram
+
+```mermaid
+flowchart LR
+    subgraph signals["src/signals/"]
+        direction TB
+        models["models.py"]
+
+        subgraph parsers["parsers/"]
+            ruff_parser["ruff.py"]
+            mypy_parser["mypy.py"]
+            pydocstyle_parser["pydocstyle.py"]
+        end
+
+        subgraph policy["policy/"]
+            severity["severity.py"]
+            path["path.py"]
+        end
+    end
+
+    subgraph orchestrator["src/orchestrator/"]
+        direction TB
+        prioritizer["prioritizer.py"]
+        signal_requirements["signal_requirements.py"]
+        context_builder["context_builder.py"]
+        fix_planner["fix_planner.py"]
+    end
+
+    subgraph agents["src/agents/"]
+        direction TB
+        tool_prompts["tool_prompts.py"]
+        agent_handler["agent_handler.py"]
+        llm_provider["llm_provider.py"]
+    end
+
+    subgraph github["src/github/"]
+        pr_generator["pr_generator.py"]
+    end
+
+    %% Dependencies
+    ruff_parser --> models
+    ruff_parser --> severity
+    ruff_parser --> path
+    mypy_parser --> models
+    mypy_parser --> severity
+    mypy_parser --> path
+    pydocstyle_parser --> models
+    pydocstyle_parser --> severity
+    pydocstyle_parser --> path
+
+    prioritizer --> models
+    signal_requirements --> models
+    context_builder --> signal_requirements
+    context_builder --> models
+    fix_planner --> prioritizer
+    fix_planner --> context_builder
+    fix_planner --> agent_handler
+
+    agent_handler --> tool_prompts
+    agent_handler --> llm_provider
+
+    pr_generator --> agent_handler
+```
+
+---
+
+## Data Flow: FixSignal Through Pipeline
+
+```mermaid
+sequenceDiagram
+    participant CI as CI/CD Tool
+    participant Parser as Signal Parser
+    participant Prioritizer as Prioritizer
+    participant Planner as Fix Planner
+    participant Context as Context Builder
+    participant Agent as Agent Handler
+    participant LLM as LLM Provider
+    participant PR as PR Generator
+
+    CI->>Parser: Raw tool output
+    Parser->>Parser: Normalize to FixSignal
+    Parser->>Prioritizer: list[FixSignal]
+
+    Prioritizer->>Prioritizer: Group by tool
+    Prioritizer->>Prioritizer: Order by priority
+    Prioritizer->>Planner: list[SignalGroup]
+
+    alt FORMAT with auto_apply=true
+        Planner->>Planner: Extract fix.edits directly
+        Planner->>PR: FixPlan (confidence=1.0)
+    else Complex signal (LINT, TYPE_CHECK, etc.)
+        Planner->>Context: SignalGroup
+        Context->>Context: Read source files
+        Context->>Context: Build edit snippets
+        Context->>Context: Extract imports/functions
+        Context->>Agent: Context dict
+        Agent->>Agent: Build prompts
+        Agent->>LLM: system + user prompt
+        LLM->>Agent: Fixed code blocks
+        Agent->>Agent: Parse to FixPlan
+        Agent->>PR: FixPlan
+    end
+
+    PR->>PR: Fetch file from GitHub
+    PR->>PR: Apply edits (bottom-to-top)
+    PR->>PR: Commit to branch
+    PR->>PR: Create pull request
+```
+
+---
+
+## Signal Type Priority & Routing
+
+```mermaid
+flowchart TD
+    subgraph Priority["Signal Priority Order"]
+        direction LR
+        SEC["🔴 SECURITY<br/>Priority: 0"]
+        TYPE["🟠 TYPE_CHECK<br/>Priority: 1"]
+        LINT["🟡 LINT<br/>Priority: 2"]
+        DOC["🟢 DOCSTRING<br/>Priority: 3"]
+        FMT["🔵 FORMAT<br/>Priority: 4"]
+    end
+
+    subgraph Routing["Fix Path Routing"]
+        direction TB
+
+        subgraph LLMPath["LLM-Assisted Path"]
+            SEC2["SECURITY"] --> LLM["AgentHandler<br/>+ LLM Call"]
+            TYPE2["TYPE_CHECK"] --> LLM
+            LINT2["LINT"] --> LLM
+            DOC2["DOCSTRING"] --> LLM
+        end
+
+        subgraph DirectPath["Direct Path"]
+            FMT2["FORMAT<br/>(auto_apply=true)"] --> Direct["Direct Conversion<br/>No LLM"]
+        end
+    end
+
+    SEC --> SEC2
+    TYPE --> TYPE2
+    LINT --> LINT2
+    DOC --> DOC2
+    FMT --> FMT2
+
+    LLM --> FixPlan1["FixPlan<br/>confidence: 0.5-1.0"]
+    Direct --> FixPlan2["FixPlan<br/>confidence: 1.0"]
+```
+
+---
+
+## Context Building Detail
+
+```mermaid
+flowchart TB
+    subgraph Input
+        Signal["FixSignal<br/>file_path, span, rule_code"]
+    end
+
+    subgraph WindowSpec["get_edit_window_spec(signal)"]
+        direction LR
+        Lines["window_type: 'lines'<br/>±N lines around error"]
+        Function["window_type: 'function'<br/>Full enclosing function"]
+        Imports["window_type: 'imports'<br/>Import block only"]
+        TryExcept["window_type: 'try_except'<br/>Enclosing try/except"]
+    end
+
+    subgraph RuleMapping["Rule Code → Window Type"]
+        F401["F401, I001, E402"] --> Imports
+        E722["E722 (bare except)"] --> TryExcept
+        F823["F823, return-value"] --> Function
+        Default["Default"] --> Lines
+    end
+
+    subgraph ContextOutput["Context Components"]
+        EditSnippet["edit_snippet<br/>Small region for LLM to fix"]
+        ContextWindow["code_context.window<br/>Larger context for understanding"]
+        ImportsBlock["code_context.imports<br/>Import statements"]
+        EnclosingFunc["code_context.enclosing_function<br/>Full function body"]
+        ClassDef["code_context.class_definition<br/>Class header + methods"]
+    end
+
+    Signal --> WindowSpec
+    WindowSpec --> ContextOutput
+```
+
+---
+
+## Tool-Specific Prompt Composition
+
+```mermaid
+flowchart LR
+    subgraph ToolID["tool_id from SignalGroup"]
+        Ruff["ruff"]
+        MyPy["mypy"]
+        PyDoc["pydocstyle"]
+        RuffFmt["ruff-format"]
+    end
+
+    subgraph Prompts["Prompt Components"]
+        Base["BASE_SYSTEM_PROMPT<br/>• Response format<br/>• Edit types (REPLACE/INSERT/DELETE)<br/>• Position conventions"]
+
+        RuffGuide["RUFF_LINT_GUIDANCE<br/>• Rule categories (F, E, W, N, I)<br/>• Safe removal patterns<br/>• Modernization tips"]
+
+        MyPyGuide["MYPY_TYPE_CHECK_GUIDANCE<br/>• ⚠️ Preserve validation logic<br/>• Type annotation strategies<br/>• Type guards and assertions"]
+
+        PyDocGuide["PYDOCSTYLE_DOCSTRING_GUIDANCE<br/>• Google-style format<br/>• Args/Returns/Raises sections"]
+    end
+
+    subgraph Output["get_system_prompt(tool_id)"]
+        Final["Combined System Prompt"]
+    end
+
+    Ruff --> Base
+    Ruff --> RuffGuide
+    MyPy --> Base
+    MyPy --> MyPyGuide
+    PyDoc --> Base
+    PyDoc --> PyDocGuide
+    RuffFmt --> Base
+
+    Base --> Final
+    RuffGuide --> Final
+    MyPyGuide --> Final
+    PyDocGuide --> Final
+```
+
+---
+
+## Edit Application Flow
+
+```mermaid
+flowchart TB
+    subgraph Input
+        FixPlan["FixPlan<br/>file_edits: list[FileEdit]"]
+    end
+
+    subgraph Process["apply_edits_to_content()"]
+        direction TB
+        Sort["Sort edits by position<br/>DESCENDING (bottom-to-top)"]
+
+        subgraph ApplyLoop["For each CodeEdit"]
+            Check["Check edit_type"]
+
+            Replace["REPLACE<br/>1. Keep prefix before span.start<br/>2. Insert new content<br/>3. Keep suffix after span.end"]
+
+            Insert["INSERT<br/>span.start == span.end<br/>Insert content at position"]
+
+            Delete["DELETE<br/>content is empty<br/>Remove span region"]
+        end
+    end
+
+    subgraph Output
+        NewContent["Modified file content"]
+    end
+
+    FixPlan --> Sort
+    Sort --> ApplyLoop
+    Check --> Replace
+    Check --> Insert
+    Check --> Delete
+    ApplyLoop --> NewContent
+
+    Note["⚠️ Bottom-to-top order<br/>preserves line numbers<br/>for subsequent edits"]
+```
+
+---
+
+## Core Data Structures
+
+### FixSignal (signals/models.py)
+
+```python
+class SignalType(str, Enum):
+    LINT = "lint"           # Code quality (ruff)
+    FORMAT = "format"       # Formatting (ruff format)
+    TYPE_CHECK = "type_check"  # Type errors (mypy)
+    SECURITY = "security"   # Vulnerabilities (bandit)
+    DOCSTRING = "docstring" # Missing docs (pydocstyle)
+
+class Severity(str, Enum):
+    CRITICAL = "critical"
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+
+@dataclass(frozen=True)
+class FixSignal:
+    signal_type: SignalType
+    severity: Severity
+    file_path: str              # Repo-relative path
+    span: Optional[Span]        # Error location
+    rule_code: Optional[str]    # e.g., "F401", "arg-type", "D101"
+    message: str
+    docs_url: Optional[str]
+    fix: Optional[Fix]          # Deterministic fix (if available)
+```
+
+### SignalGroup (orchestrator/prioritizer.py)
 
 ```python
 @dataclass(frozen=True)
 class SignalGroup:
-    tool_id: str              # "ruff", "mypy", "ruff-format"
-    signal_type: SignalType   # Type of signals in this group
-    signals: list[FixSignal]  # Max 3 signals (or all for same-file FORMAT)
+    tool_id: str              # "ruff", "mypy", "pydocstyle", "ruff-format"
+    signal_type: SignalType
+    signals: list[FixSignal]  # Batched signals (max 3, or all for same-file FORMAT)
 ```
 
-**Grouping Logic:**
-- FORMAT signals: One group per file (all FORMAT signals for that file)
-- Other signals: Grouped by tool_id, max 3 per group
-- Sorted by priority: SECURITY > TYPE_CHECK > LINT > FORMAT
-
----
-
-### 3. Context Dictionary (orchestrator/context_builder.py)
-**Output from context builder → Input to agent handler**
+### EditWindowSpec (orchestrator/signal_requirements.py)
 
 ```python
-{
-    "signal": FixSignal,                    # The signal being fixed
-    "full_file_content": str,               # Complete file content
-    "code_window": FileSnippet,             # ±30 lines around error
-    "edit_snippet": EditSnippet,            # ±3 lines around error
-    "imports": list[str],                   # Import statements from file
-    "enclosing_function": Optional[str],    # Function containing the error
-    "related_code": Optional[str]           # Additional context if needed
-}
-```
-
-**Supporting Types:**
-```python
-@dataclass(frozen=True)
-class FileSnippet:
-    file_path: str
-    start_row: int      # 1-based
-    end_row: int        # 1-based, inclusive
-    text: str           # Code content
+EditWindowType = Literal["lines", "function", "imports", "try_except"]
 
 @dataclass(frozen=True)
-class EditSnippet:
-    file_path: str
-    start_row: int
-    end_row: int
-    text: str
-    base_indent: str    # Leading whitespace of error line
-    error_line_in_snippet: int  # 1-based position of error in snippet
+class EditWindowSpec:
+    window_type: EditWindowType
+    lines: int = 0              # For window_type='lines'
+    min_context_lines: int = 10
+    min_edit_lines: int = 2
+
+@dataclass(frozen=True)
+class ContextRequirements:
+    include_imports: bool = True
+    include_enclosing_function: bool = True
+    include_try_except: bool = False
+    needs_class_definition: bool = False
+    needs_type_aliases: bool = False
+    needs_related_functions: bool = False
 ```
 
----
-
-### 4. FixPlan (agents/agent_handler.py)
-**Output from agent handler OR direct conversion → Input to PR generator**
+### FixPlan (agents/agent_handler.py)
 
 ```python
-@dataclass
-class FixPlan:
-    group_tool_id: str              # Source tool (e.g., "ruff")
-    group_signal_type: str          # "LINT", "FORMAT", etc.
-    file_edits: list[FileEdit]      # Edits grouped by file
-    summary: str                    # Human-readable description
-    warnings: list[str]             # Any caveats or concerns
-    confidence: float               # 0.0 to 1.0
-```
-
-**Supporting Types:**
-```python
-@dataclass
-class FileEdit:
-    file_path: str
-    edits: list[CodeEdit]   # Applied bottom-to-top (reverse line order)
-    reasoning: str          # Why these changes were made
+class EditType(str, Enum):
+    REPLACE = "replace"
+    INSERT = "insert"
+    DELETE = "delete"
 
 @dataclass
 class CodeEdit:
-    edit_type: EditType     # REPLACE | INSERT | DELETE
-    span: Span              # Location to edit
-    content: str            # New content (empty for DELETE)
-    description: str        # What this edit does
+    edit_type: EditType
+    span: Span
+    content: str
+    description: str
 
-@dataclass(frozen=True)
-class Position:
-    row: int        # 1-based line number
-    column: int     # 0-based character offset
+@dataclass
+class FileEdit:
+    file_path: str
+    edits: list[CodeEdit]
+    reasoning: str
 
-@dataclass(frozen=True)
-class Span:
-    start: Position
-    end: Position
+@dataclass
+class FixPlan:
+    group_tool_id: str
+    group_signal_type: str
+    file_edits: list[FileEdit]
+    summary: str
+    warnings: list[str]
+    confidence: float  # 0.0-1.0
 ```
 
----
-
-### 5. PRResult (github/pr_generator.py)
-**Output from PR generator → Final result**
+### PRResult (github/pr_generator.py)
 
 ```python
 @dataclass
 class PRResult:
     success: bool
-    pr_url: Optional[str]       # e.g., "https://github.com/owner/repo/pull/123"
-    pr_number: Optional[int]    # e.g., 123
-    branch_name: Optional[str]  # e.g., "fix/ruff-lint-abc123"
-    error: Optional[str]        # Error message if success=False
-    files_changed: list[str]    # List of modified file paths
+    pr_url: Optional[str]
+    pr_number: Optional[int]
+    branch_name: Optional[str]
+    error: Optional[str]
+    files_changed: list[str]
 ```
 
 ---
 
-## Processing Paths
-
-### Path A: Direct Conversion (Fast Path)
-**For:** FORMAT signals with `auto_apply=True`
+## File Structure
 
 ```
-FixSignal with Fix
-    ↓
-[FixPlanner] Convert Fix.edits to FixPlan.file_edits
-    ↓
-FixPlan (no LLM call needed)
-```
-
-### Path B: LLM-Assisted (Smart Path)
-**For:** Complex signals (LINT, TYPE_CHECK, SECURITY) or FORMAT without auto_apply
-
-```
-SignalGroup
-    ↓
-[ContextBuilder] Extract code context
-    ↓
-Context dict (code windows, imports, functions)
-    ↓
-[AgentHandler] Build prompt with tool-specific guidance
-    ↓
-[LLMProvider] Call OpenAI/Anthropic API
-    ↓
-LLM Response (structured text with EDIT blocks)
-    ↓
-[AgentHandler] Parse response into FixPlan
-    ↓
-FixPlan
+src/
+├── signals/
+│   ├── __init__.py
+│   ├── models.py                 # FixSignal, SignalType, Severity, Span, Position, Fix, TextEdit
+│   ├── parsers/
+│   │   ├── __init__.py
+│   │   ├── ruff.py              # parse_ruff_lint_results(), parse_ruff_format_diff()
+│   │   ├── mypy.py              # parse_mypy_results()
+│   │   └── pydocstyle.py        # parse_pydocstyle_results()
+│   └── policy/
+│       ├── __init__.py
+│       ├── severity.py          # severity_for_ruff(), severity_for_mypy(), severity_for_pydocstyle()
+│       └── path.py              # to_repo_relative()
+│
+├── orchestrator/
+│   ├── __init__.py
+│   ├── prioritizer.py           # SignalGroup, Prioritizer
+│   ├── signal_requirements.py   # EditWindowSpec, ContextRequirements, get_edit_window_spec()
+│   ├── context_builder.py       # ContextBuilder.build_group_context()
+│   └── fix_planner.py           # FixPlanner.create_fix_plan(), PlannerResult
+│
+├── agents/
+│   ├── __init__.py
+│   ├── tool_prompts.py          # BASE_SYSTEM_PROMPT, tool-specific guidance, get_system_prompt()
+│   ├── agent_handler.py         # AgentHandler, FixPlan, FileEdit, CodeEdit, AgentResult
+│   └── llm_provider.py          # LLMProvider (ABC), OpenAIProvider, ClaudeProvider, get_provider()
+│
+└── github/
+    ├── __init__.py
+    └── pr_generator.py          # PRGenerator, PRResult, apply_edits_to_content()
 ```
 
 ---
 
-## Module Responsibilities
-
-| Module | Primary Responsibility | Key Abstraction |
-|--------|------------------------|-----------------|
-| **Signals** | Normalize tool outputs into unified format | `FixSignal` |
-| **Orchestrator** | Group, prioritize, and route signals | `SignalGroup` |
-| **Agents** | Generate intelligent fixes via LLM | `FixPlan` |
-| **GitHub** | Apply fixes and create pull requests | `PRResult` |
-
----
-
-## Entry Point (To Be Implemented)
-
-The main entry point would orchestrate these modules:
+## Entry Point Pseudocode
 
 ```python
 def main():
-    # 1. Collect tool outputs
-    ruff_lint_json = run_ruff_lint()
-    ruff_format_diff = run_ruff_format()
-    mypy_json = run_mypy()
+    # 1. Collect CI/CD tool outputs
+    ruff_lint = read_file("ruff-lint-results.json")
+    ruff_format = read_file("ruff-format.diff")
+    mypy_output = read_file("mypy-results.json")
+    pydocstyle_output = read_file("pydocstyle-output.txt")
 
-    # 2. Parse into signals
-    signals = []
-    signals.extend(parse_ruff_lint_results(ruff_lint_json))
-    signals.extend(parse_ruff_format_diff(ruff_format_diff))
-    signals.extend(parse_mypy_results(mypy_json))
+    # 2. Parse into unified FixSignal format
+    signals: list[FixSignal] = []
+    signals.extend(parse_ruff_lint_results(ruff_lint))
+    signals.extend(parse_ruff_format_diff(ruff_format))
+    signals.extend(parse_mypy_results(mypy_output))
+    signals.extend(parse_pydocstyle_results(pydocstyle_output))
 
     # 3. Group and prioritize
-    signal_groups = group_and_prioritize_signals(signals)
+    prioritizer = Prioritizer(max_group_size=3)
+    signal_groups = prioritizer.prioritize(signals)
+    # Returns: [SecurityGroup, TypeCheckGroup, LintGroup, ..., FormatGroup]
 
     # 4. Generate fix plans
-    fix_plans = generate_fix_plans(signal_groups, llm_provider, config)
+    fix_planner = FixPlanner(llm_provider="anthropic", repo_root=".")
 
-    # 5. Create PRs
-    pr_generator = PRGenerator(github_token, repo)
-    for fix_plan in fix_plans:
-        pr_result = pr_generator.create_pr(fix_plan)
-        print(f"Created PR: {pr_result.pr_url}")
+    for group in signal_groups:
+        result = fix_planner.create_fix_plan(group)
+        # Routes to:
+        #   - Direct path for FORMAT (no LLM)
+        #   - LLM path for others (context → prompt → LLM → parse)
+
+        if result.success:
+            # 5. Create PR
+            pr_generator = PRGenerator()
+            pr_result = pr_generator.create_pr(result.fix_plan)
+            print(f"Created PR: {pr_result.pr_url}")
 ```
 
 ---
 
 ## Design Principles
 
-1. **Tool Agnosticism**: All tools normalized to `FixSignal` format
-2. **Two-Tier Strategy**: Fast path for deterministic fixes, LLM for complex cases
-3. **Priority-Based Processing**: Security > Type Errors > Lints > Formatting
-4. **Minimal Edits**: LLM prompted to make surgical, focused changes
-5. **Provider Flexibility**: Abstract LLM interface supports multiple backends
-6. **Immutable Data**: Frozen dataclasses prevent accidental mutations
-
----
-
-## File Locations Reference
-
-```
-src/
-├── signals/
-│   ├── models.py              # FixSignal, Fix, TextEdit, Span, Position
-│   ├── parsers/
-│   │   ├── ruff.py           # Ruff parser
-│   │   └── mypy.py           # MyPy parser
-│   └── policy/
-│       ├── severity.py       # Severity mapping
-│       └── path.py           # Path normalization
-├── orchestrator/
-│   ├── prioritizer.py        # SignalGroup, grouping logic
-│   ├── context_builder.py   # FileSnippet, EditSnippet, context building
-│   └── fix_planner.py        # Fix plan generation routing
-├── agents/
-│   ├── agent_handler.py      # FixPlan, FileEdit, CodeEdit, AgentHandler
-│   ├── llm_provider.py       # LLMProvider interface, OpenAI/Anthropic
-│   └── tool_prompts.py       # Tool-specific system prompts
-└── github/
-    └── pr_generator.py       # PRResult, PR creation logic
-```
+| Principle | Implementation |
+|-----------|----------------|
+| **Tool Agnosticism** | All tools normalized to `FixSignal` — parsers encapsulate tool-specific logic |
+| **Two-Tier Fix Strategy** | Fast deterministic path for FORMAT, intelligent LLM path for complex signals |
+| **Priority-Based Processing** | SECURITY > TYPE_CHECK > LINT > DOCSTRING > FORMAT |
+| **Signal-Specific Context** | `EditWindowSpec` and `ContextRequirements` tailor context per rule code |
+| **Tool-Specific Prompts** | Each tool gets specialized LLM guidance (mypy: preserve validation, ruff: safe removal, etc.) |
+| **Immutable Data Flow** | Frozen dataclasses prevent accidental mutations between pipeline stages |
+| **Provider Abstraction** | `LLMProvider` ABC allows swapping OpenAI/Anthropic without changing business logic |
+| **Bottom-to-Top Edit Application** | Preserves line numbers when applying multiple edits to same file |
