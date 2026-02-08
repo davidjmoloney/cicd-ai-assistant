@@ -31,6 +31,8 @@ from dotenv import load_dotenv
 
 from agents.agent_handler import CodeEdit, EditType, FileEdit, FixPlan
 
+DEFAULT_CONFIDENCE_THRESHOLD = 0.7
+
 
 # Load environment variables
 load_dotenv()
@@ -60,6 +62,15 @@ DEBUG_MODE_ON = os.getenv("DEBUG_MODE_ON", "false").lower() in ("true", "1", "ye
 # ============================================================================
 
 @dataclass
+class SkippedFix:
+    """A fix that was skipped due to low confidence."""
+    file_path: str
+    confidence: float
+    reasoning: str
+    threshold: float
+
+
+@dataclass
 class PRResult:
     """Result of PR creation."""
     success: bool
@@ -68,6 +79,7 @@ class PRResult:
     branch_name: Optional[str] = None
     error: Optional[str] = None
     files_changed: list[str] = field(default_factory=list)
+    skipped_fixes: list[SkippedFix] = field(default_factory=list)
 
 
 # ============================================================================
@@ -208,16 +220,27 @@ class PRGenerator:
             print(f"PR created: {result.pr_url}")
     """
 
-    def __init__(self) -> None:
-        """Initialize PR generator with config from environment."""
+    def __init__(self, confidence_threshold: float = DEFAULT_CONFIDENCE_THRESHOLD) -> None:
+        """Initialize PR generator with config from environment.
+
+        Args:
+            confidence_threshold: Minimum confidence level for a fix to be
+                included in the PR. Fixes below this threshold are skipped
+                and reported in PRResult.skipped_fixes. Defaults to 0.7.
+        """
         if not GITHUB_TOKEN:
             raise ValueError("GITHUB_TOKEN environment variable not set")
         if not TARGET_REPO_OWNER or not TARGET_REPO_NAME:
             raise ValueError("TARGET_REPO_OWNER and TARGET_REPO_NAME must be set")
+        self._confidence_threshold = confidence_threshold
 
     def create_pr(self, fix_plan: FixPlan, base_branch: Optional[str] = None) -> PRResult:
         """
         Create a PR from a FixPlan.
+
+        Fixes with confidence below the threshold are skipped and reported
+        in PRResult.skipped_fixes. The PR description includes per-fix
+        confidence levels and an average across all included fixes.
 
         Args:
             fix_plan: FixPlan from agent_handler containing file edits
@@ -228,6 +251,28 @@ class PRGenerator:
         """
         if not fix_plan.file_edits:
             return PRResult(success=False, error="No file edits in fix plan")
+
+        # Filter fixes by confidence threshold
+        accepted_edits: list[FileEdit] = []
+        skipped_fixes: list[SkippedFix] = []
+
+        for file_edit in fix_plan.file_edits:
+            if file_edit.confidence >= self._confidence_threshold:
+                accepted_edits.append(file_edit)
+            else:
+                skipped_fixes.append(SkippedFix(
+                    file_path=file_edit.file_path,
+                    confidence=file_edit.confidence,
+                    reasoning=file_edit.reasoning,
+                    threshold=self._confidence_threshold,
+                ))
+
+        if not accepted_edits:
+            return PRResult(
+                success=True,
+                error="All fixes were below confidence threshold — no PR created",
+                skipped_fixes=skipped_fixes,
+            )
 
         base = base_branch or TARGET_REPO_DEFAULT_BRANCH
         owner = TARGET_REPO_OWNER
@@ -247,7 +292,7 @@ class PRGenerator:
                 })
 
                 # 3. Group edits by file (to handle multiple FileEdits for same file)
-                merged_file_edits = self._merge_file_edits(fix_plan.file_edits)
+                merged_file_edits = self._merge_file_edits(accepted_edits)
 
                 # 4. Apply edits and commit each unique file
                 files_changed: list[str] = []
@@ -256,11 +301,16 @@ class PRGenerator:
                         files_changed.append(file_edit.file_path)
 
                 if not files_changed:
-                    return PRResult(success=False, error="No files were modified", branch_name=branch_name)
+                    return PRResult(
+                        success=False,
+                        error="No files were modified",
+                        branch_name=branch_name,
+                        skipped_fixes=skipped_fixes,
+                    )
 
                 # 5. Create pull request
                 title = self._generate_title(fix_plan)
-                body = self._generate_body(fix_plan, files_changed)
+                body = self._generate_body(fix_plan, files_changed, accepted_edits, skipped_fixes)
 
                 pr_data = _github_request(client, "POST", f"/repos/{owner}/{repo}/pulls", {
                     "title": title,
@@ -291,12 +341,13 @@ class PRGenerator:
                     pr_number=pr_number,
                     branch_name=branch_name,
                     files_changed=files_changed,
+                    skipped_fixes=skipped_fixes,
                 )
 
         except GitHubError as e:
-            return PRResult(success=False, error=str(e))
+            return PRResult(success=False, error=str(e), skipped_fixes=skipped_fixes)
         except Exception as e:
-            return PRResult(success=False, error=f"Unexpected error: {e}")
+            return PRResult(success=False, error=f"Unexpected error: {e}", skipped_fixes=skipped_fixes)
 
     def _commit_file_edit(
         self,
@@ -366,6 +417,7 @@ class PRGenerator:
 
         This prevents line number conflicts when multiple edits target the same file.
         All edits for a file are combined and will be applied in a single commit.
+        Confidence is set to the minimum across merged edits (most conservative).
         """
         from collections import defaultdict
 
@@ -393,7 +445,8 @@ class PRGenerator:
                 merged.append(FileEdit(
                     file_path=file_path,
                     edits=all_edits,
-                    reasoning=" | ".join(reasonings) if reasonings else ""
+                    reasoning=" | ".join(reasonings) if reasonings else "",
+                    confidence=min(fe.confidence for fe in edits_list),
                 ))
 
         return merged
@@ -435,13 +488,27 @@ class PRGenerator:
             return f"Fix {total_edits} {signal_type} issue(s) in {fix_plan.file_edits[0].file_path}"
         return f"Fix {total_edits} {signal_type} issue(s) across {num_files} files"
 
-    def _generate_body(self, fix_plan: FixPlan, files_changed: list[str]) -> str:
-        """Generate PR body."""
+    def _generate_body(
+        self,
+        fix_plan: FixPlan,
+        files_changed: list[str],
+        accepted_edits: list[FileEdit],
+        skipped_fixes: list[SkippedFix],
+    ) -> str:
+        """Generate PR body with per-fix confidence levels and averages."""
+        # Calculate average confidence across accepted fixes only
+        if accepted_edits:
+            avg_confidence = sum(fe.confidence for fe in accepted_edits) / len(accepted_edits)
+        else:
+            avg_confidence = 0.0
+
         lines = [
             "## Summary",
             fix_plan.summary or f"Automated fixes for {fix_plan.group_signal_type or 'code'} issues.",
             "",
-            f"**Confidence:** {int(fix_plan.confidence * 100)}%",
+            f"**Average Confidence:** {avg_confidence:.0%}",
+            f"**Confidence Threshold:** {self._confidence_threshold:.0%}",
+            f"**Fixes Applied:** {len(accepted_edits)} | **Skipped:** {len(skipped_fixes)}",
             "",
             "## Files Changed",
         ]
@@ -451,14 +518,23 @@ class PRGenerator:
 
         lines.extend(["", "## Changes"])
 
-        for fe in fix_plan.file_edits:
+        for fe in accepted_edits:
             if fe.file_path in files_changed:
-                lines.append(f"### `{fe.file_path}`")
+                lines.append(f"### `{fe.file_path}` (confidence: {fe.confidence:.0%})")
                 if fe.reasoning:
                     lines.append(f"**Reasoning:** {fe.reasoning}")
                 for edit in fe.edits:
                     lines.append(f"- **{edit.edit_type.value}** (line {edit.span.start.row}): {edit.description}")
                 lines.append("")
+
+        if skipped_fixes:
+            lines.extend(["## Skipped Fixes (Below Confidence Threshold)", ""])
+            for sf in skipped_fixes:
+                lines.append(
+                    f"- `{sf.file_path}` — confidence {sf.confidence:.0%} "
+                    f"(threshold: {sf.threshold:.0%}): {sf.reasoning}"
+                )
+            lines.append("")
 
         if fix_plan.warnings:
             lines.extend(["## Warnings"])

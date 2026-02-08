@@ -77,6 +77,7 @@ class FileEdit:
     file_path: str
     edits: list[CodeEdit] = field(default_factory=list)
     reasoning: str = ""  # LLM's reasoning for these edits
+    confidence: float = 1.0  # 0.0-1.0, defaults to 1.0 for deterministic fixes
 
 
 @dataclass
@@ -103,6 +104,7 @@ class FixPlan:
                 {
                     "file_path": fe.file_path,
                     "reasoning": fe.reasoning,
+                    "confidence": fe.confidence,
                     "edits": [
                         {
                             "edit_type": e.edit_type.value,
@@ -149,6 +151,7 @@ class FixPlan:
                     file_path=fe_data.get("file_path", ""),
                     edits=edits,
                     reasoning=fe_data.get("reasoning", ""),
+                    confidence=fe_data.get("confidence", 1.0),
                 )
             )
 
@@ -556,6 +559,7 @@ class AgentHandler:
                 file_path=file_path,
                 edits=[code_edit],
                 reasoning=reasoning.strip(),
+                confidence=confidence,
             ))
 
         # Calculate average confidence
