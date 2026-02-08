@@ -26,7 +26,6 @@ Chronological summary of project development for the CI/CD AI Assistant.
   - `ruff-format-output.txt` — ruff format output (~69k lines)
   - `ruff-format-results.json`
   - `mypy-results.json` — mypy type-check output
-  - `bandit-results.json` — bandit security scan output
   - `pytest-results.xml` and `pytest-coverage.json`/`.xml`
 - Updated `.gitignore` and design/plan docs to reflect the new artefacts.
 
@@ -167,7 +166,6 @@ Chronological summary of project development for the CI/CD AI Assistant.
   - `BASE_SYSTEM_PROMPT`: core instructions for JSON-structured fix output, edit types, span conventions.
   - `MYPY_GUIDANCE`: type annotation strategies, validation preservation, type guard patterns, stub handling.
   - `RUFF_GUIDANCE`: lint fix patterns, unused import removal, style conventions, common rule-code advice.
-  - `BANDIT_GUIDANCE`: security fix patterns with emphasis on caution and not introducing new vulnerabilities.
   - `get_system_prompt(tool_id)` function to compose base + tool-specific prompts dynamically.
 - Refactored `agent_handler.py` to use the new prompt system instead of inline prompt strings.
 - Updated `context_builder.py` to pass tool metadata through to prompts.

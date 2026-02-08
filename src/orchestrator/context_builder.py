@@ -699,7 +699,7 @@ class ContextBuilder:
             }
 
         return {
-            "tool_id": group_tool_id,  # group tool (ruff/mypy/bandit); later store on signal
+            "tool_id": group_tool_id,  # group tool (ruff/mypy/pydocstyle); later store on signal
             "signal_type": sig.signal_type.value,
             "severity": sig.severity.value,
             "rule_code": sig.rule_code,
@@ -1059,6 +1059,6 @@ def build_repo_context_index(repo_root: str) -> None:
           - ctags-like index
           - tree-sitter / jedi symbol graph
 
-    This helps MyPy/Bandit fixes that require cross-file understanding.
+    This helps MyPy fixes that require cross-file understanding.
     """
     raise NotImplementedError

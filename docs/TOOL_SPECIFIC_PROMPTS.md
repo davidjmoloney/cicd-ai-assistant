@@ -2,7 +2,7 @@
 
 ## Overview
 
-The AI fix generation agent now uses **tool-specific prompts** that provide specialized guidance based on the type of CI/CD signal being fixed (MyPy, Ruff, Bandit, etc.).
+The AI fix generation agent now uses **tool-specific prompts** that provide specialized guidance based on the type of CI/CD signal being fixed (MyPy, Ruff, pydocstyle, etc.).
 
 This dramatically improves fix quality by giving the LLM context-appropriate instructions for each tool's specific concerns.
 
@@ -80,26 +80,6 @@ response = llm.generate(system_prompt=system_prompt, user_prompt=user_prompt)
 # AFTER: Suggests simple fixes like renaming or removing unused imports
 ```
 
-### Bandit (Security)
-
-**Focus**: CRITICAL security vulnerabilities
-
-**Key Guidance**:
-- ⚠️ **EXTREME CAUTION** - security fixes can have severe consequences
-- NEVER weaken security to fix warnings
-- NEVER add `# nosec` without understanding
-- When unsure, set confidence < 0.5 for human review
-- Use secure alternatives (sha256 vs md5, parameterized queries)
-
-**Example Improvements**:
-```python
-# BEFORE (generic prompt):
-# LLM might disable security: verify=False  # ❌
-
-# AFTER (Bandit-specific prompt):
-# LLM suggests secure alternative or flags for review  # ✅
-```
-
 ## Prompt Structure
 
 ### Base Prompt (All Tools)
@@ -135,12 +115,11 @@ from agents.tool_prompts import get_system_prompt
 
 # Get specific prompt
 mypy_prompt = get_system_prompt("mypy")
-bandit_prompt = get_system_prompt("bandit")
 base_prompt = get_system_prompt(None)  # Fallback to base
 
 # List supported tools
 from agents.tool_prompts import list_supported_tools
-tools = list_supported_tools()  # ['mypy', 'ruff', 'ruff-lint', 'ruff-format', 'bandit']
+tools = list_supported_tools()  # ['mypy', 'ruff', 'ruff-lint', 'ruff-format', 'pydocstyle']
 ```
 
 ### Override (Custom Prompts)

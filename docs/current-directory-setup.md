@@ -10,8 +10,7 @@ cicd-ai-assistant/
 │   ├── SIGNAL_CONTEXT_REQUIREMENTS.md       # Signal-specific context extraction documentation
 │   └── TOOL_SPECIFIC_PROMPTS.md             # LLM prompt documentation for each tool
 │
-├── sample-cicd-artifacts/                   # Sample results files from CI/CD pipeline runs
-│   ├── bandit-results.json                  # Security scan results (Bandit)
+├── cicd-artifacts/                   # Sample results files from CI/CD pipeline runs
 │   ├── mypy-results.json                    # Type checking results (MyPy)
 │   ├── pytest-coverage.json                 # Test coverage data (JSON format)
 │   ├── pytest-coverage.xml                  # Test coverage data (XML format)
@@ -36,7 +35,7 @@ cicd-ai-assistant/
 │   ├── signals/                             # Signal parsing and models
 │   │   ├── __init__.py
 │   │   ├── models.py                        # Core data classes (FixSignal, Fix, TextEdit, etc.)
-│   │   │                                    # SignalType enum: LINT, FORMAT, TYPE_CHECK, SECURITY, DOCSTRING
+│   │   │                                    # SignalType enum: LINT, FORMAT, TYPE_CHECK, DOCSTRING
 │   │   │                                    # Severity enum: LOW, MEDIUM, HIGH, CRITICAL
 │   │   │
 │   │   ├── parsers/

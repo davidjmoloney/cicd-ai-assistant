@@ -10,13 +10,12 @@ class SignalType(str, Enum):
     """
     Types of CI/CD signals that can be processed.
 
-    Priority order (highest to lowest): SECURITY > TYPE_CHECK > LINT > DOCSTRING > FORMAT
+    Priority order (highest to lowest): TYPE_CHECK > LINT > DOCSTRING > FORMAT
     DOCSTRING and FORMAT are lowest priority as they're quality/cosmetic and safe.
     """
     LINT = "lint"
     FORMAT = "format"  # Formatting signals (e.g., ruff format) - always lowest priority
     TYPE_CHECK = "type_check"
-    SECURITY = "security"
     DOCSTRING = "docstring"  # Documentation quality (pydocstyle) - low priority, quality improvement
     # Later:
     # UNIT_TEST = "unit_test"
@@ -67,7 +66,7 @@ class Fix:
     """
     A deterministic patch suggestion (e.g., Ruff's JSON `fix.edits[]`).
 
-    If a tool cannot provide deterministic edits (MyPy, many Bandit cases),
+    If a tool cannot provide deterministic edits (MyPy, etc),
     you simply set fix=None and let the agent decide later.
     """
     applicability: FixApplicability
@@ -94,18 +93,3 @@ class FixSignal:
     docs_url: Optional[str]
 
     fix: Optional[Fix]  # present if tool provides deterministic edits
-
-
-# -------------------------------------------------------------------------
-# PSEUDOCODE PLACEHOLDERS (do NOT implement in v1)
-# -------------------------------------------------------------------------
-
-# BanditFixSignal notes:
-# - Bandit outputs "issue_severity", "issue_confidence", CWE, code snippet, etc.
-# - Usually no deterministic edits. So FixSignal.fix will often be None.
-# - You likely store extra evidence in a separate payload object later.
-#
-# MyPyFixSignal notes:
-# - MyPy often outputs file/line/col + message + error code.
-# - No deterministic edits, almost always agent/LLM-required.
-# - FixSignal.fix will be None; severity mapping needs a policy table.

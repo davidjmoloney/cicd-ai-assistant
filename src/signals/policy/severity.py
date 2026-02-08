@@ -9,7 +9,7 @@ from signals.models import Severity, SignalType
 # Ruff specifics:
 # - Ruff rule prefixes don't perfectly equal severity, so don't pretend they do.
 # - Start with a small mapping of *known safe autofix* rules to LOW/MEDIUM.
-# - Everything else defaults to MEDIUM so it shows up but doesn't outrank security/tests.
+# - Everything else defaults to MEDIUM.
 
 _RUFF_CODE_TO_SEVERITY: dict[str, Severity] = {
     # F-series: Pyflakes errors
@@ -37,15 +37,6 @@ def severity_for_ruff(code: str) -> Severity:
 # -------------------------------------------------------------------------
 # PSEUDOCODE PLACEHOLDERS
 # -------------------------------------------------------------------------
-
-def severity_for_bandit(issue_severity: str, issue_confidence: str) -> Severity:
-    """
-    PSEUDOCODE:
-      map = {"HIGH": CRITICAL, "MEDIUM": HIGH/MEDIUM, "LOW": LOW}
-      if confidence is HIGH and severity is LOW, maybe bump to MEDIUM
-      return result
-    """
-    raise NotImplementedError
 
 
 # MyPy error codes that indicate higher severity issues

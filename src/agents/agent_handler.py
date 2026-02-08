@@ -176,7 +176,7 @@ class AgentResult:
 # System prompt for fix generation
 # ============================================================================
 # NOTE: System prompts are now in agents/tool_prompts.py
-# This allows tool-specific guidance (mypy, ruff, bandit, etc.)
+# This allows tool-specific guidance (mypy, ruff, pydocstyle etc.)
 
 
 # ============================================================================
@@ -235,7 +235,7 @@ class AgentHandler:
         Useful for debugging and testing.
 
         Args:
-            tool_id: Tool identifier (e.g., "mypy", "ruff", "bandit")
+            tool_id: Tool identifier (e.g., "mypy", "ruff", "pydocstyle")
 
         Returns:
             Complete system prompt with tool-specific guidance
