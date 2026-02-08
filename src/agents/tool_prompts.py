@@ -3,7 +3,7 @@
 Tool-specific system prompts for the AI fix generation agent.
 
 This module centralizes all LLM prompts used for generating code fixes.
-Each CI/CD tool (mypy, ruff, bandit, etc.) gets customized guidance that
+Each CI/CD tool (mypy, ruff, pydocstyle, etc.) gets customized guidance that
 reflects its specific concerns and risks.
 
 To add a new tool:
@@ -425,116 +425,6 @@ Remember: Preserve behavior. These are style improvements, not bug fixes.
 
 
 # =============================================================================
-# Bandit Security Scanner Guidance
-# =============================================================================
-
-BANDIT_SECURITY_GUIDANCE = """
-## Bandit Security Error Fixing - Specialized Guidance
-
-You are fixing SECURITY vulnerabilities from Bandit. This is CRITICAL CODE.
-
-⚠️ EXTREME CAUTION REQUIRED ⚠️
-
-Risk Level: CRITICAL
-Security fixes can have severe consequences if done incorrectly.
-
-Core Principles:
-
-1. **NEVER weaken security** to fix a warning
-2. **NEVER add `# nosec` comments** without understanding
-3. **NEVER disable security checks** without explicit reason
-4. **When unsure: SET CONFIDENCE < 0.5** for human review
-
-Common Bandit Issues:
-
-B1XX - Injection:
-- B101: assert used (can be optimized away)
-- B102: exec used (arbitrary code execution)
-- B103: Bad file permissions (0o777, etc)
-
-B3XX - Crypto:
-- B301: pickle used (arbitrary code execution)
-- B303: MD5/SHA1 used (weak crypto)
-- B304: Insecure cipher modes
-
-B5XX - Injection Flaws:
-- B501: Request with verify=False (MITM risk)
-- B506: YAML load() (code execution)
-- B608: SQL injection (string concatenation)
-
-B6XX - Other Security:
-- B602: subprocess with shell=True
-- B607: Starting process with partial path
-
-Fixing Strategies:
-
-1. **Use Secure Alternatives**
-   ❌ `hashlib.md5()` → ✅ `hashlib.sha256()`
-   ❌ `yaml.load()` → ✅ `yaml.safe_load()`
-   ❌ `pickle.loads()` → ✅ `json.loads()` (if possible)
-
-2. **Parameterize Queries**
-   ❌ `f"SELECT * FROM users WHERE id={user_id}"`
-   ✅ `cursor.execute("SELECT * FROM users WHERE id=?", (user_id,))`
-
-3. **Validate Input**
-   ❌ `exec(user_input)`
-   ✅ Remove exec, or use `ast.literal_eval()` with strict validation
-
-4. **Fix Permissions**
-   ❌ `os.chmod(file, 0o777)`
-   ✅ `os.chmod(file, 0o600)` or `0o644`
-
-5. **Enable Verification**
-   ❌ `requests.get(url, verify=False)`
-   ✅ `requests.get(url, verify=True)` or provide CA bundle
-
-6. **Avoid Shell Injection**
-   ❌ `subprocess.call(f"ls {user_input}", shell=True)`
-   ✅ `subprocess.call(["ls", user_input], shell=False)`
-
-When # nosec Is Acceptable:
-- False positive after careful review
-- Must add comment: `# nosec B123 - reason why this is safe`
-- Never for actual vulnerabilities
-
-Confidence Guidelines:
-- High (>0.8): Clear secure alternatives (md5→sha256, yaml.load→safe_load)
-- Medium (0.5-0.8): Parameterized queries, input validation
-- Low (<0.5): Complex security logic, authentication, crypto
-  - ALWAYS flag for expert review
-  - Add detailed warnings about implications
-
-NEVER do these:
-❌ `# nosec` without comment
-❌ Disable verify=True in requests
-❌ Use shell=True with user input
-❌ exec() or eval() with external input
-❌ Hardcoded passwords/keys (move to env vars)
-❌ Weak crypto (DES, MD5, SHA1)
-
-Special Cases:
-
-Test/Demo Code:
-- Might have intentionally weak security
-- Still suggest fixes but lower confidence
-- Add warning that it's test code
-
-Configuration:
-- Hardcoded secrets must move to environment variables
-- Never commit API keys, passwords, tokens
-
-Input Handling:
-- ALL external input is untrusted
-- Validate type, format, bounds
-- Escape/sanitize before use
-
-Remember: Better to flag for human review than introduce a vulnerability.
-Security is not negotiable.
-"""
-
-
-# =============================================================================
 # Ruff Format Guidance (Note: Usually auto-applied, LLM rarely sees these)
 # =============================================================================
 
@@ -728,7 +618,6 @@ TOOL_SPECIFIC_PROMPTS: dict[str, str] = {
     "ruff": RUFF_LINT_GUIDANCE,
     "ruff-lint": RUFF_LINT_GUIDANCE,  # Alias
     "ruff-format": RUFF_FORMAT_GUIDANCE,
-    "bandit": BANDIT_SECURITY_GUIDANCE,
     "pydocstyle": PYDOCSTYLE_DOCSTRING_GUIDANCE,
 }
 
@@ -744,7 +633,7 @@ def get_system_prompt(tool_id: str | None = None) -> str:
     Combines the base prompt with tool-specific guidance if available.
 
     Args:
-        tool_id: Tool identifier (e.g., "mypy", "ruff", "bandit")
+        tool_id: Tool identifier (e.g., "mypy", "ruff", "pydocstyle")
                 If None or not recognized, returns base prompt only
 
     Returns:
@@ -753,9 +642,6 @@ def get_system_prompt(tool_id: str | None = None) -> str:
     Examples:
         >>> prompt = get_system_prompt("mypy")
         >>> assert "validation logic" in prompt.lower()
-
-        >>> prompt = get_system_prompt("bandit")
-        >>> assert "security" in prompt.lower()
 
         >>> prompt = get_system_prompt("unknown-tool")
         >>> assert prompt == BASE_SYSTEM_PROMPT  # Falls back to base

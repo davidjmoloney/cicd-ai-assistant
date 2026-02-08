@@ -23,7 +23,7 @@ Created the foundational design documentation:
   - Pipeline design: Signal Ingestion → Prioritization → Fix Planning → PR Generation
   - Data model sketches for `FixSignal`, `SignalGroup`, `FixPlan`
   - LLM integration approach (provider abstraction, tool-specific prompts)
-  - Planned tool support: ruff, mypy, bandit, pytest/coverage
+  - Planned tool support: ruff, mypy, pytest/coverage
   - Security and testing considerations
 - **`docs/directory-plan.md`** — Proposed directory layout (src/signals, src/orchestrator, src/agents, src/github)
 - Initialized `src/` package with empty `__init__.py`
@@ -48,7 +48,6 @@ Added real CI/CD output samples for development and testing:
 - **`sample-cicd-artifacts/ruff-format-output.txt`** — ~69k lines of unified diff output from `ruff format --diff`
 - **`sample-cicd-artifacts/ruff-format-results.json`** — JSON summary of format changes
 - **`sample-cicd-artifacts/mypy-results.json`** — Mypy type-check output in newline-delimited JSON
-- **`sample-cicd-artifacts/bandit-results.json`** — Bandit security scan results (~4.7k lines)
 - **`sample-cicd-artifacts/pytest-results.xml`** — JUnit XML test results
 - **`sample-cicd-artifacts/pytest-coverage.json`** and **`.xml`** — Coverage reports
 
@@ -126,7 +125,7 @@ Created `severity_for_ruff(code)` function with explicit severity mappings:
 - `E722` (bare except) → MEDIUM (catches KeyboardInterrupt)
 - Default → MEDIUM
 
-Added placeholder stubs for `severity_for_bandit()` and `severity_for_mypy()`.
+Added placeholder stubs for `severity_for_mypy()`.
 
 ---
 
@@ -192,7 +191,7 @@ Defined `SignalGroup` dataclass:
 ```python
 @dataclass
 class SignalGroup:
-    tool_id: str          # "ruff", "mypy", "bandit"
+    tool_id: str          # "ruff", "mypy", "pydocstyle"
     signal_type: SignalType
     signals: list[FixSignal]
 ```
@@ -817,11 +816,6 @@ Examples of good vs bad fixes with detailed explanations.
 - Common rule categories: F (Pyflakes), E/W (pycodestyle), N (naming), I (isort), UP (pyupgrade)
 - Fixing strategies: remove unused code, simplify logic, fix naming, modernize syntax
 - Warnings: don't remove code with side effects, don't break working code
-
-**`BANDIT_SECURITY_GUIDANCE`** (~100 lines):
-- Emphasizes caution — security fixes can introduce new vulnerabilities
-- Categories: injection, crypto, authentication, permissions
-- Validation guidance: don't break security checks while fixing
 
 **`get_system_prompt(tool_id: str | None) -> str`:**
 - Combines `BASE_SYSTEM_PROMPT` + tool-specific guidance

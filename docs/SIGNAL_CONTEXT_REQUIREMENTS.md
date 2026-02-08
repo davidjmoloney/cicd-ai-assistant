@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document explains the rationale and implementation of signal-specific context gathering and edit window sizing for LLM-based code fixes. Each CI/CD tool (ruff, mypy, bandit) produces different types of errors that require different amounts of code context and different edit scopes to fix effectively.
+This document explains the rationale and implementation of signal-specific context gathering and edit window sizing for LLM-based code fixes. Each CI/CD tool (ruff, mypy, pydocstyle(tbc)) produces different types of errors that require different amounts of code context and different edit scopes to fix effectively.
 
 ## The Problem
 
@@ -229,7 +229,6 @@ Only gather what's needed:
 
 ### Planned Additions
 
-1. **Bandit signals**: Security-focused context requirements
 2. **Pytest signals**: Test context and fixture resolution
 3. **Cross-file resolution**: For override errors (requires import resolution)
 4. **Symbol index**: For faster related function lookup

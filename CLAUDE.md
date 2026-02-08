@@ -4,18 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AI-powered CI/CD assistant that ingests pipeline signals (lint, type-check, format, security) and generates pull requests with fixes. Uses LLMs with tool-specific prompts to generate code corrections.
+AI-powered CI/CD assistant that ingests pipeline signals (lint, type-check, format) and generates pull requests with fixes. Uses LLMs with tool-specific prompts to generate code corrections.
 
 ## Development Status
 
 **Core pipeline implemented.** Working components:
 - Signal parsers for ruff (lint/format) and mypy (type-check)
 - Prioritizer with severity-based ordering
-- Fix planner with direct-apply (format) and LLM paths
-- Tool-specific LLM prompts (mypy, ruff, bandit)
+- Fix planner with direct-apply (format) and LLM path
+- Tool-specific LLM prompts (mypy, ruff, pydocstyle)
 - PR generator with GitHub API integration
-
-**Not yet implemented:** bandit parser, pytest/coverage parsers, validation loops
 
 ## Architecture
 
@@ -32,7 +30,7 @@ See `docs/current-application-setup.md` for detailed pipeline flow.
 
 ```python
 FixSignal:
-  signal_type: LINT | FORMAT | TYPE_CHECK | SECURITY
+  signal_type: LINT | FORMAT | TYPE_CHECK 
   severity: LOW | MEDIUM | HIGH | CRITICAL
   file_path: str
   span: Span(start, end)
@@ -46,7 +44,7 @@ FixSignal:
 Tool-specific prompts in `src/agents/tool_prompts.py`:
 - **mypy**: Type annotation fixes, validation preservation, type guards
 - **ruff**: Lint fixes, unused code removal, style improvements
-- **bandit**: Security fixes with high caution (planned)
+- **pydocstyle**: Doc String usage at module, class and function level.
 
 The agent returns fixed code snippets that are parsed and applied to files.
 

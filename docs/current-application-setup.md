@@ -43,7 +43,7 @@ The application processes CI/CD tool output (linter results, formatter diffs, et
 │          │                                                                   │
 │          └─── Sort by SIGNAL_TYPE_PRIORITY                                   │
 │                                                                              │
-│  List[SignalGroup]  ─── ordered: SECURITY → TYPE_CHECK → LINT → FORMAT       │
+│  List[SignalGroup]  ─── ordered: TYPE_CHECK → LINT → DOCSTRING → FORMAT      │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
                                     │
@@ -95,7 +95,7 @@ The application processes CI/CD tool output (linter results, formatter diffs, et
 **Artifacts produced:**
 ```python
 FixSignal(
-    signal_type=SignalType.FORMAT,      # or LINT, SECURITY, TYPE_CHECK, DOCSTRING
+    signal_type=SignalType.FORMAT,      # or LINT, TYPE_CHECK, DOCSTRING
     severity=Severity.LOW,               # LOW, MEDIUM, HIGH, CRITICAL
     file_path="app/foo.py",
     span=Span(start, end),               # Location in file
@@ -122,12 +122,12 @@ FixSignal(
 
 | Signal Type | Grouping | Rationale |
 |-------------|----------|-----------|
-| SECURITY, TYPE_CHECK, LINT, DOCSTRING | By tool, chunked (max 3) | Fits LLM context window |
+| TYPE_CHECK, LINT, DOCSTRING | By tool, chunked (max 3) | Fits LLM context window |
 | FORMAT | By file (no chunking) | Line numbers are interdependent |
 
 **Priority Order:**
 ```
-SECURITY (0) → TYPE_CHECK (1) → LINT (2) → DOCSTRING (3) → FORMAT (4)
+TYPE_CHECK (1) → LINT (2) → DOCSTRING (3) → FORMAT (4)
 ```
 
 **Artifacts produced:**
@@ -153,12 +153,11 @@ SignalGroup(
 | Condition | Pathway | Cost |
 |-----------|---------|------|
 | FORMAT + `AUTO_APPLY_FORMAT_FIXES=true` | Direct conversion | Free, instant |
-| All other signals (LINT, TYPE_CHECK, SECURITY, DOCSTRING) | LLM via AgentHandler | API cost, latency |
+| All other signals (LINT, TYPE_CHECK, DOCSTRING) | LLM via AgentHandler | API cost, latency |
 
 **Tool-Specific Prompts:** The LLM receives customized guidance based on tool type:
 - `mypy` - Type annotation strategies, validation preservation
 - `ruff`/`ruff-lint` - Lint fix patterns, side-effect awareness
-- `bandit` - Security-focused guidance with high caution
 - `pydocstyle` - Google-style docstring format, Args/Returns/Raises sections
 - `ruff-format` - Simple formatting (rarely used, auto-applied)
 
@@ -258,7 +257,7 @@ STAGE 4 (PRGenerator):
 2. **Auto-apply for FORMAT**: Format changes are idempotent and safe; no LLM needed
 
 3. **Priority ordering**: Security issues are fixed before cosmetic formatting
-   - SECURITY → TYPE_CHECK → LINT → DOCSTRING → FORMAT
+   - TYPE_CHECK → LINT → DOCSTRING → FORMAT
 
 4. **Signal-specific context optimization**: Each signal type receives only relevant context
    - Import errors: imports only (no function bodies)

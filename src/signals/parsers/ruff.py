@@ -425,28 +425,3 @@ def parse_ruff_lint_results(raw: str | Sequence[dict[str, Any]], *, repo_root: s
 
     return signals
 
-
-# -------------------------------------------------------------------------
-# PSEUDOCODE PLACEHOLDERS
-# -------------------------------------------------------------------------
-
-# def parse_bandit_results(...):
-#   """
-#   PSEUDOCODE:
-#     load JSON -> for each issue in data["results"]:
-#       file/line/col + rule/test_id + issue_text + more_info + cwe
-#       severity = severity_for_bandit(issue_severity, issue_confidence)
-#       FixSignal.fix = None (almost always)
-#   """
-#   raise NotImplementedError
-
-# def parse_mypy_results(...):
-#   """
-#   PSEUDOCODE:
-#     mypy JSON can be newline-delimited objects or one JSON blob depending on flags.
-#     for each error:
-#       file/line/col + message + error_code
-#       severity = severity_for_mypy(severity, error_code)
-#       FixSignal.fix = None
-#   """
-#   raise NotImplementedError

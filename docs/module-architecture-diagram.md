@@ -13,7 +13,6 @@ flowchart TB
         RuffFormat["Ruff Format<br/>Unified Diff"]
         MyPy["MyPy<br/>JSON (NDJSON)"]
         PyDocStyle["Pydocstyle<br/>Text Output"]
-        Bandit["Bandit<br/>JSON (planned)"]
     end
 
     subgraph Signals["signals/ — Data Model & Parsing"]
@@ -62,7 +61,6 @@ flowchart TB
     RuffFormat --> RuffParser
     MyPy --> MyPyParser
     PyDocStyle --> PyDocStyleParser
-    Bandit -.->|"planned"| Parsers
 
     %% Parser dependencies
     RuffParser --> SeverityPolicy
@@ -85,7 +83,7 @@ flowchart TB
 
     %% Fix Planner routing
     FixPlanner -->|"FORMAT with auto_apply"| DirectPath["Direct Conversion<br/>FixSignal.fix → FixPlan<br/>No LLM, confidence=1.0"]
-    FixPlanner -->|"LINT, TYPE_CHECK,<br/>DOCSTRING, SECURITY"| ContextBuilder
+    FixPlanner -->|"LINT, TYPE_CHECK,<br/>DOCSTRING"| ContextBuilder
 
     %% Context building
     SignalReqs --> ContextBuilder
@@ -111,7 +109,7 @@ flowchart TB
     classDef outputClass fill:#e0f2f1,stroke:#00695c,stroke-width:2px
     classDef directPath fill:#fffde7,stroke:#f9a825,stroke-width:2px
 
-    class RuffLint,RuffFormat,MyPy,PyDocStyle,Bandit inputClass
+    class RuffLint,RuffFormat,MyPy,PyDocStyle inputClass
     class RuffParser,MyPyParser,PyDocStyleParser,SeverityPolicy,PathPolicy,SignalModels signalsClass
     class Prioritizer,SignalReqs,ContextBuilder,FixPlanner orchestratorClass
     class ToolPrompts,AgentHandler,LLMProvider agentsClass
@@ -239,7 +237,6 @@ sequenceDiagram
 flowchart TD
     subgraph Priority["Signal Priority Order"]
         direction LR
-        SEC["🔴 SECURITY<br/>Priority: 0"]
         TYPE["🟠 TYPE_CHECK<br/>Priority: 1"]
         LINT["🟡 LINT<br/>Priority: 2"]
         DOC["🟢 DOCSTRING<br/>Priority: 3"]
@@ -250,7 +247,6 @@ flowchart TD
         direction TB
 
         subgraph LLMPath["LLM-Assisted Path"]
-            SEC2["SECURITY"] --> LLM["AgentHandler<br/>+ LLM Call"]
             TYPE2["TYPE_CHECK"] --> LLM
             LINT2["LINT"] --> LLM
             DOC2["DOCSTRING"] --> LLM
@@ -399,7 +395,6 @@ class SignalType(str, Enum):
     LINT = "lint"           # Code quality (ruff)
     FORMAT = "format"       # Formatting (ruff format)
     TYPE_CHECK = "type_check"  # Type errors (mypy)
-    SECURITY = "security"   # Vulnerabilities (bandit)
     DOCSTRING = "docstring" # Missing docs (pydocstyle)
 
 class Severity(str, Enum):
@@ -555,7 +550,7 @@ def main():
     # 3. Group and prioritize
     prioritizer = Prioritizer(max_group_size=3)
     signal_groups = prioritizer.prioritize(signals)
-    # Returns: [SecurityGroup, TypeCheckGroup, LintGroup, ..., FormatGroup]
+    # Returns: [TypeCheckGroup, LintGroup, ..., FormatGroup]
 
     # 4. Generate fix plans
     fix_planner = FixPlanner(llm_provider="anthropic", repo_root=".")
@@ -581,7 +576,7 @@ def main():
 |-----------|----------------|
 | **Tool Agnosticism** | All tools normalized to `FixSignal` — parsers encapsulate tool-specific logic |
 | **Two-Tier Fix Strategy** | Fast deterministic path for FORMAT, intelligent LLM path for complex signals |
-| **Priority-Based Processing** | SECURITY > TYPE_CHECK > LINT > DOCSTRING > FORMAT |
+| **Priority-Based Processing** | TYPE_CHECK > LINT > DOCSTRING > FORMAT |
 | **Signal-Specific Context** | `EditWindowSpec` and `ContextRequirements` tailor context per rule code |
 | **Tool-Specific Prompts** | Each tool gets specialized LLM guidance (mypy: preserve validation, ruff: safe removal, etc.) |
 | **Immutable Data Flow** | Frozen dataclasses prevent accidental mutations between pipeline stages |

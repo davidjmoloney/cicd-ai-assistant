@@ -2,7 +2,7 @@
 Signal parsing and processing module.
 
 This module handles the ingestion and structuring of CI/CD signals from various
-tools like ruff, mypy, and bandit.
+tools like ruff, mypy, and pydocstyle.
 """
 
 from .models import (

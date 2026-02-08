@@ -8,7 +8,7 @@ This module handles:
   - Special handling for FORMAT signals (file-based grouping)
 
 Priority order (highest to lowest):
-  SECURITY > TYPE_CHECK > LINT > FORMAT
+    TYPE_CHECK > LINT > DOCSTRING > FORMAT
 
 FORMAT signals are grouped differently:
   - One SignalGroup per file (not chunked by max_group_size)
@@ -30,11 +30,10 @@ from signals.models import FixSignal, SignalType
 # Signal type priority order (lower number = higher priority)
 # DOCSTRING and FORMAT are lowest priority (quality/cosmetic, no runtime impact)
 SIGNAL_TYPE_PRIORITY: dict[SignalType, int] = {
-    SignalType.SECURITY: 0,     # Security issues first
-    SignalType.TYPE_CHECK: 1,   # Type errors second
-    SignalType.LINT: 2,         # Lint issues third
-    SignalType.DOCSTRING: 3,    # Documentation quality fourth
-    SignalType.FORMAT: 4,       # Format issues last (cosmetic, always safe)
+    SignalType.TYPE_CHECK: 0,   # Type errors second
+    SignalType.LINT: 1,         # Lint issues third
+    SignalType.DOCSTRING: 2,    # Documentation quality fourth
+    SignalType.FORMAT: 3,       # Format issues last (cosmetic, always safe)
 }
 
 
@@ -48,7 +47,7 @@ class SignalGroup:
     A batch of signals to be passed to an agent.
 
     v1 rules (simple):
-      - tool-homogeneous groups (ruff separate from mypy/bandit)
+      - tool-homogeneous groups (ruff separate from mypy etc)
       - preserve original order within each tool
       - max 3 signals per group
 
@@ -143,7 +142,7 @@ class Prioritizer:
           1) Separate signals by type (FORMAT vs others)
           2) For non-FORMAT: bucket by tool, chunk by max_group_size
           3) For FORMAT: group by file (all signals for a file in one group)
-          4) Sort all groups by priority (SECURITY > TYPE_CHECK > LINT > FORMAT)
+          4) Sort all groups by priority (TYPE_CHECK > LINT > DOCSTRING > FORMAT)
           5) Return ordered groups
 
         Returns:

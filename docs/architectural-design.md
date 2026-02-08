@@ -20,7 +20,7 @@ Comprehensive documentation of the CI/CD AI Assistant architecture, covering sig
 
 ## 1. System Overview
 
-The CI/CD AI Assistant ingests signals from static analysis tools (linters, type checkers, formatters, security scanners), generates code fixes using either deterministic rules or LLM assistance, and creates pull requests with the fixes.
+The CI/CD AI Assistant ingests signals from static analysis tools (linters, type checkers, formatters, docstring checks), generates code fixes using either deterministic rules or LLM assistance, and creates pull requests with the fixes.
 
 ### Pipeline Architecture
 
@@ -45,7 +45,7 @@ The CI/CD AI Assistant ingests signals from static analysis tools (linters, type
 │                   src/orchestrator/prioritizer.py                           │
 │                                                                             │
 │   Groups signals by tool and batches for processing                         │
-│   Priority: SECURITY > TYPE_CHECK > LINT > DOCSTRING > FORMAT              │
+│   Priority: TYPE_CHECK > LINT > DOCSTRING > FORMAT              │
 │   FORMAT signals grouped by file; others chunked by max_group_size=3       │
 └───────────────────────────────────┬─────────────────────────────────────────┘
                                     │ list[SignalGroup]
@@ -97,7 +97,7 @@ Every signal from every tool is normalized into a `FixSignal`. This is the unive
 ```python
 @dataclass(frozen=True)
 class FixSignal:
-    signal_type: SignalType      # LINT | FORMAT | TYPE_CHECK | SECURITY | DOCSTRING
+    signal_type: SignalType      # LINT | FORMAT | TYPE_CHECK | DOCSTRING
     severity: Severity           # CRITICAL | HIGH | MEDIUM | LOW
     file_path: str               # Normalized path relative to repo root
     span: Optional[Span]         # Location in file (start/end positions)
@@ -111,7 +111,7 @@ class FixSignal:
 
 1. **Frozen dataclass** — Signals are immutable to prevent accidental modification during pipeline processing.
 
-2. **Optional `fix` field** — Present when the tool provides deterministic edits (ruff lint with safe fixes, ruff format). Absent when human/LLM judgment is needed (mypy, pydocstyle, bandit).
+2. **Optional `fix` field** — Present when the tool provides deterministic edits (ruff lint with safe fixes, ruff format). Absent when human/LLM judgment is needed (mypy, pydocstyle).
 
 3. **Tool-agnostic** — The same structure works for all tools. Tool-specific data is normalized into common fields.
 
@@ -122,7 +122,6 @@ class SignalType(str, Enum):
     LINT = "lint"           # Code quality issues (ruff)
     FORMAT = "format"       # Formatting issues (ruff format)
     TYPE_CHECK = "type_check"  # Type errors (mypy)
-    SECURITY = "security"   # Security vulnerabilities (bandit)
     DOCSTRING = "docstring" # Missing documentation (pydocstyle)
 
 class Severity(str, Enum):
@@ -334,7 +333,6 @@ Signal types are processed in priority order:
 
 ```python
 SIGNAL_TYPE_PRIORITY = {
-    SignalType.SECURITY: 0,     # Highest - fix security issues first
     SignalType.TYPE_CHECK: 1,   # Type errors can cause runtime failures
     SignalType.LINT: 2,         # Code quality
     SignalType.DOCSTRING: 3,    # Documentation quality
@@ -342,7 +340,7 @@ SIGNAL_TYPE_PRIORITY = {
 }
 ```
 
-**Rationale:** Security and type errors can cause runtime failures. Format changes are purely cosmetic and safe to defer.
+**Rationale:** type errors can cause runtime failures. Format changes are purely cosmetic and safe to defer.
 
 ### 4.2 Tool Resolution
 
@@ -470,7 +468,7 @@ def _create_direct_fix_plan(self, group: SignalGroup) -> PlannerResult:
 ### 5.3 LLM-Assisted Path
 
 Used for:
-- `LINT`, `TYPE_CHECK`, `SECURITY`, `DOCSTRING` signals
+- `LINT`, `TYPE_CHECK`, `DOCSTRING` signals
 - FORMAT signals when `AUTO_APPLY_FORMAT_FIXES=false`
 
 The process:
@@ -771,10 +769,6 @@ def get_system_prompt(tool_id: str | None) -> str:
    - Args, Returns, Raises sections
    - Match existing codebase style
 
-5. **BANDIT_SECURITY_GUIDANCE** — For security fixes:
-   - High caution required
-   - Don't break security while fixing
-   - Prefer minimal changes
 
 ### 7.4 LLM Response Format
 
@@ -980,7 +974,7 @@ LLM integration and prompt management.
 |--------|------|-------------|
 | **agent_handler.py** | `src/agents/agent_handler.py` | LLM-based fix generation. Defines `FixPlan`, `FileEdit`, `CodeEdit`, `EditType`, `Span`, `Position` dataclasses. `AgentHandler` class with `generate_fix_plan()`. Handles prompt building and response parsing. |
 | **llm_provider.py** | `src/agents/llm_provider.py` | LLM provider abstraction. Defines `LLMProvider` abstract base class, `LLMResponse`, `LLMError`. Implements `OpenAIProvider` and `ClaudeProvider`. Includes retry logic and `get_provider()` factory. |
-| **tool_prompts.py** | `src/agents/tool_prompts.py` | Tool-specific system prompts. Contains `BASE_SYSTEM_PROMPT`, `MYPY_TYPE_CHECK_GUIDANCE`, `RUFF_LINT_GUIDANCE`, `PYDOCSTYLE_DOCSTRING_GUIDANCE`, `BANDIT_SECURITY_GUIDANCE`. `get_system_prompt(tool_id)` composes prompts. |
+| **tool_prompts.py** | `src/agents/tool_prompts.py` | Tool-specific system prompts. Contains `BASE_SYSTEM_PROMPT`, `MYPY_TYPE_CHECK_GUIDANCE`, `RUFF_LINT_GUIDANCE`, `PYDOCSTYLE_DOCSTRING_GUIDANCE`. `get_system_prompt(tool_id)` composes prompts. |
 
 ### 10.4 GitHub Package (`src/github/`)
 
