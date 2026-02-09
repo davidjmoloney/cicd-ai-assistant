@@ -26,6 +26,15 @@ The CI/CD AI Assistant ingests signals from static analysis tools (linters, type
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
+│                              ENTRY POINT                                    │
+│                              src/main.py                                    │
+│                                                                             │
+│   CLI interface, artifact discovery, pipeline orchestration, run metrics   │
+│   Config: CONFIDENCE_THRESHOLD, SIGNALS_PER_PR, LLM_PROVIDER, LOG_LEVEL    │
+└───────────────────────────────────┬─────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
 │                            CI/CD TOOL OUTPUTS                               │
 │   ruff lint → JSON    mypy → JSON    pydocstyle → text    ruff format → diff│
 └───────────────────────────────────┬─────────────────────────────────────────┘
@@ -81,6 +90,7 @@ The CI/CD AI Assistant ingests signals from static analysis tools (linters, type
 
 | Module | Path | Responsibility |
 |--------|------|----------------|
+| **Main** | `src/main.py` | CLI entry point, artifact discovery, pipeline orchestration, run metrics |
 | **Signals** | `src/signals/` | Data models, parsers, severity policy |
 | **Orchestrator** | `src/orchestrator/` | Prioritization, context building, fix planning |
 | **Agents** | `src/agents/` | LLM integration, prompts, response parsing |

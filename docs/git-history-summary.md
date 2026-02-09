@@ -234,3 +234,35 @@ Chronological summary of project development for the CI/CD AI Assistant.
   - `agent_handler.py`: added pydocstyle response handling.
 - Added sample pydocstyle output files and `scripts/test_pydocstyle.py`.
 - Updated application setup and directory docs.
+
+---
+
+## 2026-02-08 — `76ed6c3`, `6ba4019` — Confidence filtering and bandit removal
+
+- Added confidence-based filtering to PR generation:
+  - `PRGenerator` now accepts `confidence_threshold` parameter (default 0.7).
+  - Fixes below threshold are skipped and reported in `PRResult.skipped_fixes`.
+  - PR descriptions include per-fix confidence levels and averages.
+  - Added `SkippedFix` dataclass to track filtered fixes.
+- Removed deprecated bandit-related code and sample files:
+  - Removed `SECURITY` signal type from `SignalType` enum.
+  - Removed bandit sample artifacts and references.
+  - Cleaned up tool prompts and severity mappings.
+
+---
+
+## 2026-02-08 to 2026-02-09 — `bffa7e2`, `94cfc0e`, `a858995` — Main entry point and project cleanup
+
+- Created `src/main.py` — the main application entry point:
+  - CLI with `--artifacts-dir` argument for specifying input directory.
+  - Environment variable configuration: `CONFIDENCE_THRESHOLD`, `SIGNALS_PER_PR`, `LLM_PROVIDER`, `LOG_LEVEL`, `TARGET_REPO_ROOT`.
+  - Full pipeline orchestration: artifact discovery → parsing → prioritization → fix planning → PR generation.
+  - `RunMetrics` dataclass for tracking pipeline statistics.
+  - Run report generation to `logs/` directory with timestamped files.
+  - Debug mode (`LOG_LEVEL=debug`) for dumping pipeline objects to `debug/` directory.
+- Reorganized CI/CD artifact files:
+  - Renamed `sample-cicd-artifacts/` to `cicd-artifacts/` for active use.
+  - Removed outdated sample files (pytest, coverage, old ruff/mypy samples).
+  - Added evaluation artifact files with real tool output.
+- Added `logs/` and `debug/` directories with `.gitkeep` files.
+- Updated `.gitignore` to exclude generated log and debug files.

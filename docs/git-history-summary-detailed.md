@@ -1116,8 +1116,278 @@ if sig.signal_type == SignalType.DOCSTRING:
 
 ---
 
-## 2026-02-05 11:51 — `0bd288b` — Add git history summary documenting project development chronology
+## 2026-02-05 11:51 — `a86a620` — Add git history summary documenting project development chronology
 
 **Files:** `docs/git-history-summary.md` (+238)
 
 Added summary markdown file documenting the project development history.
+
+---
+
+## 2026-02-08 14:00 — `13fcf8b` — Add detailed git history summary
+
+**Files:** `docs/git-history-summary-detailed.md` (+1124)
+
+Added comprehensive detailed git history with code change analysis for each significant commit.
+
+---
+
+## 2026-02-08 — `6ba4019` — Removing deprecated files and code blocks for planned bandit inclusion
+
+**Files:** `src/signals/models.py` (+1, −5), `src/signals/policy/severity.py` (−11), `src/agents/tool_prompts.py` (−118), `sample-cicd-artifacts/bandit-results.json` (−4778), `sample-cicd-artifacts/*.json` (various removals), `scripts/verify_tool_prompts.py` (−113)
+
+**Removed bandit/security signal type** — deferred for future implementation.
+
+### `src/signals/models.py` changes
+
+Removed `SECURITY` from `SignalType` enum:
+```python
+# Before
+class SignalType(str, Enum):
+    LINT = "lint"
+    FORMAT = "format"
+    TYPE_CHECK = "type_check"
+    SECURITY = "security"  # REMOVED
+    DOCSTRING = "docstring"
+
+# After
+class SignalType(str, Enum):
+    LINT = "lint"
+    FORMAT = "format"
+    TYPE_CHECK = "type_check"
+    DOCSTRING = "docstring"
+```
+
+Updated docstring to reflect current priority order: `TYPE_CHECK > LINT > DOCSTRING > FORMAT`
+
+### Other removals
+
+- `src/signals/policy/severity.py`: Removed `severity_for_bandit()` function
+- `src/agents/tool_prompts.py`: Removed `BANDIT_SECURITY_GUIDANCE` (~118 lines)
+- `sample-cicd-artifacts/bandit-results.json`: Removed 4,778-line sample file
+- `scripts/verify_tool_prompts.py`: Removed prompt verification script
+- Various sample files: Removed pytest, coverage, and outdated ruff/mypy samples
+
+---
+
+## 2026-02-08 — `76ed6c3` — Add confidence-based filtering to PR generation
+
+**Files:** `src/github/pr_generator.py` (+102, −10), `src/orchestrator/fix_planner.py` (+2, −2)
+
+**Confidence filtering — prevents low-confidence fixes from being included in PRs.**
+
+### `src/github/pr_generator.py` changes (+102 lines)
+
+**New `SkippedFix` dataclass:**
+```python
+@dataclass
+class SkippedFix:
+    """A fix that was skipped due to low confidence."""
+    file_path: str
+    confidence: float
+    reasoning: str
+    threshold: float
+```
+
+**Updated `PRResult` dataclass:**
+```python
+@dataclass
+class PRResult:
+    success: bool
+    pr_url: Optional[str] = None
+    pr_number: Optional[int] = None
+    branch_name: Optional[str] = None
+    error: Optional[str] = None
+    files_changed: list[str] = field(default_factory=list)
+    skipped_fixes: list[SkippedFix] = field(default_factory=list)  # NEW
+```
+
+**Updated `PRGenerator.__init__()`:**
+- Added `confidence_threshold` parameter (default 0.7)
+- Stored as `self._confidence_threshold`
+
+**Updated `create_pr()` method:**
+1. Iterates through `fix_plan.file_edits`
+2. Filters by `file_edit.confidence >= self._confidence_threshold`
+3. Accepted edits proceed to PR creation
+4. Rejected edits added to `skipped_fixes` list
+5. If all fixes rejected, returns success with no PR URL
+
+**Updated `_generate_body()` method:**
+- Includes average confidence across accepted fixes
+- Shows confidence threshold setting
+- Lists per-fix confidence levels
+- Adds "Skipped Fixes" section if any were filtered
+
+### `src/orchestrator/fix_planner.py` changes
+
+- Updated default provider from `"openai"` to `"anthropic"`
+
+---
+
+## 2026-02-08 — `bffa7e2` — Add main entry point with artifact parsing, pipeline orchestration, and run reporting
+
+**Files:** `src/main.py` (+381)
+
+**Main application module — the entry point that ties together all pipeline components.**
+
+### `src/main.py` (381 lines)
+
+**Environment variable configuration:**
+```python
+def _read_config() -> dict:
+    return {
+        "repo_root": os.getenv("TARGET_REPO_ROOT"),
+        "confidence_threshold": float(os.getenv("CONFIDENCE_THRESHOLD", "0.7")),
+        "signals_per_pr": int(os.getenv("SIGNALS_PER_PR", "4")),
+        "llm_provider": os.getenv("LLM_PROVIDER", "anthropic").strip(),
+        "log_level": os.getenv("LOG_LEVEL", "info").strip().lower(),
+    }
+```
+
+**Artifact discovery and routing:**
+```python
+def discover_artifacts(artifacts_dir: Path) -> list[Path]:
+    """Return all regular files in artifacts_dir, sorted by name."""
+
+def _route_artifact(path: Path) -> Optional[str]:
+    """Determine parser type based on filename."""
+    # Returns: "mypy", "ruff-lint", "ruff-format", "pydocstyle", or None
+```
+
+**Parser dispatch:**
+```python
+def parse_artifact(path: Path, parser_type: str, repo_root: str | None) -> list[FixSignal]:
+    """Read path and run the appropriate parser."""
+    raw = path.read_text(encoding="utf-8")
+    if parser_type == "mypy":
+        return parse_mypy_results(raw, repo_root=repo_root)
+    elif parser_type == "ruff-lint":
+        return parse_ruff_lint_results(raw, repo_root=repo_root)
+    # ... etc
+```
+
+**RunMetrics dataclass:**
+```python
+@dataclass
+class RunMetrics:
+    start_time: datetime
+    end_time: Optional[datetime]
+
+    # Parsing
+    artifacts_found: int = 0
+    artifacts_parsed: int = 0
+    total_signals: int = 0
+    signals_by_type: dict[str, int]
+
+    # Fix planning
+    signal_groups: int = 0
+    fix_plans_created: int = 0
+    fix_plans_failed: int = 0
+    llm_calls: int = 0
+    direct_fixes: int = 0
+
+    # PR generation
+    prs_created: int = 0
+    prs_failed: int = 0
+    signals_fixed: int = 0
+    signals_skipped: int = 0
+```
+
+**Main pipeline (`run()` function):**
+1. Discover artifacts in directory
+2. Route each artifact to appropriate parser
+3. Collect all `FixSignal` objects
+4. Prioritize and group signals
+5. For each group:
+   - Create fix plan (direct or LLM)
+   - Generate PR
+   - Record metrics
+6. Return `RunMetrics`
+
+**Run report generation:**
+```python
+def write_run_report(metrics: RunMetrics, output_dir: Path) -> Path:
+    """Write timestamped run report to logs/ directory."""
+```
+
+**CLI entry point:**
+```python
+def main() -> None:
+    parser = argparse.ArgumentParser(...)
+    parser.add_argument("--artifacts-dir", type=Path, default=Path("cicd-artifacts"))
+    args = parser.parse_args()
+    # Run pipeline and write report
+```
+
+---
+
+## 2026-02-09 — `94cfc0e` — Adding main application module and tidying sample cicd artifact files
+
+**Files:** `src/main.py` (+92), `cicd-artifacts/*` (new directory), `sample-cicd-artifacts/*` (removed), `.gitignore` (+3)
+
+**Project reorganization and debug functionality.**
+
+### `src/main.py` additions (+92 lines)
+
+**Debug mode support:**
+```python
+# Debug mode setup
+debug_mode = log_level == "debug"
+debug_dir = Path("debug")
+debug_timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+
+if debug_mode:
+    print("[main] Debug mode enabled — objects will be dumped to debug/")
+```
+
+**Debug serialization helpers:**
+```python
+def _serialize_for_debug(obj: Any) -> Any:
+    """Recursively serialize dataclasses, enums, and nested structures."""
+    if isinstance(obj, Enum):
+        return obj.value
+    if is_dataclass(obj) and not isinstance(obj, type):
+        if hasattr(obj, "to_dict"):
+            return obj.to_dict()
+        return {k: _serialize_for_debug(v) for k, v in asdict(obj).items()}
+    # ... handle dict, list, Path
+
+def _dump_debug_object(obj, name, debug_dir, timestamp):
+    """Dump object to timestamped JSON file in debug directory."""
+```
+
+**Debug dumps in pipeline:**
+- `all-signals-{timestamp}.json` — After parsing
+- `groups-{timestamp}.json` — After prioritization
+- `fix-plan-{n}-{tool}-{type}-{timestamp}.json` — For each group
+- `pr-result-{n}-{tool}-{type}-{timestamp}.json` — For each PR result
+
+### Artifact directory reorganization
+
+- Renamed `sample-cicd-artifacts/` → `cicd-artifacts/` for active evaluation
+- Removed obsolete sample files:
+  - `pytest-results.xml`, `pytest-coverage.json`, `pytest-coverage.xml`
+  - `ruff-format-results.json`, `ruff-format-cicd-short.txt`
+  - `mypy-results-short.json`, `mypy-results-short-debug.json`
+  - `pydocstyle-output-short.txt`, `pydocstyle-output-debug.txt`
+- Added evaluation artifacts:
+  - `mypy-results-eval.json`
+  - `ruff-lint-results-eval.json`
+  - `ruff-format-results-eval.txt`
+  - `pydocstyle-results-eval.txt`
+
+### `.gitignore` additions
+
+```
+debug/*.json
+logs/*.txt
+```
+
+---
+
+## 2026-02-09 — `a858995` — Fixing log folder git handling
+
+**Files:** `logs/.gitkeep` (+0), `.gitignore` (+1)
+
+Added `.gitkeep` to `logs/` directory and updated gitignore to properly track directory while excluding generated log files.
