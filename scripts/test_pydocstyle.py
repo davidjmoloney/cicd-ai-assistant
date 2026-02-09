@@ -36,7 +36,7 @@ from agents.agent_handler import FixPlan
 
 
 # Path to your pydocstyle text output
-pydocstyle_output_path = Path("/home/devel/cicd-ai-assistant/sample-cicd-artifacts/pydocstyle-output-debug.txt")
+pydocstyle_output_path = Path("/home/devel/cicd-ai-assistant/cicd-artifacts/pydocstyle-output-debug.txt")
 
 # Output file paths
 output_dir = Path(__file__).parent / "test-outputs"
@@ -46,7 +46,7 @@ fix_planner_output = output_dir / "pydocstyle-fix-plan.json"
 repo_root = "/home/devel/cicd-ai-assistant/test-repo-stripped/"
 
 # Test Settings
-PARSE_PYDOCSTYLE_AND_OUTPUT=True
+PARSE_PYDOCSTYLE_AND_OUTPUT=False
 CREATE_PR_FROM_FIXPLAN=True
 
 def main() -> int:

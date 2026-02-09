@@ -346,7 +346,7 @@ class FixPlanner:
         Create FixPlan using LLM via AgentHandler.
 
         Used for:
-            - Non-FORMAT signals (lint, type_check, security)
+            - Non-FORMAT signals (lint, type_check, docstyle)
             - FORMAT signals when AUTO_APPLY_FORMAT_FIXES=false
 
         This approach:

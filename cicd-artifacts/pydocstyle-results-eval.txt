@@ -1,0 +1,6 @@
+app/main.py:347 in public method `dispatch`:
+        D102: Missing docstring in public method
+app/api/routes/excel_exports.py:17 in public function `export_company_excel_jwt`:
+        D103: Missing docstring in public function
+app/routers/save_share.py:18 in public function `get_save_share_service`:
+        D103: Missing docstring in public function
