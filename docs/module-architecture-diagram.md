@@ -8,7 +8,11 @@ Comprehensive diagram of the CI/CD AI Assistant architecture showing all modules
 
 ```mermaid
 flowchart TB
-    subgraph Input["CI/CD Tool Outputs"]
+    subgraph Main["src/main.py — Entry Point"]
+        MainModule["main.py<br/>• CLI (--artifacts-dir)<br/>• discover_artifacts()<br/>• parse_artifact()<br/>• run() pipeline<br/>• RunMetrics"]
+    end
+
+    subgraph Input["CI/CD Tool Outputs (cicd-artifacts/)"]
         RuffLint["Ruff Lint<br/>JSON"]
         RuffFormat["Ruff Format<br/>Unified Diff"]
         MyPy["MyPy<br/>JSON (NDJSON)"]
@@ -56,6 +60,11 @@ flowchart TB
         PR["GitHub Pull Request<br/>with AI-generated fixes"]
     end
 
+    %% Main orchestrates the pipeline
+    MainModule -->|"Discovers artifacts"| Input
+    MainModule -->|"Coordinates pipeline"| FixPlanner
+    MainModule -->|"Initiates PR creation"| PRGenerator
+
     %% Input connections
     RuffLint --> RuffParser
     RuffFormat --> RuffParser
@@ -101,6 +110,7 @@ flowchart TB
     PRGenerator -->|"PRResult"| PR
 
     %% Styling
+    classDef mainClass fill:#e1f5fe,stroke:#0277bd,stroke-width:3px
     classDef inputClass fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
     classDef signalsClass fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
     classDef orchestratorClass fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
@@ -109,6 +119,7 @@ flowchart TB
     classDef outputClass fill:#e0f2f1,stroke:#00695c,stroke-width:2px
     classDef directPath fill:#fffde7,stroke:#f9a825,stroke-width:2px
 
+    class MainModule mainClass
     class RuffLint,RuffFormat,MyPy,PyDocStyle inputClass
     class RuffParser,MyPyParser,PyDocStyleParser,SeverityPolicy,PathPolicy,SignalModels signalsClass
     class Prioritizer,SignalReqs,ContextBuilder,FixPlanner orchestratorClass
@@ -124,6 +135,10 @@ flowchart TB
 
 ```mermaid
 flowchart LR
+    subgraph main["src/"]
+        main_py["main.py<br/>(entry point)"]
+    end
+
     subgraph signals["src/signals/"]
         direction TB
         models["models.py"]
@@ -159,7 +174,15 @@ flowchart LR
         pr_generator["pr_generator.py"]
     end
 
-    %% Dependencies
+    %% Main dependencies
+    main_py --> ruff_parser
+    main_py --> mypy_parser
+    main_py --> pydocstyle_parser
+    main_py --> prioritizer
+    main_py --> fix_planner
+    main_py --> pr_generator
+
+    %% Parser dependencies
     ruff_parser --> models
     ruff_parser --> severity
     ruff_parser --> path
@@ -190,7 +213,7 @@ flowchart LR
 
 ```mermaid
 sequenceDiagram
-    participant CI as CI/CD Tool
+    participant Main as main.py
     participant Parser as Signal Parser
     participant Prioritizer as Prioritizer
     participant Planner as Fix Planner
@@ -199,34 +222,39 @@ sequenceDiagram
     participant LLM as LLM Provider
     participant PR as PR Generator
 
-    CI->>Parser: Raw tool output
+    Main->>Main: discover_artifacts()
+    Main->>Parser: Raw tool output
     Parser->>Parser: Normalize to FixSignal
-    Parser->>Prioritizer: list[FixSignal]
+    Parser->>Main: list[FixSignal]
 
+    Main->>Prioritizer: all_signals
     Prioritizer->>Prioritizer: Group by tool
     Prioritizer->>Prioritizer: Order by priority
-    Prioritizer->>Planner: list[SignalGroup]
+    Prioritizer->>Main: list[SignalGroup]
 
-    alt FORMAT with auto_apply=true
-        Planner->>Planner: Extract fix.edits directly
-        Planner->>PR: FixPlan (confidence=1.0)
-    else Complex signal (LINT, TYPE_CHECK, etc.)
-        Planner->>Context: SignalGroup
-        Context->>Context: Read source files
-        Context->>Context: Build edit snippets
-        Context->>Context: Extract imports/functions
-        Context->>Agent: Context dict
-        Agent->>Agent: Build prompts
-        Agent->>LLM: system + user prompt
-        LLM->>Agent: Fixed code blocks
-        Agent->>Agent: Parse to FixPlan
-        Agent->>PR: FixPlan
+    loop For each SignalGroup
+        Main->>Planner: SignalGroup
+
+        alt FORMAT with auto_apply=true
+            Planner->>Planner: Extract fix.edits directly
+            Planner->>Main: FixPlan (confidence=1.0)
+        else Complex signal (LINT, TYPE_CHECK, etc.)
+            Planner->>Context: SignalGroup
+            Context->>Context: Read source files
+            Context->>Context: Build edit snippets
+            Context->>Agent: Context dict
+            Agent->>LLM: system + user prompt
+            LLM->>Agent: Fixed code blocks
+            Agent->>Planner: FixPlan
+            Planner->>Main: FixPlan
+        end
+
+        Main->>PR: FixPlan
+        PR->>PR: Apply edits, create PR
+        PR->>Main: PRResult
     end
 
-    PR->>PR: Fetch file from GitHub
-    PR->>PR: Apply edits (bottom-to-top)
-    PR->>PR: Commit to branch
-    PR->>PR: Create pull request
+    Main->>Main: Write run report
 ```
 
 ---
@@ -497,6 +525,8 @@ class PRResult:
 
 ```
 src/
+├── main.py                      # Entry point: CLI, artifact discovery, pipeline orchestration
+│
 ├── signals/
 │   ├── __init__.py
 │   ├── models.py                 # FixSignal, SignalType, Severity, Span, Position, Fix, TextEdit
@@ -530,42 +560,51 @@ src/
 
 ---
 
-## Entry Point Pseudocode
+## Entry Point (src/main.py)
+
+The actual implementation in `src/main.py`:
 
 ```python
-def main():
-    # 1. Collect CI/CD tool outputs
-    ruff_lint = read_file("ruff-lint-results.json")
-    ruff_format = read_file("ruff-format.diff")
-    mypy_output = read_file("mypy-results.json")
-    pydocstyle_output = read_file("pydocstyle-output.txt")
+# Usage:
+#   python -m main --artifacts-dir ./cicd-artifacts
+#
+# Environment variables:
+#   CONFIDENCE_THRESHOLD  - Min confidence for PR inclusion (default: 0.7)
+#   SIGNALS_PER_PR        - Max signals per group (default: 4)
+#   LLM_PROVIDER          - "anthropic" (default) or "openai"
+#   LOG_LEVEL             - "info" (default) or "debug"
+#   TARGET_REPO_ROOT      - Repository root for path normalization
 
-    # 2. Parse into unified FixSignal format
-    signals: list[FixSignal] = []
-    signals.extend(parse_ruff_lint_results(ruff_lint))
-    signals.extend(parse_ruff_format_diff(ruff_format))
-    signals.extend(parse_mypy_results(mypy_output))
-    signals.extend(parse_pydocstyle_results(pydocstyle_output))
+def run(artifacts_dir: Path, config: dict) -> RunMetrics:
+    metrics = RunMetrics()
 
-    # 3. Group and prioritize
-    prioritizer = Prioritizer(max_group_size=3)
-    signal_groups = prioritizer.prioritize(signals)
-    # Returns: [TypeCheckGroup, LintGroup, ..., FormatGroup]
+    # 1. Discover and parse artifacts
+    artifact_files = discover_artifacts(artifacts_dir)
+    all_signals: list[FixSignal] = []
 
-    # 4. Generate fix plans
-    fix_planner = FixPlanner(llm_provider="anthropic", repo_root=".")
+    for path in artifact_files:
+        parser_type = _route_artifact(path)  # "mypy", "ruff-lint", etc.
+        if parser_type:
+            signals = parse_artifact(path, parser_type, config["repo_root"])
+            all_signals.extend(signals)
 
-    for group in signal_groups:
-        result = fix_planner.create_fix_plan(group)
-        # Routes to:
-        #   - Direct path for FORMAT (no LLM)
-        #   - LLM path for others (context → prompt → LLM → parse)
+    # 2. Prioritize and group
+    prioritizer = Prioritizer(max_group_size=config["signals_per_pr"])
+    groups = prioritizer.prioritize(all_signals)
 
-        if result.success:
-            # 5. Create PR
-            pr_generator = PRGenerator()
-            pr_result = pr_generator.create_pr(result.fix_plan)
-            print(f"Created PR: {pr_result.pr_url}")
+    # 3. Generate fix plans and create PRs
+    planner = FixPlanner(llm_provider=config["llm_provider"])
+    pr_generator = PRGenerator(confidence_threshold=config["confidence_threshold"])
+
+    for group in groups:
+        planner_result = planner.create_fix_plan(group)
+
+        if planner_result.success:
+            pr_result = pr_generator.create_pr(planner_result.fix_plan)
+            metrics.record_pr(pr_result, group)
+
+    # 4. Write run report to logs/
+    return metrics
 ```
 
 ---
