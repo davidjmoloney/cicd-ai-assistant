@@ -15,6 +15,14 @@ Configuration (environment variables):
     SIGNALS_PER_PR        - Max signals per group sent to LLM     (default: 3)
     LLM_PROVIDER          - LLM provider name                     (default: "openai")
     LOG_LEVEL             - "info" (default) or "debug"
+    TARGET_REPO_ROOT      - Repository root for path normalization (optional)
+
+Debug Mode (LOG_LEVEL=debug):
+    When LOG_LEVEL is set to "debug", pipeline objects are dumped to debug/:
+      - all-signals-{timestamp}.json   : All parsed FixSignal objects
+      - groups-{timestamp}.json        : Prioritized SignalGroup objects
+      - fix-plan-{n}-{tool}-{type}-{timestamp}.json : FixPlan for each group
+      - pr-result-{n}-{tool}-{type}-{timestamp}.json : PRResult for each group
 """
 from __future__ import annotations
 
@@ -23,10 +31,11 @@ import json
 import os
 import sys
 import time
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field, is_dataclass
 from datetime import datetime, timezone
+from enum import Enum
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 # Optional dotenv support for local development
 try:
@@ -56,16 +65,70 @@ def _read_config() -> dict:
         log_level.
     """
     return {
-        "confidence_threshold": float(
-            os.getenv("CONFIDENCE_THRESHOLD", "0.7")
-        ),
-        "signals_per_pr": int(
-            os.getenv("SIGNALS_PER_PR", "3")
-        ),
-        "llm_provider": os.getenv("LLM_PROVIDER", "openai").strip(),
+        "local_repo_root": os.getenv("LOCAL_REPO_ROOT"),
+        "target_repo_root": os.getenv("TARGET_REPO_ROOT"),
+        "confidence_threshold": float(os.getenv("CONFIDENCE_THRESHOLD", "0.7")),
+        "signals_per_pr": int(os.getenv("SIGNALS_PER_PR", "4")),
+        "llm_provider": os.getenv("LLM_PROVIDER", "anthropic").strip(),
         "log_level": os.getenv("LOG_LEVEL", "info").strip().lower(),
         # ── placeholder: add future env vars here ──
     }
+
+
+# =============================================================================
+# Debug Output Helpers
+# =============================================================================
+
+def _serialize_for_debug(obj: Any) -> Any:
+    """
+    Recursively serialize an object to JSON-compatible format.
+
+    Handles dataclasses, enums, and nested structures.
+    """
+    if obj is None:
+        return None
+    if isinstance(obj, Enum):
+        return obj.value
+    if is_dataclass(obj) and not isinstance(obj, type):
+        # Use to_dict() if available (e.g., FixPlan), otherwise asdict
+        if hasattr(obj, "to_dict"):
+            return obj.to_dict()
+        return {k: _serialize_for_debug(v) for k, v in asdict(obj).items()}
+    if isinstance(obj, dict):
+        return {k: _serialize_for_debug(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_serialize_for_debug(item) for item in obj]
+    if isinstance(obj, Path):
+        return str(obj)
+    return obj
+
+
+def _dump_debug_object(
+    obj: Any,
+    name: str,
+    debug_dir: Path,
+    timestamp: str,
+) -> None:
+    """
+    Dump an object to a JSON file in the debug directory.
+
+    Args:
+        obj: Object to serialize and dump
+        name: Name identifier for the file (e.g., "all-signals", "groups")
+        debug_dir: Directory to write debug files
+        timestamp: Timestamp string for filename (format: YYYYMMDD-HHMMSS)
+    """
+    debug_dir.mkdir(parents=True, exist_ok=True)
+    filename = f"{name}-{timestamp}.json"
+    filepath = debug_dir / filename
+
+    try:
+        serialized = _serialize_for_debug(obj)
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(serialized, f, indent=2, default=str)
+        print(f"[debug] Dumped {name} to {filepath}")
+    except Exception as e:
+        print(f"[debug] Failed to dump {name}: {e}")
 
 
 # =============================================================================
@@ -108,7 +171,7 @@ def _route_artifact(path: Path) -> Optional[str]:
     return None
 
 
-def parse_artifact(path: Path, parser_type: str) -> list[FixSignal]:
+def parse_artifact(path: Path, parser_type: str, target_repo_root: str | None) -> list[FixSignal]:
     """Read *path* and run the appropriate parser.
 
     Returns a (possibly empty) list of FixSignal objects.
@@ -116,13 +179,13 @@ def parse_artifact(path: Path, parser_type: str) -> list[FixSignal]:
     raw = path.read_text(encoding="utf-8")
 
     if parser_type == "mypy":
-        return parse_mypy_results(raw)
+        return parse_mypy_results(raw, repo_root=target_repo_root)
     elif parser_type == "ruff-lint":
-        return parse_ruff_lint_results(raw)
+        return parse_ruff_lint_results(raw, repo_root=target_repo_root)
     elif parser_type == "ruff-format":
-        return parse_ruff_format_diff(raw)
+        return parse_ruff_format_diff(raw, repo_root=target_repo_root)
     elif parser_type == "pydocstyle":
-        return parse_pydocstyle_results(raw)
+        return parse_pydocstyle_results(raw, repo_root=target_repo_root)
     else:
         return []
 
@@ -255,10 +318,20 @@ def run(artifacts_dir: Path, config: dict) -> RunMetrics:
     """
     metrics = RunMetrics()
 
+    local_repo_root: str | None = config["local_repo_root"]
+    target_repo_root: str | None = config["target_repo_root"]
     confidence_threshold: float = config["confidence_threshold"]
     signals_per_pr: int = config["signals_per_pr"]
     llm_provider: str = config["llm_provider"]
     log_level: str = config["log_level"]
+
+    # Debug mode setup
+    debug_mode = log_level == "debug"
+    debug_dir = Path("debug")
+    debug_timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+
+    if debug_mode:
+        print("[main] Debug mode enabled — objects will be dumped to debug/")
 
     # ── 1. Discover & parse artifacts ──────────────────────────
     print(f"[main] Scanning artifacts in {artifacts_dir}")
@@ -275,7 +348,7 @@ def run(artifacts_dir: Path, config: dict) -> RunMetrics:
 
         print(f"[main]   parsing {path.name} with {parser_type}")
         try:
-            signals = parse_artifact(path, parser_type)
+            signals = parse_artifact(path, parser_type, target_repo_root)
             all_signals.extend(signals)
             metrics.artifacts_parsed += 1
             print(f"[main]     → {len(signals)} signal(s)")
@@ -284,6 +357,10 @@ def run(artifacts_dir: Path, config: dict) -> RunMetrics:
 
     metrics.record_signals(all_signals)
     print(f"[main] Total signals parsed: {metrics.total_signals}")
+
+    # Debug: dump all_signals
+    if debug_mode:
+        _dump_debug_object(all_signals, "all-signals", debug_dir, debug_timestamp)
 
     if not all_signals:
         print("[main] No signals found — nothing to do.")
@@ -296,8 +373,12 @@ def run(artifacts_dir: Path, config: dict) -> RunMetrics:
     metrics.signal_groups = len(groups)
     print(f"[main] Signal groups: {len(groups)}")
 
+    # Debug: dump groups
+    if debug_mode:
+        _dump_debug_object(groups, "groups", debug_dir, debug_timestamp)
+
     # ── 3. Generate fix plans ──────────────────────────────────
-    planner = FixPlanner(llm_provider=llm_provider)
+    planner = FixPlanner(llm_provider=llm_provider, repo_root=local_repo_root)
     pr_generator = PRGenerator(confidence_threshold=confidence_threshold)
 
     for idx, group in enumerate(groups, 1):
@@ -318,9 +399,19 @@ def run(artifacts_dir: Path, config: dict) -> RunMetrics:
 
         metrics.fix_plans_created += 1
 
+        # Debug: dump fix_plan
+        if debug_mode:
+            fix_plan_name = f"fix-plan-{idx}-{group.tool_id}-{group.signal_type.value}"
+            _dump_debug_object(planner_result.fix_plan, fix_plan_name, debug_dir, debug_timestamp)
+
         # ── 4. Create PR ──────────────────────────────────────
         pr_result: PRResult = pr_generator.create_pr(planner_result.fix_plan)
         metrics.record_pr(pr_result, group)
+
+        # Debug: dump pr_result
+        if debug_mode:
+            pr_result_name = f"pr-result-{idx}-{group.tool_id}-{group.signal_type.value}"
+            _dump_debug_object(pr_result, pr_result_name, debug_dir, debug_timestamp)
 
         if pr_result.success and pr_result.pr_url:
             print(f"[main]   {label} PR created: {pr_result.pr_url}")

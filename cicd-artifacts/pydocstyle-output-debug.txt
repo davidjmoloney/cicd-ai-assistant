@@ -1,6 +1,0 @@
-app/routers/auth.py:49 in public class `ApprovalStatusResponse`:
-        D101: Missing docstring in public class
-app/routers/auth.py:137 in public function `create_user_profile`:
-        D103: Missing docstring in public function
-app/routers/auth.py:168 in public function `update_user_profile`:
-        D103: Missing docstring in public function
