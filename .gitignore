@@ -216,5 +216,5 @@ test-repo-stripped/
 scripts/debug/*
 scripts/test-outputs/*
 debug/*.json
-
+logs/*.txt
 
