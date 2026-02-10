@@ -20,7 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, Iterable, Optional
 
-from signals.models import FixSignal, SignalType
+from signals.models import FixSignal, Severity, SignalType
 
 
 # ----------------------------
@@ -34,6 +34,14 @@ SIGNAL_TYPE_PRIORITY: dict[SignalType, int] = {
     SignalType.LINT: 1,         # Lint issues third
     SignalType.DOCSTRING: 2,    # Documentation quality fourth
     SignalType.FORMAT: 3,       # Format issues last (cosmetic, always safe)
+}
+
+# Severity priority order (lower number = higher priority)
+SEVERITY_PRIORITY: dict[Severity, int] = {
+    Severity.CRITICAL: 0,
+    Severity.HIGH: 1,
+    Severity.MEDIUM: 2,
+    Severity.LOW: 3,
 }
 
 
@@ -112,8 +120,9 @@ class Prioritizer:
       - FORMAT signals: grouped by file (one group per file)
 
     Priority ordering:
-      - Groups are sorted by signal type priority (SECURITY first, FORMAT last)
-      - Within each type, original encounter order is preserved
+      - Groups are sorted by signal type priority (TYPE_CHECK first, FORMAT last)
+      - Within each type, groups with higher severity signals come first
+      - Within each tool bucket, signals are sorted by severity before chunking
 
     Rationale for FORMAT file-based grouping:
       - Format changes within a file are interdependent (applying one may
@@ -126,7 +135,7 @@ class Prioritizer:
     def __init__(
         self,
         *,
-        max_group_size: int = 3,
+        max_group_size: int = 4,
         tool_resolver: Callable[[FixSignal], str] = default_tool_resolver,
     ) -> None:
         if max_group_size < 1:
@@ -140,9 +149,9 @@ class Prioritizer:
 
         Steps:
           1) Separate signals by type (FORMAT vs others)
-          2) For non-FORMAT: bucket by tool, chunk by max_group_size
+          2) For non-FORMAT: bucket by tool, sort by severity, chunk by max_group_size
           3) For FORMAT: group by file (all signals for a file in one group)
-          4) Sort all groups by priority (TYPE_CHECK > LINT > DOCSTRING > FORMAT)
+          4) Sort all groups by type priority (stable sort preserves severity order)
           5) Return ordered groups
 
         Returns:
@@ -194,10 +203,11 @@ class Prioritizer:
                 tool_order.append(tool_id)
             buckets[tool_id].append(s)
 
-        # Pack each tool bucket in order
+        # Pack each tool bucket in order, highest severity first
         groups: list[SignalGroup] = []
         for tool_id in tool_order:
             bucket = buckets[tool_id]
+            bucket.sort(key=lambda s: SEVERITY_PRIORITY.get(s.severity, 99))
             for i in range(0, len(bucket), self._max_group_size):
                 chunk = bucket[i : i + self._max_group_size]
                 groups.append(
@@ -266,47 +276,3 @@ def _dominant_signal_type(signals: Iterable[FixSignal]) -> SignalType:
     return next(iter(signals)).signal_type
 
 
-# -------------------------------------------------------------------------
-# FUTURE: "real" prioritisation hooks (NOT IMPLEMENTED YET)
-# -------------------------------------------------------------------------
-
-def prioritize_by_severity_and_location(signals: list[FixSignal]) -> list[FixSignal]:
-    """
-    FUTURE (pseudocode):
-      - sort by severity descending (CRITICAL > HIGH > MEDIUM > LOW)
-      - tie-break by:
-          - file_path
-          - span.start.row, span.start.column (if present)
-          - rule_code
-      - return sorted signals
-
-    NOTE:
-      This should probably happen *within a tool bucket* first,
-      then groups are packed from that sorted list.
-    """
-    raise NotImplementedError
-
-
-def group_by_file_proximity(signals: list[FixSignal], *, max_group_size: int = 3) -> list[list[FixSignal]]:
-    """
-    FUTURE (pseudocode):
-      - goal: keep groups coherent, ideally same file or adjacent rows
-      - steps:
-          1) partition by file_path
-          2) within each file: sort by row/col
-          3) pack into groups of <= max_group_size
-          4) interleave files by top severity to avoid ignoring severe issues
-    """
-    raise NotImplementedError
-
-
-def compute_group_priority_score(group: list[FixSignal]) -> float:
-    """
-    FUTURE (pseudocode):
-      - score = max severity score in group
-      - optionally add:
-          - bonus if all in same file (lower context switching)
-          - penalty if any fix is UNSAFE
-          - bonus if edits exist (deterministic autofix)
-    """
-    raise NotImplementedError
