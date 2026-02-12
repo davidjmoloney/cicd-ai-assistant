@@ -55,37 +55,98 @@ def get_edit_window_spec(signal: FixSignal) -> EditWindowSpec:
     # ===================================================================
 
     # Import-related rules need full import block
-    if rule_code in ["F401", "I001", "E402"]:
+    if rule_code in ["F401", "I001", "I002", "E402"]:
         return EditWindowSpec(window_type="imports")
 
     # Try/except-related rules need full try/except block
-    if rule_code == "E722":  # Bare except
+    if rule_code in [
+        "E722",  # bare except
+        "B025",  # duplicate except handler
+        "B029",  # except with empty tuple
+        "S110",  # try-except-pass
+        "S112",  # try-except-continue
+    ]:
         return EditWindowSpec(window_type="try_except")
 
     # Function-level issues need full function
-    if rule_code in ["F823"]:  # Local variable referenced before assignment
+    if rule_code in [
+        "F823",  # local variable referenced before assignment
+        "B020",  # loop variable overrides iterator
+        "B023",  # function uses loop variable (late binding closure)
+    ]:
         return EditWindowSpec(window_type="function")
+
+    # Class-level issues need full class
+    if rule_code in [
+        "B024",  # abstract class without abstract methods
+    ]:
+        return EditWindowSpec(window_type="class")
 
     # Trivial single-line fixes (±1 line)
     if rule_code in [
+        # E/F-series
         "F541",  # f-string without placeholders
         "F901",  # raise NotImplemented
         "E711",  # comparison to None
         "E712",  # comparison to True/False
         "E721",  # type comparison
+        # B-series
         "B007",  # unused loop variable
+        "B009",  # getattr with constant attribute
+        "B010",  # setattr with constant attribute
         "B011",  # assert False
         "B016",  # raise literal
+        "B018",  # useless expression (no effect)
+        "B028",  # warnings.warn without stacklevel
+        "B032",  # unintentional type annotation (no assignment)
+        # UP-series - all single-line modernizations
+        "UP001", "UP003", "UP004",  # useless metaclass/type()/__class__/object inheritance
+        "UP006", "UP007", "UP008",  # typing.List→list, Union→|, super()
+        "UP009", "UP010", "UP012",  # utf-8 declaration, __future__, encode("utf-8")
+        "UP015", "UP018",           # open mode "r", literal constructors
+        "UP031", "UP032", "UP034",  # %-format, .format(), extraneous parens
+        "UP035", "UP036", "UP037",  # deprecated typing import, version block, quoted annotation
+        "UP038", "UP040",           # isinstance tuple→|, TypeAlias
+        # S-series - single-statement security flags
+        "S101",  # use of assert
+        "S103",  # permissive chmod
+        "S104",  # binding to 0.0.0.0
+        "S108",  # insecure temp file/dir
+        "S113",  # requests without timeout
+        "S301",  # pickle usage
+        "S311",  # pseudo-random generator
+        "S501",  # requests verify=False
+        "S506",  # unsafe yaml load
     ]:
         return EditWindowSpec(window_type="lines", lines=1)
 
     # Small context fixes (±3 lines)
     if rule_code in [
+        # E/F-series
         "F601",  # duplicate dict key
         "F841",  # unused variable
         "E731",  # lambda assignment
+        # B-series
         "B006",  # mutable default arg
+        "B008",  # function call in default argument
         "B015",  # useless comparison
+        "B017",  # assertRaises(Exception) too broad
+        "B026",  # star-arg unpacking after keyword arg
+        "B034",  # re.sub/split without flags= keyword
+        "B039",  # mutable ContextVar default
+        # S-series
+        "S102",  # use of exec()
+        "S105",  # hardcoded password in string
+        "S106",  # hardcoded password in function argument
+        "S107",  # hardcoded password in default value
+        "S303",  # insecure hash function (MD5/SHA1)
+        "S307",  # use of eval()
+        "S324",  # insecure hash function (hashlib)
+        "S602",  # subprocess with shell=True
+        "S603",  # subprocess without shell
+        "S605",  # starting process with a shell
+        "S607",  # starting process with partial path
+        "S701",  # jinja2 autoescape disabled
     ]:
         return EditWindowSpec(window_type="lines", lines=3)
 
@@ -93,7 +154,8 @@ def get_edit_window_spec(signal: FixSignal) -> EditWindowSpec:
     if rule_code in [
         "F811",  # redefinition
         "F821",  # undefined name
-        "B002",  # unintentional self.attr
+        "B002",  # unary prefix increment (++x)
+        "S608",  # SQL injection via string formatting
     ]:
         return EditWindowSpec(window_type="lines", lines=5)
 
@@ -214,7 +276,7 @@ def get_context_requirements(signal: FixSignal) -> ContextRequirements:
     # IMPORT ERRORS - Need ONLY imports
     # ===================================================================
 
-    if rule_code in ["F401", "I001", "E402"]:
+    if rule_code in ["F401", "I001", "I002", "E402"]:
         # Import errors are global - don't need function context
         return ContextRequirements(
             include_imports=True,
@@ -226,8 +288,14 @@ def get_context_requirements(signal: FixSignal) -> ContextRequirements:
     # BARE EXCEPT - Need ONLY try/except block
     # ===================================================================
 
-    if rule_code == "E722":
-        # Bare except needs only the try/except block
+    if rule_code in [
+        "E722",  # bare except
+        "B025",  # duplicate except handler
+        "B029",  # except with empty tuple
+        "S110",  # try-except-pass
+        "S112",  # try-except-continue
+    ]:
+        # Exception handling issues need only the try/except block
         return ContextRequirements(
             include_imports=False,
             include_enclosing_function=False,
@@ -326,12 +394,25 @@ def get_context_requirements(signal: FixSignal) -> ContextRequirements:
     # RUFF LINT ERRORS - Various requirements
     # ===================================================================
 
-    # Function-level issues (F823: variable referenced before assignment)
-    if rule_code == "F823":
+    # Function-level issues - local logic bugs, imports not relevant
+    if rule_code in [
+        "F823",  # local variable referenced before assignment
+        "B020",  # loop variable overrides iterator
+        "B023",  # function uses loop variable (late binding closure)
+    ]:
         return ContextRequirements(
-            include_imports=False,  # Local variable issue, imports not relevant
+            include_imports=False,
             include_enclosing_function=True,
             include_try_except=False,
+        )
+
+    # Class-level issues - need class definition
+    if rule_code == "B024":  # abstract class without abstract methods
+        return ContextRequirements(
+            include_imports=True,
+            include_enclosing_function=False,
+            include_try_except=False,
+            needs_class_definition=True,
         )
 
     # Undefined names (might be a constant)
