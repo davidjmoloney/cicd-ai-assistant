@@ -25,6 +25,13 @@ class FileSnippet:
     text: str
 
 
+@dataclass
+class MergedSnippetGroup:
+    """Group of signals sharing one merged edit snippet."""
+    signal_indices: list[int]       # indices into the original signals list
+    edit_snippet: EditSnippet       # the merged snippet
+
+
 @dataclass(frozen=True)
 class EditSnippet:
     """
@@ -170,6 +177,9 @@ class ContextBuilder:
                 }
             )
 
+        # Merge overlapping edit snippets before returning
+        merged_groups, standalone_indices = self._merge_overlapping_snippets(items)
+
         return {
             "group": {
                 "tool_id": group.tool_id,
@@ -177,7 +187,140 @@ class ContextBuilder:
                 "group_size": len(group.signals),
             },
             "signals": items,
+            "merged_snippet_groups": [
+                {
+                    "signal_indices": mg.signal_indices,
+                    "edit_snippet": mg.edit_snippet.__dict__,
+                }
+                for mg in merged_groups
+            ],
+            "standalone_signal_indices": standalone_indices,
         }
+
+    # ----------------------------
+    # Snippet merging
+    # ----------------------------
+
+    def _merge_overlapping_snippets(
+        self,
+        items: list[dict[str, Any]],
+    ) -> tuple[list[MergedSnippetGroup], list[int]]:
+        """
+        Detect overlapping/adjacent edit snippets and merge them.
+
+        Groups signals by file_path, then greedily merges snippets whose
+        line ranges overlap or are within 2 lines of each other.
+
+        Args:
+            items: The per-signal context dicts (must have 'edit_snippet' and 'signal' keys)
+
+        Returns:
+            (merged_groups, standalone_indices) where:
+            - merged_groups: list of MergedSnippetGroup for overlapping signals
+            - standalone_indices: indices of signals not in any merged group
+        """
+        # Group signal indices by file_path (only those with edit snippets)
+        by_file: dict[str, list[int]] = {}
+        for idx, item in enumerate(items):
+            snippet = item.get("edit_snippet")
+            if snippet is None:
+                continue
+            fp = snippet["file_path"]
+            by_file.setdefault(fp, []).append(idx)
+
+        merged_groups: list[MergedSnippetGroup] = []
+        merged_indices: set[int] = set()
+
+        for file_path, indices in by_file.items():
+            if len(indices) < 2:
+                continue
+
+            # Sort by start_row
+            sorted_indices = sorted(indices, key=lambda i: items[i]["edit_snippet"]["start_row"])
+
+            # Greedy merge: extend current group if next snippet overlaps or is adjacent (gap ≤ 2)
+            current_group = [sorted_indices[0]]
+            current_end = items[sorted_indices[0]]["edit_snippet"]["end_row"]
+
+            for i in range(1, len(sorted_indices)):
+                idx = sorted_indices[i]
+                snippet = items[idx]["edit_snippet"]
+                if snippet["start_row"] <= current_end + 2:
+                    # Overlapping or adjacent — extend group
+                    current_group.append(idx)
+                    current_end = max(current_end, snippet["end_row"])
+                else:
+                    # Gap too large — finalize current group if it has >1 signal
+                    if len(current_group) > 1:
+                        group = self._build_merged_group(current_group, items, file_path)
+                        merged_groups.append(group)
+                        merged_indices.update(current_group)
+                    # Start new group
+                    current_group = [idx]
+                    current_end = snippet["end_row"]
+
+            # Finalize last group
+            if len(current_group) > 1:
+                group = self._build_merged_group(current_group, items, file_path)
+                merged_groups.append(group)
+                merged_indices.update(current_group)
+
+        standalone_indices = [i for i in range(len(items)) if i not in merged_indices]
+        return merged_groups, standalone_indices
+
+    def _build_merged_group(
+        self,
+        indices: list[int],
+        items: list[dict[str, Any]],
+        file_path: str,
+    ) -> MergedSnippetGroup:
+        """
+        Build a MergedSnippetGroup by computing the union range and rebuilding
+        the EditSnippet from file lines.
+        """
+        snippets = [items[i]["edit_snippet"] for i in indices]
+        union_start = min(s["start_row"] for s in snippets)
+        union_end = max(s["end_row"] for s in snippets)
+
+        # Read file lines from cache
+        _, lines, _ = self._read_file(file_path)
+        if lines is None:
+            # Fallback: use the first snippet as-is
+            first = snippets[0]
+            merged_snippet = EditSnippet(
+                file_path=file_path,
+                start_row=first["start_row"],
+                end_row=first["end_row"],
+                text=first["text"],
+                original_text=first["original_text"],
+                error_line=first["error_line"],
+                error_line_in_snippet=first["error_line_in_snippet"],
+                snippet_length=first["snippet_length"],
+                base_indent=first["base_indent"],
+            )
+            return MergedSnippetGroup(signal_indices=indices, edit_snippet=merged_snippet)
+
+        # Rebuild snippet from file lines using union range
+        snippet_lines = lines[union_start - 1 : union_end]
+        original_text = "".join(snippet_lines)
+        base_indent = self._calculate_base_indent(snippet_lines)
+        stripped_text = self._strip_base_indent(snippet_lines, base_indent)
+
+        # Use the first signal's error line for the merged snippet
+        first_error_line = snippets[0]["error_line"]
+
+        merged_snippet = EditSnippet(
+            file_path=file_path,
+            start_row=union_start,
+            end_row=union_end,
+            text=stripped_text,
+            original_text=original_text,
+            error_line=first_error_line,
+            error_line_in_snippet=first_error_line - union_start + 1,
+            snippet_length=union_end - union_start + 1,
+            base_indent=base_indent,
+        )
+        return MergedSnippetGroup(signal_indices=indices, edit_snippet=merged_snippet)
 
     # ----------------------------
     # File reading and slicing
