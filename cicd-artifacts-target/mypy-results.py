@@ -1,0 +1,4 @@
+{"file": "authentication/clerk.py", "line": 81, "column": 34, "message": "Argument \"jwks_url\" to \"ClerkSettings\" has incompatible type \"str | None\"; expected \"str\"", "hint": null, "code": "arg-type", "severity": "error"}
+{"file": "authentication/clerk.py", "line": 81, "column": 51, "message": "Argument \"issuer\" to \"ClerkSettings\" has incompatible type \"str | None\"; expected \"str\"", "hint": null, "code": "arg-type", "severity": "error"}
+{"file": "ria/views.py", "line": 666, "column": 12, "message": "Need type annotation for \"by_activity_type\" (hint: \"by_activity_type: dict[<type>, <type>] = ...\")", "hint": null, "code": "var-annotated", "severity": "error"}
+{"file": "ria/views.py", "line": 667, "column": 12, "message": "Need type annotation for \"by_user\" (hint: \"by_user: dict[<type>, <type>] = ...\")", "hint": null, "code": "var-annotated", "severity": "error"}

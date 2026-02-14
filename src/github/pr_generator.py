@@ -18,7 +18,6 @@ from __future__ import annotations
 import base64
 import hashlib
 import os
-import time
 import logging
 
 from dataclasses import dataclass, field
@@ -30,6 +29,13 @@ import httpx
 from dotenv import load_dotenv
 
 from agents.agent_handler import CodeEdit, EditType, FileEdit, FixPlan
+from github.client import (
+    GitHubError,
+    github_request,
+    TARGET_REPO_OWNER,
+    TARGET_REPO_NAME,
+    TARGET_REPO_DEFAULT_BRANCH,
+)
 
 DEFAULT_CONFIDENCE_THRESHOLD = 0.7
 
@@ -38,20 +44,11 @@ DEFAULT_CONFIDENCE_THRESHOLD = 0.7
 load_dotenv()
 
 # ============================================================================
-# Configuration (self-explanatory environment variable names)
+# Configuration (PR-specific settings)
 # ============================================================================
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "").strip()
-TARGET_REPO_OWNER = os.getenv("TARGET_REPO_OWNER", "").strip()
-TARGET_REPO_NAME = os.getenv("TARGET_REPO_NAME", "").strip()
-TARGET_REPO_DEFAULT_BRANCH = os.getenv("TARGET_REPO_DEFAULT_BRANCH", "david/cicd-ai-assistant").strip()
 PR_BRANCH_PREFIX = os.getenv("PR_BRANCH_PREFIX", "cicd-agent-fix").strip()
 PR_LABELS = [l.strip() for l in os.getenv("PR_LABELS", "cicd-agent-generated").split(",") if l.strip()]
 PR_DRAFT_MODE = os.getenv("PR_DRAFT_MODE", "false").lower() in ("true", "1", "yes")
-
-# API constants
-GITHUB_API_URL = "https://api.github.com"
-MAX_RETRIES = 4
-RETRY_DELAYS = [2, 4, 8, 16]
 
 # Logging Mode Environment Settings
 DEBUG_MODE_ON = os.getenv("DEBUG_MODE_ON", "false").lower() in ("true", "1", "yes")
@@ -153,58 +150,6 @@ def _apply_edit(lines: list[str], edit: CodeEdit) -> list[str]:
 
 
 # ============================================================================
-# GitHub API Helpers
-# ============================================================================
-
-def _github_headers() -> dict[str, str]:
-    """Get headers for GitHub API requests."""
-    return {
-        "Accept": "application/vnd.github+json",
-        "Authorization": f"Bearer {GITHUB_TOKEN}",
-        "X-GitHub-Api-Version": "2022-11-28",
-    }
-
-
-def _github_request(
-    client: httpx.Client,
-    method: str,
-    path: str,
-    json_data: Optional[dict] = None,
-) -> dict[str, Any]:
-    """Make a GitHub API request with retry logic."""
-    url = f"{GITHUB_API_URL}{path}"
-
-    for attempt in range(MAX_RETRIES + 1):
-        try:
-            response = client.request(method, url, json=json_data)
-
-            if response.status_code in (200, 201):
-                return response.json()
-            elif response.status_code == 422:
-                error = response.json()
-                raise GitHubError(f"Validation error: {error.get('message', 'Unknown')}")
-            elif response.status_code >= 500 and attempt < MAX_RETRIES:
-                time.sleep(RETRY_DELAYS[attempt])
-                continue
-            else:
-                error = response.json() if response.content else {}
-                raise GitHubError(f"API error {response.status_code}: {error.get('message', 'Unknown')}")
-
-        except httpx.RequestError as e:
-            if attempt < MAX_RETRIES:
-                time.sleep(RETRY_DELAYS[attempt])
-                continue
-            raise GitHubError(f"Network error: {e}")
-
-    raise GitHubError("Max retries exceeded")
-
-
-class GitHubError(Exception):
-    """GitHub API error."""
-    pass
-
-
-# ============================================================================
 # PR Generator
 # ============================================================================
 
@@ -220,18 +165,21 @@ class PRGenerator:
             print(f"PR created: {result.pr_url}")
     """
 
-    def __init__(self, confidence_threshold: float = DEFAULT_CONFIDENCE_THRESHOLD) -> None:
-        """Initialize PR generator with config from environment.
+    def __init__(
+        self,
+        *,
+        github_client: httpx.Client,
+        confidence_threshold: float = DEFAULT_CONFIDENCE_THRESHOLD,
+    ) -> None:
+        """Initialize PR generator.
 
         Args:
+            github_client: httpx.Client pre-configured with GitHub auth headers.
             confidence_threshold: Minimum confidence level for a fix to be
                 included in the PR. Fixes below this threshold are skipped
                 and reported in PRResult.skipped_fixes. Defaults to 0.7.
         """
-        if not GITHUB_TOKEN:
-            raise ValueError("GITHUB_TOKEN environment variable not set")
-        if not TARGET_REPO_OWNER or not TARGET_REPO_NAME:
-            raise ValueError("TARGET_REPO_OWNER and TARGET_REPO_NAME must be set")
+        self._client = github_client
         self._confidence_threshold = confidence_threshold
 
     def create_pr(self, fix_plan: FixPlan, base_branch: Optional[str] = None) -> PRResult:
@@ -279,70 +227,71 @@ class PRGenerator:
         repo = TARGET_REPO_NAME
 
         try:
-            with httpx.Client(headers=_github_headers(), timeout=30.0) as client:
-                # 1. Get base branch SHA
-                ref_data = _github_request(client, "GET", f"/repos/{owner}/{repo}/git/ref/heads/{base}")
-                base_sha = ref_data["object"]["sha"]
+            client = self._client
 
-                # 2. Create new branch
-                branch_name = self._generate_branch_name(fix_plan)
-                _github_request(client, "POST", f"/repos/{owner}/{repo}/git/refs", {
-                    "ref": f"refs/heads/{branch_name}",
-                    "sha": base_sha,
-                })
+            # 1. Get base branch SHA
+            ref_data = github_request(client, "GET", f"/repos/{owner}/{repo}/git/ref/heads/{base}")
+            base_sha = ref_data["object"]["sha"]
 
-                # 3. Group edits by file (to handle multiple FileEdits for same file)
-                merged_file_edits = self._merge_file_edits(accepted_edits)
+            # 2. Create new branch
+            branch_name = self._generate_branch_name(fix_plan)
+            github_request(client, "POST", f"/repos/{owner}/{repo}/git/refs", {
+                "ref": f"refs/heads/{branch_name}",
+                "sha": base_sha,
+            })
 
-                # 4. Apply edits and commit each unique file
-                files_changed: list[str] = []
-                for file_edit in merged_file_edits:
-                    if self._commit_file_edit(client, owner, repo, file_edit, branch_name, base):
-                        files_changed.append(file_edit.file_path)
+            # 3. Group edits by file (to handle multiple FileEdits for same file)
+            merged_file_edits = self._merge_file_edits(accepted_edits)
 
-                if not files_changed:
-                    return PRResult(
-                        success=False,
-                        error="No files were modified",
-                        branch_name=branch_name,
-                        skipped_fixes=skipped_fixes,
-                    )
+            # 4. Apply edits and commit each unique file
+            files_changed: list[str] = []
+            for file_edit in merged_file_edits:
+                if self._commit_file_edit(client, owner, repo, file_edit, branch_name, base):
+                    files_changed.append(file_edit.file_path)
 
-                # 5. Create pull request
-                title = self._generate_title(fix_plan)
-                body = self._generate_body(fix_plan, files_changed, accepted_edits, skipped_fixes)
-
-                pr_data = _github_request(client, "POST", f"/repos/{owner}/{repo}/pulls", {
-                    "title": title,
-                    "body": body,
-                    "head": branch_name,
-                    "base": base,
-                    "draft": PR_DRAFT_MODE,
-                })
-
-                pr_number = pr_data.get("number")
-                pr_url = pr_data.get("html_url")
-
-                # 6. Add labels
-                if pr_number and PR_LABELS:
-                    labels = list(PR_LABELS)
-                    if fix_plan.group_signal_type:
-                        labels.append(fix_plan.group_signal_type)
-                    try:
-                        _github_request(client, "POST", f"/repos/{owner}/{repo}/issues/{pr_number}/labels", {
-                            "labels": labels
-                        })
-                    except GitHubError:
-                        pass  # Labels are non-critical
-
+            if not files_changed:
                 return PRResult(
-                    success=True,
-                    pr_url=pr_url,
-                    pr_number=pr_number,
+                    success=False,
+                    error="No files were modified",
                     branch_name=branch_name,
-                    files_changed=files_changed,
                     skipped_fixes=skipped_fixes,
                 )
+
+            # 5. Create pull request
+            title = self._generate_title(fix_plan)
+            body = self._generate_body(fix_plan, files_changed, accepted_edits, skipped_fixes)
+
+            pr_data = github_request(client, "POST", f"/repos/{owner}/{repo}/pulls", {
+                "title": title,
+                "body": body,
+                "head": branch_name,
+                "base": base,
+                "draft": PR_DRAFT_MODE,
+            })
+
+            pr_number = pr_data.get("number")
+            pr_url = pr_data.get("html_url")
+
+            # 6. Add labels
+            if pr_number and PR_LABELS:
+                labels = list(PR_LABELS)
+                if fix_plan.group_signal_type:
+                    labels.append(fix_plan.group_signal_type)
+                try:
+                    github_request(client, "POST", f"/repos/{owner}/{repo}/issues/{pr_number}/labels", {
+                        "labels": labels
+                    })
+                except GitHubError:
+                    pass  # Labels are non-critical
+
+            return PRResult(
+                success=True,
+                pr_url=pr_url,
+                pr_number=pr_number,
+                branch_name=branch_name,
+                files_changed=files_changed,
+                skipped_fixes=skipped_fixes,
+            )
 
         except GitHubError as e:
             return PRResult(success=False, error=str(e), skipped_fixes=skipped_fixes)
@@ -361,7 +310,7 @@ class PRGenerator:
         """Apply a FileEdit and commit it. Returns True if successful."""
         try:
             # Get current file content from the branch being built (to chain commits)
-            file_data = _github_request(
+            file_data = github_request(
                 client, "GET",
                 f"/repos/{owner}/{repo}/contents/{file_edit.file_path}?ref={branch}"
             )
@@ -395,7 +344,7 @@ class PRGenerator:
             encoded_content = base64.b64encode(new_content.encode("utf-8")).decode("utf-8")
 
             try:
-                _github_request(client, "PUT", f"/repos/{owner}/{repo}/contents/{file_edit.file_path}", {
+                github_request(client,"PUT", f"/repos/{owner}/{repo}/contents/{file_edit.file_path}", {
                     "message": commit_msg,
                     "content": encoded_content,
                     "sha": file_sha,

@@ -3,9 +3,11 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any, Optional
 
+import httpx
+
+from github.client import read_file_from_github
 from orchestrator.signal_requirements import (
     EditWindowSpec,
     get_edit_window_spec,
@@ -61,15 +63,22 @@ class ContextBuilder:
     def __init__(
         self,
         *,
-        repo_root: str | Path | None = None,
+        github_client: httpx.Client,
+        repo_owner: str,
+        repo_name: str,
+        ref: str,
         window_lines: int = 30,
         snippet_window_lines: int = 3,  # Lines on each side of error for edit snippets
         max_file_bytes: int = 512_000,  # safety cap: 512KB per file read
     ) -> None:
-        self._repo_root = Path(repo_root) if repo_root is not None else None
+        self._client = github_client
+        self._repo_owner = repo_owner
+        self._repo_name = repo_name
+        self._ref = ref
         self._window_lines = window_lines
         self._snippet_window_lines = snippet_window_lines
         self._max_file_bytes = max_file_bytes
+        self._file_cache: dict[str, tuple[str | None, list[str] | None, str | None]] = {}
 
     def build_group_context(self, group: SignalGroup) -> dict[str, Any]:
         """
@@ -174,48 +183,45 @@ class ContextBuilder:
     # File reading and slicing
     # ----------------------------
 
-    def _resolve_path(self, file_path: str) -> Path:
-        p = Path(file_path)
-        if p.is_absolute():
-            return p
-        if self._repo_root is None:
-            return p
-        return self._repo_root / p
-
     def _read_file(self, file_path: str) -> tuple[str | None, list[str] | None, str | None]:
         """
-        Returns (file_text, lines, error).
-        lines are 1-based in concept but stored as a 0-based list of strings.
+        Read a file from GitHub and return (file_text, lines, error).
+
+        Results are cached per-instance so multiple signals in the same file
+        don't trigger redundant API calls.
         """
         import logging
-        import os
 
-        path = self._resolve_path(file_path)
+        if file_path in self._file_cache:
+            return self._file_cache[file_path]
 
-        # Debug logging
         debug_mode = os.getenv("DEBUG_MODE_ON", "false").lower() in ("true", "1", "yes")
         if debug_mode:
-            logging.info(f"ContextBuilder: Reading file_path='{file_path}'")
-            logging.info(f"  Resolved to: {path}")
-            logging.info(f"  Repo root: {self._repo_root}")
-            logging.info(f"  File exists: {path.exists()}")
+            logging.info(
+                f"ContextBuilder: Reading file_path='{file_path}' "
+                f"from {self._repo_owner}/{self._repo_name}@{self._ref}"
+            )
 
         try:
-            data = path.read_bytes()
-            if len(data) > self._max_file_bytes:
-                return None, None, f"File too large to read safely ({len(data)} bytes)"
-            text = data.decode("utf-8")
-            # keepends=True so line reconstruction preserves exact text
-            lines = text.splitlines(keepends=True)
+            text = read_file_from_github(
+                self._client, self._repo_owner, self._repo_name, file_path, self._ref,
+            )
+            if len(text.encode("utf-8")) > self._max_file_bytes:
+                result = (None, None, f"File too large ({len(text.encode('utf-8'))} bytes)")
+            else:
+                # keepends=True so line reconstruction preserves exact text
+                lines = text.splitlines(keepends=True)
+                result = (text, lines, None)
 
-            if debug_mode:
-                logging.info(f"  ✓ Successfully read {len(lines)} lines ({len(data)} bytes)")
-
-            return text, lines, None
+                if debug_mode:
+                    logging.info(f"  ✓ Successfully read {len(lines)} lines")
         except Exception as e:
             if debug_mode:
                 logging.error(f"  ✗ Failed to read: {e}")
-            return None, None, str(e)
+            result = (None, None, str(e))
+
+        self._file_cache[file_path] = result
+        return result
 
     def _snippet_around_span(
         self,

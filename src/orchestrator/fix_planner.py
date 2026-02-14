@@ -40,6 +40,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
+import httpx
+
 # Optional dotenv support for local development
 try:
     from dotenv import load_dotenv
@@ -213,7 +215,10 @@ class FixPlanner:
         self,
         *,
         llm_provider: str = "openai",
-        repo_root: str | None = None,
+        github_client: httpx.Client,
+        repo_owner: str,
+        repo_name: str,
+        ref: str,
         auto_apply_format: Optional[bool] = None,
     ) -> None:
         """
@@ -221,12 +226,18 @@ class FixPlanner:
 
         Args:
             llm_provider: LLM provider for agent-assisted fixes
-            repo_root: Repository root for context building
+            github_client: httpx.Client pre-configured with GitHub auth headers.
+            repo_owner: Target repository owner.
+            repo_name: Target repository name.
+            ref: Branch or commit SHA to read files from.
             auto_apply_format: Override AUTO_APPLY_FORMAT_FIXES env var.
                                If None, uses environment variable.
         """
         self._llm_provider = llm_provider
-        self._repo_root = repo_root
+        self._github_client = github_client
+        self._repo_owner = repo_owner
+        self._repo_name = repo_name
+        self._ref = ref
         self._auto_apply_format = (
             auto_apply_format if auto_apply_format is not None
             else AUTO_APPLY_FORMAT_FIXES
@@ -360,7 +371,12 @@ class FixPlanner:
                 self._agent_handler = AgentHandler(provider=self._llm_provider)
 
             if self._context_builder is None:
-                self._context_builder = ContextBuilder(repo_root=self._repo_root)
+                self._context_builder = ContextBuilder(
+                    github_client=self._github_client,
+                    repo_owner=self._repo_owner,
+                    repo_name=self._repo_name,
+                    ref=self._ref,
+                )
 
             # Build context for the signal group
             context = self._context_builder.build_group_context(group)
@@ -405,7 +421,10 @@ def create_fix_plan(
     group: SignalGroup,
     *,
     llm_provider: str = "openai",
-    repo_root: str | None = None,
+    github_client: httpx.Client,
+    repo_owner: str,
+    repo_name: str,
+    ref: str,
     auto_apply_format: Optional[bool] = None,
 ) -> PlannerResult:
     """
@@ -414,7 +433,10 @@ def create_fix_plan(
     Args:
         group: SignalGroup to create fix plan for
         llm_provider: LLM provider for agent-assisted fixes
-        repo_root: Repository root for context building
+        github_client: httpx.Client pre-configured with GitHub auth headers.
+        repo_owner: Target repository owner.
+        repo_name: Target repository name.
+        ref: Branch or commit SHA to read files from.
         auto_apply_format: Override AUTO_APPLY_FORMAT_FIXES env var
 
     Returns:
@@ -422,7 +444,10 @@ def create_fix_plan(
     """
     planner = FixPlanner(
         llm_provider=llm_provider,
-        repo_root=repo_root,
+        github_client=github_client,
+        repo_owner=repo_owner,
+        repo_name=repo_name,
+        ref=ref,
         auto_apply_format=auto_apply_format,
     )
     return planner.create_fix_plan(group)
