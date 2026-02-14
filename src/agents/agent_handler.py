@@ -343,8 +343,62 @@ class AgentHandler:
                 llm_response=response,
             )
         
+    def _build_response_index_map(self, context: dict[str, Any]) -> list[dict[str, Any]]:
+        """
+        Build a mapping from response block index to the signal/snippet info needed for parsing.
+
+        Merged groups produce one response block; standalone signals produce one each.
+        Returns a list where each entry is:
+          {"signal_indices": [int, ...], "edit_snippet": dict | None, "file_path": str}
+        """
+        signals = context.get("signals", [])
+        merged_groups = context.get("merged_snippet_groups", [])
+        standalone_indices = context.get("standalone_signal_indices")
+
+        # If no merge info present (backward compat), treat all signals as standalone
+        if standalone_indices is None:
+            standalone_indices = list(range(len(signals)))
+
+        response_map: list[dict[str, Any]] = []
+
+        # Track which indices are in merged groups
+        merged_idx_set: set[int] = set()
+        for mg in merged_groups:
+            merged_idx_set.update(mg["signal_indices"])
+
+        # Build ordered list: iterate through signals in order, emit merged group
+        # when we first encounter one of its members, then standalone signals
+        emitted_groups: set[int] = set()
+        for idx in range(len(signals)):
+            if idx in merged_idx_set:
+                # Find which merged group this belongs to
+                for gi, mg in enumerate(merged_groups):
+                    if idx in mg["signal_indices"] and gi not in emitted_groups:
+                        emitted_groups.add(gi)
+                        response_map.append({
+                            "signal_indices": mg["signal_indices"],
+                            "edit_snippet": mg["edit_snippet"],
+                            "file_path": mg["edit_snippet"]["file_path"],
+                        })
+                        break
+            else:
+                sig_data = signals[idx]
+                edit_snippet = sig_data.get("edit_snippet")
+                file_path = sig_data.get("signal", {}).get("file_path", "unknown")
+                response_map.append({
+                    "signal_indices": [idx],
+                    "edit_snippet": edit_snippet,
+                    "file_path": file_path,
+                })
+
+        return response_map
+
     def _build_user_prompt(self, context: dict[str, Any]) -> str:
-        """Build the user prompt from context with clear snippet presentation."""
+        """Build the user prompt from context with clear snippet presentation.
+
+        When signals share a merged edit snippet, they are presented as a single
+        block so the LLM can fix all errors in one coherent pass.
+        """
         parts = []
 
         group_info = context.get("group", {})
@@ -353,108 +407,149 @@ class AgentHandler:
         parts.append(f"Number of Signals: {group_info.get('group_size', 0)}")
         parts.append("")
 
-        for idx, signal_data in enumerate(context.get("signals", []), 1):
-            signal = signal_data.get("signal", {})
-            edit_snippet = signal_data.get("edit_snippet")
-            code_context = signal_data.get("code_context", {})
+        response_map = self._build_response_index_map(context)
+        signals = context.get("signals", [])
 
-            parts.append(f"{'='*60}")
-            parts.append(f"SIGNAL {idx}")
-            parts.append(f"{'='*60}")
-            parts.append("")
+        for block_idx, entry in enumerate(response_map, 1):
+            sig_indices = entry["signal_indices"]
+            edit_snippet = entry["edit_snippet"]
 
-            # Error information
-            parts.append("## Error Information")
-            parts.append(f"- File: {signal.get('file_path', 'unknown')}")
-            parts.append(f"- Message: {signal.get('message', 'No message')}")
-            parts.append(f"- Rule Code: {signal.get('rule_code', 'N/A')}")
-            parts.append(f"- Severity: {signal.get('severity', 'unknown')}")
-            if signal.get('span'):
-                span = signal['span']
-                parts.append(f"- Location: Line {span['start']['row']}, Column {span['start']['column']}")
-            parts.append("")
-
-            # Edit snippet - this is what they need to fix and return
-            if edit_snippet:
-                parts.append("## Edit Snippet (FIX AND RETURN THIS)")
-                parts.append(f"Lines {edit_snippet['start_row']}-{edit_snippet['end_row']} "
-                           f"(error on line {edit_snippet['error_line_in_snippet']} of {edit_snippet['snippet_length']})")
-                parts.append("```python")
-                parts.append(edit_snippet['text'])
-                parts.append("```")
+            if len(sig_indices) > 1:
+                # Merged group — present all errors together with one shared snippet
+                label_range = f"{sig_indices[0]+1}-{sig_indices[-1]+1}"
+                parts.append(f"{'='*60}")
+                parts.append(f"SIGNALS {label_range} (shared edit region)")
+                parts.append(f"{'='*60}")
                 parts.append("")
 
-            # Context window - for understanding only
-            window = code_context.get("window")
-            if window:
-                parts.append("## Context Window (for understanding, DO NOT return)")
-                parts.append(f"Lines {window['start_row']}-{window['end_row']}")
-                parts.append("```python")
-                parts.append(window['text'])
-                parts.append("```")
+                for error_num, si in enumerate(sig_indices, 1):
+                    signal = signals[si].get("signal", {})
+                    parts.append(f"## Error {error_num}")
+                    parts.append(f"- File: {signal.get('file_path', 'unknown')}")
+                    parts.append(f"- Message: {signal.get('message', 'No message')}")
+                    parts.append(f"- Rule Code: {signal.get('rule_code', 'N/A')}")
+                    parts.append(f"- Severity: {signal.get('severity', 'unknown')}")
+                    if signal.get('span'):
+                        span = signal['span']
+                        parts.append(f"- Location: Line {span['start']['row']}, Column {span['start']['column']}")
+                    parts.append("")
+
+                # Shared edit snippet
+                if edit_snippet:
+                    parts.append("## Edit Snippet (FIX ALL ERRORS ABOVE AND RETURN THIS)")
+                    parts.append(f"Lines {edit_snippet['start_row']}-{edit_snippet['end_row']} "
+                               f"({len(sig_indices)} errors in {edit_snippet['snippet_length']} lines)")
+                    parts.append("```python")
+                    parts.append(edit_snippet['text'])
+                    parts.append("```")
+                    parts.append("")
+
+                # Include context from first signal in the group
+                self._append_context_blocks(parts, signals[sig_indices[0]])
+            else:
+                # Standalone signal — original behavior
+                si = sig_indices[0]
+                signal_data = signals[si]
+                signal = signal_data.get("signal", {})
+                edit_snippet_data = signal_data.get("edit_snippet") if edit_snippet is None else edit_snippet
+
+                parts.append(f"{'='*60}")
+                parts.append(f"SIGNAL {si+1}")
+                parts.append(f"{'='*60}")
                 parts.append("")
 
-            # Imports context
-            imports = code_context.get("imports")
-            if imports:
-                parts.append("## Imports")
-                parts.append("```python")
-                parts.append(imports['text'])
-                parts.append("```")
+                parts.append("## Error Information")
+                parts.append(f"- File: {signal.get('file_path', 'unknown')}")
+                parts.append(f"- Message: {signal.get('message', 'No message')}")
+                parts.append(f"- Rule Code: {signal.get('rule_code', 'N/A')}")
+                parts.append(f"- Severity: {signal.get('severity', 'unknown')}")
+                if signal.get('span'):
+                    span = signal['span']
+                    parts.append(f"- Location: Line {span['start']['row']}, Column {span['start']['column']}")
                 parts.append("")
 
-            # Enclosing function context
-            enclosing = code_context.get("enclosing_function")
-            if enclosing:
-                parts.append("## Enclosing Function")
-                parts.append(f"Lines {enclosing['start_row']}-{enclosing['end_row']}")
-                parts.append("```python")
-                parts.append(enclosing['text'])
-                parts.append("```")
-                parts.append("")
+                if edit_snippet_data:
+                    parts.append("## Edit Snippet (FIX AND RETURN THIS)")
+                    parts.append(f"Lines {edit_snippet_data['start_row']}-{edit_snippet_data['end_row']} "
+                               f"(error on line {edit_snippet_data['error_line_in_snippet']} of {edit_snippet_data['snippet_length']})")
+                    parts.append("```python")
+                    parts.append(edit_snippet_data['text'])
+                    parts.append("```")
+                    parts.append("")
 
-            # Additional context blocks
-            class_def = code_context.get("class_definition")
-            if class_def:
-                parts.append("## Class Definition")
-                parts.append(f"Lines {class_def['start_row']}-{class_def['end_row']}")
-                parts.append("```python")
-                parts.append(class_def['text'])
-                parts.append("```")
-                parts.append("")
-
-            type_aliases = code_context.get("type_aliases")
-            if type_aliases:
-                parts.append("## Type Aliases")
-                parts.append(f"Lines {type_aliases['start_row']}-{type_aliases['end_row']}")
-                parts.append("```python")
-                parts.append(type_aliases['text'])
-                parts.append("```")
-                parts.append("")
-
-            related_func = code_context.get("related_function")
-            if related_func:
-                parts.append("## Related Function Signature")
-                parts.append(f"Lines {related_func['start_row']}-{related_func['end_row']}")
-                parts.append("```python")
-                parts.append(related_func['text'])
-                parts.append("```")
-                parts.append("")
-
-            module_constants = code_context.get("module_constants")
-            if module_constants:
-                parts.append("## Module Constants")
-                parts.append(f"Lines {module_constants['start_row']}-{module_constants['end_row']}")
-                parts.append("```python")
-                parts.append(module_constants['text'])
-                parts.append("```")
-                parts.append("")
+                self._append_context_blocks(parts, signal_data)
 
             parts.append("")
 
         parts.append("Please provide fixes for the above signals using the specified response format.")
 
         return "\n".join(parts)
+
+    def _append_context_blocks(self, parts: list[str], signal_data: dict[str, Any]) -> None:
+        """Append context window, imports, enclosing function, etc. to prompt parts."""
+        code_context = signal_data.get("code_context", {})
+
+        window = code_context.get("window")
+        if window:
+            parts.append("## Context Window (for understanding, DO NOT return)")
+            parts.append(f"Lines {window['start_row']}-{window['end_row']}")
+            parts.append("```python")
+            parts.append(window['text'])
+            parts.append("```")
+            parts.append("")
+
+        imports = code_context.get("imports")
+        if imports:
+            parts.append("## Imports")
+            parts.append("```python")
+            parts.append(imports['text'])
+            parts.append("```")
+            parts.append("")
+
+        enclosing = code_context.get("enclosing_function")
+        if enclosing:
+            parts.append("## Enclosing Function")
+            parts.append(f"Lines {enclosing['start_row']}-{enclosing['end_row']}")
+            parts.append("```python")
+            parts.append(enclosing['text'])
+            parts.append("```")
+            parts.append("")
+
+        class_def = code_context.get("class_definition")
+        if class_def:
+            parts.append("## Class Definition")
+            parts.append(f"Lines {class_def['start_row']}-{class_def['end_row']}")
+            parts.append("```python")
+            parts.append(class_def['text'])
+            parts.append("```")
+            parts.append("")
+
+        type_aliases = code_context.get("type_aliases")
+        if type_aliases:
+            parts.append("## Type Aliases")
+            parts.append(f"Lines {type_aliases['start_row']}-{type_aliases['end_row']}")
+            parts.append("```python")
+            parts.append(type_aliases['text'])
+            parts.append("```")
+            parts.append("")
+
+        related_func = code_context.get("related_function")
+        if related_func:
+            parts.append("## Related Function Signature")
+            parts.append(f"Lines {related_func['start_row']}-{related_func['end_row']}")
+            parts.append("```python")
+            parts.append(related_func['text'])
+            parts.append("```")
+            parts.append("")
+
+        module_constants = code_context.get("module_constants")
+        if module_constants:
+            parts.append("## Module Constants")
+            parts.append(f"Lines {module_constants['start_row']}-{module_constants['end_row']}")
+            parts.append("```python")
+            parts.append(module_constants['text'])
+            parts.append("```")
+            parts.append("")
     
 
     def _restore_base_indent(self, code: str, base_indent: str) -> str:
@@ -469,7 +564,11 @@ class AgentHandler:
 
 
     def _parse_response(self, content: str, context: dict[str, Any]) -> FixPlan:
-        """Parse LLM response with delimited snippets into FixPlan."""
+        """Parse LLM response with delimited snippets into FixPlan.
+
+        Uses the response index map to match FIX FOR blocks to the correct
+        edit snippets, handling both merged groups and standalone signals.
+        """
         # Parse the new format: ===== FIX FOR: <path> ===== ... ===== END FIX =====
         fix_pattern = re.compile(
             r"={5,}\s*FIX FOR:\s*(.+?)\s*={5,}\s*"
@@ -489,13 +588,13 @@ class AgentHandler:
                 "===== FIX FOR: <path> ===== ... ```FIXED_CODE ... ``` ... ===== END FIX ====="
             )
 
+        # Build response index map: one entry per expected response block
+        response_map = self._build_response_index_map(context)
+
         # Build file edits from parsed fixes
         file_edits: list[FileEdit] = []
         all_warnings: list[str] = []
         total_confidence = 0.0
-
-        # Get signals from context for position information
-        signals = context.get("signals", [])
 
         for idx, match in enumerate(matches):
             file_path, confidence_str, reasoning, fixed_code, warnings_str = match
@@ -513,26 +612,23 @@ class AgentHandler:
             if warnings_str.lower() != "none" and warnings_str:
                 all_warnings.append(f"{file_path}: {warnings_str}")
 
-            # Match fix to signal by index
-            # LLM receives signals as SIGNAL 1, SIGNAL 2, etc. and responds in same order
-            # So fix at index 0 corresponds to signal at index 0, etc.
-            if idx >= len(signals):
+            # Match fix to response block by index
+            if idx >= len(response_map):
                 all_warnings.append(
-                    f"Fix index {idx} exceeds number of signals ({len(signals)}), skipping"
+                    f"Fix index {idx} exceeds number of expected blocks ({len(response_map)}), skipping"
                 )
                 continue
 
-            sig_data = signals[idx]
-            edit_snippet = sig_data.get("edit_snippet")
+            entry = response_map[idx]
+            edit_snippet = entry["edit_snippet"]
 
             if not edit_snippet:
-                sig_file = sig_data.get("signal", {}).get("file_path", "unknown")
-                all_warnings.append(f"No edit snippet available for signal {idx} ({sig_file}), skipping")
+                all_warnings.append(
+                    f"No edit snippet available for block {idx} ({entry['file_path']}), skipping"
+                )
                 continue
 
             # Build the edit using snippet positions
-            # Use line-based replacement: start at column 1, end at large column on last line
-            # This effectively replaces entire lines from start_row to end_row inclusive
             start_row = edit_snippet["start_row"]
             end_row = edit_snippet["end_row"]
             base_indent = edit_snippet.get("base_indent", "")
@@ -540,15 +636,10 @@ class AgentHandler:
             # Re-apply base indentation to all lines in the fixed code
             fixed_code = self._restore_base_indent(fixed_code, base_indent)
 
-            # Ensure fixed_code ends with newline for clean replacement
-            # fixed_code = fixed_code.rstrip('\n') + '\n'
-
             code_edit = CodeEdit(
                 edit_type=EditType.REPLACE,
                 span=Span(
                     start=Position(row=start_row, column=1),
-                    # Use large column number to capture entire last line
-                    # _apply_edit will take suffix as empty since we're past line end
                     end=Position(row=end_row, column=99999),
                 ),
                 content=fixed_code,
