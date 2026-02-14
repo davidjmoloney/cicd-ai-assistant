@@ -10,13 +10,13 @@ Output format: unified diff (`--diff` flag). Parser: `parse_ruff_format_diff()`.
 
 ### Run Command
 ```bash
-ruff format --diff \
-  --target-version py312 \
-  --line-length 150 \
-  --exclude 'tests' \
-  authentication/ watchlist/ ria/ \
-  > rf-results.txt
-```
+ruff format --diff   --target-version py312  \
+ --line-length 150 --exclude 'tests,migrations' \
+  prospecting/ authentication/ watchlist/ ria/ \
+  meeting_prep/ google_integration/ \
+  hubspot/ outlook/ salesforce/ \
+ > rf-results.txt
+``` 
 
 ## Ruff Lint
 ### Overview of Signals
@@ -53,8 +53,10 @@ ruff check --output-format=json \
   --line-length 150 \
   --select E,F,B,UP,I,S \
   --ignore E203,E501 \
-  --exclude 'tests' \
-  authentication/ watchlist/ ria/ \
+  --exclude 'tests,migrations' \
+  prospecting/ authentication/ watchlist/ ria/ \
+  meeting_prep/ google_integration/ \
+  hubspot/ outlook/ salesforce/ \
   > rl-results.json
 ```
 
@@ -88,8 +90,10 @@ mypy --output=json \
   --no-implicit-optional \
   --ignore-missing-imports \
   --follow-imports=normal \
-  --exclude '(tests/)' \
-  authentication/ watchlist/ ria/ \
+  --exclude 'tests,migrations' \
+  prospecting/ authentication/ watchlist/ ria/ \
+  meeting_prep/ google_integration/ \
+  hubspot/ outlook/ salesforce/ \
   > mp-results.json
 ```
 
@@ -131,6 +135,9 @@ Output format: plain text (two-line blocks per error). Parser: `parse_pydocstyle
 pydocstyle \
   --select=D101,D102,D103 \
   --match='(?!test_).*\.py' \
-  authentication/ watchlist/ ria/ \
+  --match-dir='(?!tests|migrations).*' \
+  prospecting/ authentication/ watchlist/ ria/ \
+  meeting_prep/ google_integration/ \
+  hubspot/ outlook/ salesforce/ \
   > pds-results.txt
 ```

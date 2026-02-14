@@ -1,3 +1,0 @@
-{"file": "app/config/tier_queries.py", "line": 173, "column": 0, "message": "Need type annotation for \"DEPRIORITIZE_QUERIES\" (hint: \"DEPRIORITIZE_QUERIES: dict[<type>, <type>] = ...\")", "hint": null, "code": "var-annotated", "severity": "error"}
-{"file": "app/tools/json_to_excel.py", "line": 356, "column": 12, "message": "Argument 2 to \"convert_company_enrichment_json_to_excel\" has incompatible type \"str\"; expected \"BytesIO\"", "hint": null, "code": "arg-type", "severity": "error"}
-{"file": "app/utils/config.py", "line": 55, "column": 33, "message": "Argument 1 to \"get\" of \"dict\" has incompatible type \"str | None\"; expected \"str\"", "hint": null, "code": "arg-type", "severity": "error"}

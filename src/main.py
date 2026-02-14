@@ -7,8 +7,8 @@ prioritises and groups them, generates fixes (direct or LLM-assisted),
 and creates pull requests with the results.
 
 Usage:
-    python -m main                          # defaults: cicd-artifacts/
-    python -m main --artifacts-dir ./my-artifacts
+    python -m main                          # defaults: cicd-artifacts-target/
+    python -m main --artifacts-dir /home/devel/ardessa-backend-clone-12Feb2026/evaluation/cicd-artifacts-target
 
 Configuration (environment variables):
     CONFIDENCE_THRESHOLD  - Min confidence to include a fix in PR (default: 0.7)
@@ -16,9 +16,13 @@ Configuration (environment variables):
     LLM_PROVIDER          - LLM provider name                     (default: "openai")
     LOG_LEVEL             - "info" (default) or "debug"
     TARGET_REPO_ROOT      - Repository root for path normalization (optional)
+    GITHUB_TOKEN          - GitHub PAT for API access
+    TARGET_REPO_OWNER     - Target repository owner
+    TARGET_REPO_NAME      - Target repository name
+    TARGET_REPO_DEFAULT_BRANCH - Branch to read files from / create PRs against
 
 Debug Mode (LOG_LEVEL=debug):
-    When LOG_LEVEL is set to "debug", pipeline objects are dumped to debug/:
+    When LOG_LEVEL is set to "debug", pipeline objects are dumped to debug/: 
       - all-signals-{timestamp}.json   : All parsed FixSignal objects
       - groups-{timestamp}.json        : Prioritized SignalGroup objects
       - fix-plan-{n}-{tool}-{type}-{timestamp}.json : FixPlan for each group
@@ -44,12 +48,20 @@ try:
 except ImportError:
     pass
 
+import httpx
+
 from signals.models import FixSignal, SignalType
 from signals.parsers.mypy import parse_mypy_results
 from signals.parsers.ruff import parse_ruff_lint_results, parse_ruff_format_diff
 from signals.parsers.pydocstyle import parse_pydocstyle_results
 from orchestrator.prioritizer import Prioritizer, SignalGroup
 from orchestrator.fix_planner import FixPlanner, PlannerResult
+from github.client import (
+    github_headers,
+    TARGET_REPO_OWNER,
+    TARGET_REPO_NAME,
+    TARGET_REPO_DEFAULT_BRANCH,
+)
 from github.pr_generator import PRGenerator, PRResult
 
 
@@ -62,10 +74,9 @@ def _read_config() -> dict:
 
     Returns:
         Dict with keys: confidence_threshold, signals_per_pr, llm_provider,
-        log_level.
+        log_level, target_repo_root.
     """
     return {
-        "local_repo_root": os.getenv("LOCAL_REPO_ROOT"),
         "target_repo_root": os.getenv("TARGET_REPO_ROOT"),
         "confidence_threshold": float(os.getenv("CONFIDENCE_THRESHOLD", "0.7")),
         "signals_per_pr": int(os.getenv("SIGNALS_PER_PR", "4")),
@@ -151,21 +162,21 @@ def _route_artifact(path: Path) -> Optional[str]:
     name = path.name.lower()
 
     # ruff-format diff files (text only — the .json status file is skipped)
-    if "ruff-format" in name or ("ruff" in name and "format" in name):
+    if "rf-" in name or "ruff-format" in name or ("ruff" in name and "format" in name):
         if path.suffix == ".txt":
             return "ruff-format"
         return None  # skip the JSON status stub
 
     # ruff lint JSON results
-    if "ruff" in name and "lint" in name:
+    if "rl-" in name or ("ruff" in name and "lint" in name):
         return "ruff-lint"
 
     # mypy JSON results
-    if "mypy" in name or "my-py" in name:
+    if "mp-" in name or "mypy" in name or "my-py" in name:
         return "mypy"
 
     # pydocstyle text output
-    if "pydocstyle" in name:
+    if "pds-" in name or "pydocstyle" in name:
         return "pydocstyle"
 
     return None
@@ -318,7 +329,6 @@ def run(artifacts_dir: Path, config: dict) -> RunMetrics:
     """
     metrics = RunMetrics()
 
-    local_repo_root: str | None = config["local_repo_root"]
     target_repo_root: str | None = config["target_repo_root"]
     confidence_threshold: float = config["confidence_threshold"]
     signals_per_pr: int = config["signals_per_pr"]
@@ -377,54 +387,64 @@ def run(artifacts_dir: Path, config: dict) -> RunMetrics:
     if debug_mode:
         _dump_debug_object(groups, "groups", debug_dir, debug_timestamp)
 
-    # ── 3. Generate fix plans ──────────────────────────────────
-    planner = FixPlanner(llm_provider=llm_provider, repo_root=local_repo_root)
-    pr_generator = PRGenerator(confidence_threshold=confidence_threshold)
+    # ── 3. Generate fix plans & PRs (shared GitHub client) ─────
+    with httpx.Client(headers=github_headers(), timeout=30.0) as github_client:
+        planner = FixPlanner(
+            llm_provider=llm_provider,
+            github_client=github_client,
+            repo_owner=TARGET_REPO_OWNER,
+            repo_name=TARGET_REPO_NAME,
+            ref=TARGET_REPO_DEFAULT_BRANCH,
+        )
+        pr_generator = PRGenerator(
+            github_client=github_client,
+            confidence_threshold=confidence_threshold,
+        )
 
-    for idx, group in enumerate(groups, 1):
-        label = f"[group {idx}/{len(groups)} | {group.tool_id} {group.signal_type.value}]"
-        print(f"[main] {label} {len(group.signals)} signal(s)")
+        for idx, group in enumerate(groups, 1):
+            label = f"[group {idx}/{len(groups)} | {group.tool_id} {group.signal_type.value}]"
+            print(f"[main] {label} {len(group.signals)} signal(s)")
 
-        planner_result: PlannerResult = planner.create_fix_plan(group)
+            planner_result: PlannerResult = planner.create_fix_plan(group)
 
-        if planner_result.used_llm:
-            metrics.llm_calls += 1
-        else:
-            metrics.direct_fixes += 1
+            if planner_result.used_llm:
+                metrics.llm_calls += 1
+            else:
+                metrics.direct_fixes += 1
 
-        if not planner_result.success or planner_result.fix_plan is None:
-            print(f"[main]   {label} fix plan failed: {planner_result.error}")
-            metrics.fix_plans_failed += 1
-            continue
+            if not planner_result.success or planner_result.fix_plan is None:
+                print(f"[main]   {label} fix plan failed: {planner_result.error}")
+                metrics.fix_plans_failed += 1
+                continue
 
-        metrics.fix_plans_created += 1
+            metrics.fix_plans_created += 1
 
-        # Debug: dump fix_plan
-        if debug_mode:
-            fix_plan_name = f"fix-plan-{idx}-{group.tool_id}-{group.signal_type.value}"
-            _dump_debug_object(planner_result.fix_plan, fix_plan_name, debug_dir, debug_timestamp)
+            # Debug: dump fix_plan
+            if debug_mode:
+                fix_plan_name = f"fix-plan-{idx}-{group.tool_id}-{group.signal_type.value}"
+                _dump_debug_object(planner_result.fix_plan, fix_plan_name, debug_dir, debug_timestamp)
 
-        # ── 4. Create PR ──────────────────────────────────────
-        pr_result: PRResult = pr_generator.create_pr(planner_result.fix_plan)
-        metrics.record_pr(pr_result, group)
+            # ── 4. Create PR ──────────────────────────────────
+            pr_result: PRResult = pr_generator.create_pr(planner_result.fix_plan)
+            metrics.record_pr(pr_result, group)
 
-        # Debug: dump pr_result
-        if debug_mode:
-            pr_result_name = f"pr-result-{idx}-{group.tool_id}-{group.signal_type.value}"
-            _dump_debug_object(pr_result, pr_result_name, debug_dir, debug_timestamp)
+            # Debug: dump pr_result
+            if debug_mode:
+                pr_result_name = f"pr-result-{idx}-{group.tool_id}-{group.signal_type.value}"
+                _dump_debug_object(pr_result, pr_result_name, debug_dir, debug_timestamp)
 
-        if pr_result.success and pr_result.pr_url:
-            print(f"[main]   {label} PR created: {pr_result.pr_url}")
-        elif pr_result.success and not pr_result.pr_url:
-            print(f"[main]   {label} all fixes below threshold — no PR")
-        else:
-            print(f"[main]   {label} PR failed: {pr_result.error}")
+            if pr_result.success and pr_result.pr_url:
+                print(f"[main]   {label} PR created: {pr_result.pr_url}")
+            elif pr_result.success and not pr_result.pr_url:
+                print(f"[main]   {label} all fixes below threshold — no PR")
+            else:
+                print(f"[main]   {label} PR failed: {pr_result.error}")
 
-        if pr_result.skipped_fixes:
-            print(
-                f"[main]   {label} skipped {len(pr_result.skipped_fixes)} "
-                "fix(es) below confidence threshold"
-            )
+            if pr_result.skipped_fixes:
+                print(
+                    f"[main]   {label} skipped {len(pr_result.skipped_fixes)} "
+                    "fix(es) below confidence threshold"
+                )
 
     metrics.finish()
     return metrics
@@ -441,8 +461,8 @@ def main() -> None:
     parser.add_argument(
         "--artifacts-dir",
         type=Path,
-        default=Path("cicd-artifacts"),
-        help="Directory containing CI/CD tool output files (default: cicd-artifacts/)",
+        default=Path("cicd-artifacts-target"),
+        help="Directory containing CI/CD tool output files (default: cicd-artifacts-target/)",
     )
     args = parser.parse_args()
 
