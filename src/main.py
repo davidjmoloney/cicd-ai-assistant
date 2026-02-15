@@ -82,7 +82,7 @@ def _read_config() -> dict:
         "signals_per_pr": int(os.getenv("SIGNALS_PER_PR", "4")),
         "llm_provider": os.getenv("LLM_PROVIDER", "anthropic").strip(),
         "log_level": os.getenv("LOG_LEVEL", "info").strip().lower(),
-        # ── placeholder: add future env vars here ──
+        "llm_rate_limit_wait": os.getenv("LLM_RATE_LIMIT_WAIT", "false").lower() in ("true", "1", "yes"),
     }
 
 
@@ -337,6 +337,7 @@ def run(artifacts_dir: Path, config: dict) -> RunMetrics:
     signals_per_pr: int = config["signals_per_pr"]
     llm_provider: str = config["llm_provider"]
     log_level: str = config["log_level"]
+    llm_rate_limit_wait: bool = config["llm_rate_limit_wait"]
 
     # Debug mode setup
     debug_mode = log_level == "debug"
@@ -412,6 +413,9 @@ def run(artifacts_dir: Path, config: dict) -> RunMetrics:
 
             if planner_result.used_llm:
                 metrics.llm_calls += 1
+                if llm_rate_limit_wait and idx < len(groups):
+                    print(f"[main]   {label} rate-limit wait: sleeping 60s")
+                    time.sleep(60)
             else:
                 metrics.direct_fixes += 1
 
