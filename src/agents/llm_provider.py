@@ -129,7 +129,7 @@ class OpenAIProvider(LLMProvider):
         model: Optional[str] = None,
         api_url: Optional[str] = None,
         timeout_s: float = 120.0,
-        max_retries: int = 4,
+        max_retries: int = 7,
     ) -> None:
         self._api_key = (api_key or OPENAI_API_KEY).strip()
         self._model = (model or OPENAI_MODEL).strip()
@@ -274,9 +274,11 @@ class OpenAIProvider(LLMProvider):
                         except ValueError:
                             sleep_s = 2 ** attempt
                     else:
-                        sleep_s = 2 ** attempt  # 1,2,4,8...
+                        sleep_s = 2 ** attempt  # 1,2,4,8,16,32,64...
 
-                    time.sleep(min(sleep_s, 30.0))
+                    sleep_s = min(sleep_s, 300.0)  # cap at 5 minutes
+                    print(f"[llm] OpenAI retry {attempt + 1}/{self._max_retries} — waiting {sleep_s:.0f}s")
+                    time.sleep(sleep_s)
 
         except httpx.TimeoutException:
             return LLMError(error_type="timeout", message="OpenAI API request timed out")
@@ -300,7 +302,7 @@ class ClaudeProvider(LLMProvider):
         api_url: Optional[str] = None,
         api_version: Optional[str] = None,
         timeout_s: float = 120.0,
-        max_retries: int = 4,
+        max_retries: int = 7,
     ) -> None:
         self._api_key = (api_key or ANTHROPIC_API_KEY).strip()
         self._model = (model or ANTHROPIC_MODEL).strip()
@@ -421,9 +423,11 @@ class ClaudeProvider(LLMProvider):
                         except ValueError:
                             sleep_s = 2 ** attempt
                     else:
-                        sleep_s = 2 ** attempt
+                        sleep_s = 2 ** attempt  # 1,2,4,8,16,32,64...
 
-                    time.sleep(min(sleep_s, 30.0))
+                    sleep_s = min(sleep_s, 300.0)  # cap at 5 minutes
+                    print(f"[llm] Anthropic retry {attempt + 1}/{self._max_retries} — waiting {sleep_s:.0f}s")
+                    time.sleep(sleep_s)
 
         except httpx.TimeoutException:
             return LLMError(error_type="timeout", message="Anthropic API request timed out")
