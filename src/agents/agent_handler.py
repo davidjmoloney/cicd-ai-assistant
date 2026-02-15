@@ -67,6 +67,16 @@ class CodeEdit:
 
 
 @dataclass
+class SignalError:
+    """Original error info from a CI signal, for PR descriptions."""
+    file_path: str
+    line: int
+    column: int
+    message: str
+    rule_code: str | None
+
+
+@dataclass
 class FileEdit:
     """
     All edits for a single file.
@@ -78,6 +88,7 @@ class FileEdit:
     edits: list[CodeEdit] = field(default_factory=list)
     reasoning: str = ""  # LLM's reasoning for these edits
     confidence: float = 1.0  # 0.0-1.0, defaults to 1.0 for deterministic fixes
+    signal_errors: list[SignalError] = field(default_factory=list)
 
 
 @dataclass
@@ -105,6 +116,16 @@ class FixPlan:
                     "file_path": fe.file_path,
                     "reasoning": fe.reasoning,
                     "confidence": fe.confidence,
+                    "signal_errors": [
+                        {
+                            "file_path": se.file_path,
+                            "line": se.line,
+                            "column": se.column,
+                            "message": se.message,
+                            "rule_code": se.rule_code,
+                        }
+                        for se in fe.signal_errors
+                    ],
                     "edits": [
                         {
                             "edit_type": e.edit_type.value,
@@ -146,12 +167,23 @@ class FixPlan:
                         description=e_data.get("description", ""),
                     )
                 )
+            signal_errors = [
+                SignalError(
+                    file_path=se.get("file_path", ""),
+                    line=se.get("line", 0),
+                    column=se.get("column", 0),
+                    message=se.get("message", ""),
+                    rule_code=se.get("rule_code"),
+                )
+                for se in fe_data.get("signal_errors", [])
+            ]
             file_edits.append(
                 FileEdit(
                     file_path=fe_data.get("file_path", ""),
                     edits=edits,
                     reasoning=fe_data.get("reasoning", ""),
                     confidence=fe_data.get("confidence", 1.0),
+                    signal_errors=signal_errors,
                 )
             )
 
@@ -646,11 +678,28 @@ class AgentHandler:
                 description=reasoning.strip(),
             )
 
+            # Build signal_errors from the original signals for this block
+            signals = context.get("signals", [])
+            signal_errors: list[SignalError] = []
+            for si in entry["signal_indices"]:
+                if si < len(signals):
+                    sig = signals[si].get("signal", {})
+                    span_data = sig.get("span", {})
+                    start = span_data.get("start", {})
+                    signal_errors.append(SignalError(
+                        file_path=sig.get("file_path", file_path),
+                        line=start.get("row", 0),
+                        column=start.get("column", 0),
+                        message=sig.get("message", ""),
+                        rule_code=sig.get("rule_code"),
+                    ))
+
             file_edits.append(FileEdit(
                 file_path=file_path,
                 edits=[code_edit],
                 reasoning=reasoning.strip(),
                 confidence=confidence,
+                signal_errors=signal_errors,
             ))
 
         # Calculate average confidence
