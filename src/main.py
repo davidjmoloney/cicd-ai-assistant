@@ -230,6 +230,7 @@ class RunMetrics:
     signals_fixed: int = 0
     signals_fixed_by_type: dict[str, int] = field(default_factory=dict)
     signals_skipped: int = 0
+    signals_unchanged: int = 0
 
     def finish(self) -> None:
         self.end_time = datetime.now(timezone.utc)
@@ -261,6 +262,7 @@ class RunMetrics:
             self.prs_failed += 1
 
         self.signals_skipped += len(pr_result.skipped_fixes)
+        self.signals_unchanged += len(pr_result.unchanged_fixes)
 
 
 def write_run_report(metrics: RunMetrics, output_dir: Path) -> Path:
@@ -306,6 +308,7 @@ def write_run_report(metrics: RunMetrics, output_dir: Path) -> Path:
     for stype, count in sorted(metrics.signals_fixed_by_type.items()):
         lines.append(f"  {stype:20s}: {count}")
     lines.append(f"Signals skipped  : {metrics.signals_skipped}")
+    lines.append(f"Signals unchanged: {metrics.signals_unchanged}")
 
     lines.extend(["", "=" * 60])
 
@@ -446,6 +449,12 @@ def run(artifacts_dir: Path, config: dict) -> RunMetrics:
                     "fix(es) below confidence threshold"
                 )
 
+            if pr_result.unchanged_fixes:
+                print(
+                    f"[main]   {label} unchanged {len(pr_result.unchanged_fixes)} "
+                    "fix(es) (LLM returned identical code)"
+                )
+
     metrics.finish()
     return metrics
 
@@ -483,6 +492,7 @@ def main() -> None:
     print(f"\n{'─' * 40}")
     print(f"Signals: {metrics.total_signals} parsed, "
           f"{metrics.signals_fixed} fixed, "
+          f"{metrics.signals_unchanged} unchanged, "
           f"{metrics.signals_skipped} skipped")
     print(f"PRs: {metrics.prs_created} created, "
           f"{metrics.prs_failed} failed")

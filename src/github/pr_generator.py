@@ -28,7 +28,7 @@ from typing import Any, Optional
 import httpx
 from dotenv import load_dotenv
 
-from agents.agent_handler import CodeEdit, EditType, FileEdit, FixPlan
+from agents.agent_handler import CodeEdit, EditType, FileEdit, FixPlan, SignalError
 from github.client import (
     GitHubError,
     github_request,
@@ -68,6 +68,14 @@ class SkippedFix:
 
 
 @dataclass
+class UnchangedFix:
+    """A fix where the LLM returned identical code."""
+    file_path: str
+    reasoning: str
+    signal_errors: list[SignalError]
+
+
+@dataclass
 class PRResult:
     """Result of PR creation."""
     success: bool
@@ -77,6 +85,7 @@ class PRResult:
     error: Optional[str] = None
     files_changed: list[str] = field(default_factory=list)
     skipped_fixes: list[SkippedFix] = field(default_factory=list)
+    unchanged_fixes: list[UnchangedFix] = field(default_factory=list)
 
 
 # ============================================================================
@@ -245,9 +254,16 @@ class PRGenerator:
 
             # 4. Apply edits and commit each unique file
             files_changed: list[str] = []
+            unchanged_fixes: list[UnchangedFix] = []
             for file_edit in merged_file_edits:
                 if self._commit_file_edit(client, owner, repo, file_edit, branch_name, base):
                     files_changed.append(file_edit.file_path)
+                else:
+                    unchanged_fixes.append(UnchangedFix(
+                        file_path=file_edit.file_path,
+                        reasoning=file_edit.reasoning,
+                        signal_errors=file_edit.signal_errors,
+                    ))
 
             if not files_changed:
                 return PRResult(
@@ -255,11 +271,12 @@ class PRGenerator:
                     error="No files were modified",
                     branch_name=branch_name,
                     skipped_fixes=skipped_fixes,
+                    unchanged_fixes=unchanged_fixes,
                 )
 
             # 5. Create pull request
             title = self._generate_title(fix_plan)
-            body = self._generate_body(fix_plan, files_changed, accepted_edits, skipped_fixes)
+            body = self._generate_body(fix_plan, files_changed, accepted_edits, skipped_fixes, unchanged_fixes)
 
             pr_data = github_request(client, "POST", f"/repos/{owner}/{repo}/pulls", {
                 "title": title,
@@ -291,6 +308,7 @@ class PRGenerator:
                 branch_name=branch_name,
                 files_changed=files_changed,
                 skipped_fixes=skipped_fixes,
+                unchanged_fixes=unchanged_fixes,
             )
 
         except GitHubError as e:
@@ -443,8 +461,11 @@ class PRGenerator:
         files_changed: list[str],
         accepted_edits: list[FileEdit],
         skipped_fixes: list[SkippedFix],
+        unchanged_fixes: list[UnchangedFix] | None = None,
     ) -> str:
         """Generate PR body with per-fix confidence levels and averages."""
+        unchanged_fixes = unchanged_fixes or []
+
         # Calculate average confidence across accepted fixes only
         if accepted_edits:
             avg_confidence = sum(fe.confidence for fe in accepted_edits) / len(accepted_edits)
@@ -457,7 +478,11 @@ class PRGenerator:
             "",
             f"**Average Confidence:** {avg_confidence:.0%}",
             f"**Confidence Threshold:** {self._confidence_threshold:.0%}",
-            f"**Fixes Applied:** {len(accepted_edits)} | **Skipped:** {len(skipped_fixes)}",
+            (
+                f"**Fixes Applied:** {len(files_changed)} | "
+                f"**Unchanged:** {len(unchanged_fixes)} | "
+                f"**Skipped:** {len(skipped_fixes)}"
+            ),
             "",
             "## Files Changed",
         ]
@@ -470,10 +495,34 @@ class PRGenerator:
         for fe in accepted_edits:
             if fe.file_path in files_changed:
                 lines.append(f"### `{fe.file_path}` (confidence: {fe.confidence:.0%})")
-                if fe.reasoning:
-                    lines.append(f"**Reasoning:** {fe.reasoning}")
-                for edit in fe.edits:
-                    lines.append(f"- **{edit.edit_type.value}** (line {edit.span.start.row}): {edit.description}")
+
+                if fe.signal_errors:
+                    lines.append("")
+                    lines.append("**Errors addressed:**")
+                    for se in fe.signal_errors:
+                        rule_tag = f"`[{se.rule_code}]` " if se.rule_code else ""
+                        lines.append(f"- Line {se.line}, Col {se.column} — {rule_tag}{se.message}")
+                    lines.append("")
+                    if fe.reasoning:
+                        lines.append(f"**Fix:** {fe.reasoning}")
+                else:
+                    if fe.reasoning:
+                        lines.append(f"**Reasoning:** {fe.reasoning}")
+                    for edit in fe.edits:
+                        lines.append(f"- (line {edit.span.start.row}): {edit.description}")
+
+                lines.append("")
+
+        if unchanged_fixes:
+            lines.extend(["## Unchanged Fixes (LLM returned identical code)", ""])
+            for uf in unchanged_fixes:
+                lines.append(f"### `{uf.file_path}`")
+                if uf.signal_errors:
+                    for se in uf.signal_errors:
+                        rule_tag = f"`[{se.rule_code}]` " if se.rule_code else ""
+                        lines.append(f"- Line {se.line}, Col {se.column} — {rule_tag}{se.message}")
+                if uf.reasoning:
+                    lines.append(f"- **Reasoning:** {uf.reasoning}")
                 lines.append("")
 
         if skipped_fixes:
@@ -488,7 +537,7 @@ class PRGenerator:
         if fix_plan.warnings:
             lines.extend(["## Warnings"])
             for w in fix_plan.warnings:
-                lines.append(f"- ⚠️ {w}")
+                lines.append(f"- {w}")
 
         lines.extend([
             "",
