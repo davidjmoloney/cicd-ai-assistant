@@ -99,6 +99,11 @@ def _parse_unified_diff(diff_text: str) -> list[FileDiff]:
         # Check for file header (--- path)
         file_match = _FILE_HEADER_PATTERN.match(line)
         if file_match:
+            # Flush in-progress hunk before saving the file
+            if current_hunk is not None:
+                current_hunks.append(current_hunk)
+                current_hunk = None
+
             # Save previous file if exists
             if current_file is not None and current_hunks:
                 file_diffs.append(FileDiff(file_path=current_file, hunks=current_hunks))
