@@ -64,6 +64,8 @@ from github.client import (
 )
 from github.pr_generator import PRGenerator, PRResult
 
+import logging
+#logging.basicConfig(level=logging.INFO)
 
 # =============================================================================
 # Environment Variable Configuration

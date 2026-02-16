@@ -108,7 +108,7 @@ def _dump_llm_data_to_file(
     group: SignalGroup,
     result: AgentResult,
     prompts: dict[str, str] | None = None,
-    output_dir: str | Path = "scripts/debug/llm-contexts",
+    output_dir: str | Path = "debug/llm-contexts",
 ) -> None:
     """
     Dump LLM context and prompts to a JSON file for debugging.

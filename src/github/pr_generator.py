@@ -51,8 +51,8 @@ PR_LABELS = [l.strip() for l in os.getenv("PR_LABELS", "cicd-agent-generated").s
 PR_DRAFT_MODE = os.getenv("PR_DRAFT_MODE", "false").lower() in ("true", "1", "yes")
 
 # Logging Mode Environment Settings
-DEBUG_MODE_ON = os.getenv("DEBUG_MODE_ON", "false").lower() in ("true", "1", "yes")
-
+log_level = os.getenv("LOG_LEVEL", "info").strip().lower()
+debug_mode = log_level == "debug"
 
 # ============================================================================
 # Result Type
@@ -335,20 +335,14 @@ class PRGenerator:
             original_content = base64.b64decode(file_data["content"]).decode("utf-8")
             file_sha = file_data["sha"]
 
-            with (Path("/home/devel/cicd-ai-assistant/scripts/debug/original_content.txt")).open("w", encoding="utf-8") as f:
-                    f.write(original_content)
-
             # Apply edits
             new_content = apply_edits_to_content(original_content, file_edit.edits)
-
-            with (Path("/home/devel/cicd-ai-assistant/scripts/debug/new_content.txt")).open("w", encoding="utf-8") as f:
-                    f.write(new_content)
 
             if new_content == original_content:
                 return False  # No changes
 
             # Log the details before committing
-            if DEBUG_MODE_ON: 
+            if debug_mode: 
                 logging.info(f"Attempting to commit {file_edit.file_path}")
                 logging.info(f"  Branch: {branch}")
                 logging.info(f"  File SHA: {file_sha}")

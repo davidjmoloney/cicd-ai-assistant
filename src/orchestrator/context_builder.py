@@ -100,7 +100,8 @@ class ContextBuilder:
         import logging
         import os
 
-        debug_mode = os.getenv("DEBUG_MODE_ON", "false").lower() in ("true", "1", "yes")
+        log_level = os.getenv("LOG_LEVEL", "info").strip().lower()
+        debug_mode = log_level == "debug"
         if debug_mode:
             logging.info(f"\n=== Building context for {len(group.signals)} signals ===")
 
@@ -338,7 +339,8 @@ class ContextBuilder:
         if file_path in self._file_cache:
             return self._file_cache[file_path]
 
-        debug_mode = os.getenv("DEBUG_MODE_ON", "false").lower() in ("true", "1", "yes")
+        log_level = os.getenv("LOG_LEVEL", "info").strip().lower()
+        debug_mode = log_level == "debug"
         if debug_mode:
             logging.info(
                 f"ContextBuilder: Reading file_path='{file_path}' "
@@ -409,6 +411,11 @@ class ContextBuilder:
 
         file_path = signal.file_path
 
+        # Pydocstyle signals need the full signature + a few lines after
+        rule_code = signal.rule_code or ""
+        if rule_code in ("D101", "D102", "D103"):
+            return self._build_pydocstyle_edit_snippet(file_path, lines, span, rule_code)
+
         # Use existing extraction functions based on window type
         if edit_spec.window_type == "function":
             file_snippet = self._extract_enclosing_function(file_path, lines, span)
@@ -444,6 +451,90 @@ class ContextBuilder:
         error_line = span.start.row
         start_row = max(1, error_line - window_lines)
         end_row = min(total, error_line + window_lines)
+
+        snippet_lines = lines[start_row - 1 : end_row]
+        original_text = "".join(snippet_lines)
+        base_indent = self._calculate_base_indent(snippet_lines)
+        stripped_text = self._strip_base_indent(snippet_lines, base_indent)
+
+        return EditSnippet(
+            file_path=file_path,
+            start_row=start_row,
+            end_row=end_row,
+            text=stripped_text,
+            original_text=original_text,
+            error_line=error_line,
+            error_line_in_snippet=error_line - start_row + 1,
+            snippet_length=end_row - start_row + 1,
+            base_indent=base_indent,
+        )
+
+    def _build_pydocstyle_edit_snippet(
+        self,
+        file_path: str,
+        lines: list[str],
+        span: Span,
+        rule_code: str,
+    ) -> Optional[EditSnippet]:
+        """
+        Build an edit snippet for pydocstyle (D101/D102/D103) signals.
+
+        Captures the full function/class signature (which may span multiple lines)
+        plus a few lines after the signature ends. This ensures the LLM sees the
+        complete signature and knows exactly where to insert the docstring.
+
+        Args:
+            file_path: Path to the file
+            lines: File lines
+            span: Error location (points to the def/class line)
+            rule_code: The pydocstyle rule code (D101, D102, D103)
+
+        Returns:
+            EditSnippet covering the full signature + 3 lines after
+        """
+        total = len(lines)
+        error_line = span.start.row
+        trailing_lines = 3  # Lines to include after signature ends
+
+        # Start from the error line (the def/class line)
+        start_row = error_line
+
+        # Include decorators above the definition
+        for r in range(error_line - 1, 0, -1):
+            stripped = lines[r - 1].lstrip()
+            if stripped.startswith("@") or stripped == "":
+                start_row = r
+            else:
+                break
+
+        # Find the end of the signature by looking for the closing '):' or just ':'
+        # For classes: `class Foo(Bar):` — usually single line
+        # For functions: `def foo(arg1, arg2, ...) -> ReturnType:` — can span multiple lines
+        sig_end_row = error_line
+        paren_depth = 0
+        found_signature_end = False
+
+        for r in range(error_line, min(total + 1, error_line + 50)):
+            line = lines[r - 1]
+            for ch in line:
+                if ch == '(':
+                    paren_depth += 1
+                elif ch == ')':
+                    paren_depth -= 1
+
+            # Signature ends when parens are balanced and line ends with ':'
+            stripped = line.rstrip()
+            if paren_depth <= 0 and stripped.endswith(':'):
+                sig_end_row = r
+                found_signature_end = True
+                break
+
+        if not found_signature_end:
+            # Fallback: just use the error line as signature end
+            sig_end_row = error_line
+
+        # Include trailing_lines after the signature
+        end_row = min(total, sig_end_row + trailing_lines)
 
         snippet_lines = lines[start_row - 1 : end_row]
         original_text = "".join(snippet_lines)
