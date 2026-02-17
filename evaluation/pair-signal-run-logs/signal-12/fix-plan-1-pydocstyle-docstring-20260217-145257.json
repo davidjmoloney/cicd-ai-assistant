@@ -1,0 +1,40 @@
+{
+  "group_tool_id": "pydocstyle",
+  "group_signal_type": "docstring",
+  "file_edits": [
+    {
+      "file_path": "prospecting/enrichment_types.py",
+      "reasoning": "Added Google-style docstring for FieldDefinition dataclass explaining its purpose and attributes",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "prospecting/enrichment_types.py",
+          "line": 50,
+          "column": 0,
+          "message": "Missing docstring in public class",
+          "rule_code": "D101"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 47,
+              "column": 1
+            },
+            "end": {
+              "row": 53,
+              "column": 99999
+            }
+          },
+          "content": "\n\n@dataclass\nclass FieldDefinition:\n    \"\"\"Define metadata and processing rules for an enrichment field.\n\n    Specifies how a field should be processed, validated, and merged\n    during company enrichment operations.\n\n    Attributes:\n        field_path: Dot-notation path to the field (e.g., \"firm_information.firm_name\")\n        field_type: The data type of the field\n        pydantic_model: Reference to Pydantic model if field uses structured data\n    \"\"\"\n    field_path: str  # e.g., \"firm_information.firm_name\"\n    field_type: FieldType\n    pydantic_model: Optional[Type[BaseModel]] = None  # Reference to Pydantic model if applicable\n",
+          "description": "Added Google-style docstring for FieldDefinition dataclass explaining its purpose and attributes"
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 1 file(s) for pydocstyle signals",
+  "warnings": [],
+  "confidence": 0.9
+}

@@ -1,0 +1,40 @@
+{
+  "group_tool_id": "pydocstyle",
+  "group_signal_type": "docstring",
+  "file_edits": [
+    {
+      "file_path": "authentication/clerk.py",
+      "reasoning": "Added Google-style docstring for classmethod that creates ClerkSettings from configuration. The method loads config values and validates required settings.",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "authentication/clerk.py",
+          "line": 45,
+          "column": 0,
+          "message": "Missing docstring in public method",
+          "rule_code": "D102"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 43,
+              "column": 1
+            },
+            "end": {
+              "row": 48,
+              "column": 99999
+            }
+          },
+          "content": "\n    @classmethod\n    def from_config(cls) -> \"ClerkSettings\":\n        \"\"\"Create ClerkSettings instance from configuration values.\n    \n        Loads Clerk authentication settings from config helpers and validates\n        that required configuration values are present.\n    \n        Returns:\n            ClerkSettings instance with loaded configuration values.\n        \n        Raises:\n            ClerkConfigurationError: If required configuration values are missing.\n        \"\"\"\n        jwks_url = get_clerk_jwks_url()\n        issuer = get_clerk_issuer()\n        audience = get_clerk_audience()\n",
+          "description": "Added Google-style docstring for classmethod that creates ClerkSettings from configuration. The method loads config values and validates required settings."
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 1 file(s) for pydocstyle signals",
+  "warnings": [],
+  "confidence": 0.9
+}

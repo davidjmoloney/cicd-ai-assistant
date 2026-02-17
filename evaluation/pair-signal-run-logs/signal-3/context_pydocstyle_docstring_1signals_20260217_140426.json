@@ -1,0 +1,113 @@
+{
+  "_debug_metadata": {
+    "timestamp": "20260217_140426",
+    "tool_id": "pydocstyle",
+    "signal_type": "docstring",
+    "num_signals": 1,
+    "signal_files": [
+      "authentication/utils.py"
+    ],
+    "system_prompt_length": 10610,
+    "user_prompt_length": 2628
+  },
+  "context": {
+    "group": {
+      "tool_id": "pydocstyle",
+      "signal_type": "docstring",
+      "group_size": 1
+    },
+    "signals": [
+      {
+        "signal": {
+          "tool_id": "pydocstyle",
+          "signal_type": "docstring",
+          "severity": "low",
+          "rule_code": "D103",
+          "message": "Missing docstring in public function",
+          "docs_url": "http://www.pydocstyle.org/en/stable/error_codes.html#D103",
+          "file_path": "authentication/utils.py",
+          "span": {
+            "start": {
+              "row": 32,
+              "column": 0
+            },
+            "end": {
+              "row": 32,
+              "column": 0
+            }
+          }
+        },
+        "file_read_error": null,
+        "code_context": {
+          "window": {
+            "file_path": "authentication/utils.py",
+            "start_row": 2,
+            "end_row": 47,
+            "text": "\nfrom typing import Optional\n\n\ndef extract_email_from_claims(claims: dict) -> Optional[str]:\n    \"\"\"Extract email from Clerk claims.\"\"\"\n    email = claims.get(\"email\")\n    if email:\n        return email.lower().strip()\n    # Clerk may nest email inside email_addresses array\n    email_addresses = claims.get(\"email_addresses\") or []\n    for entry in email_addresses:\n        if entry.get(\"id\") == claims.get(\"email_address_id\"):\n            extracted_email = entry.get(\"email_address\")\n            if extracted_email:\n                return extracted_email.lower().strip()\n    return None\n\n\ndef extract_roles_from_claims(claims: dict) -> list[str]:\n    \"\"\"Extract roles from Clerk claims.\"\"\"\n    metadata = claims.get(\"public_metadata\") or {}\n    roles = metadata.get(\"roles\")\n    if isinstance(roles, list):\n        return [str(role) for role in roles]\n    if isinstance(roles, str):\n        return [roles]\n    return []\n\n\ndef extract_daily_override_from_claims(claims: dict) -> Optional[int]:\n    metadata = claims.get(\"private_metadata\") or {}\n    override = metadata.get(\"dailyLimitOverride\")\n    try:\n        return int(override) if override is not None else None\n    except (TypeError, ValueError):\n        return None\n\n\ndef normalize_roles(roles: list[str], is_admin: bool = False) -> list[str]:\n    \"\"\"Normalize roles list. Add admin if is_admin is True.\"\"\"\n    normalized = set(roles)\n    if is_admin:\n        normalized.add(\"admin\")\n    return sorted(list(normalized))\n\n"
+          },
+          "imports": null,
+          "enclosing_function": {
+            "file_path": "authentication/utils.py",
+            "start_row": 30,
+            "end_row": 40,
+            "text": "\n\ndef extract_daily_override_from_claims(claims: dict) -> Optional[int]:\n    metadata = claims.get(\"private_metadata\") or {}\n    override = metadata.get(\"dailyLimitOverride\")\n    try:\n        return int(override) if override is not None else None\n    except (TypeError, ValueError):\n        return None\n\n\n"
+          },
+          "try_except_block": null,
+          "class_definition": null,
+          "type_aliases": null,
+          "related_function": null,
+          "module_constants": null
+        },
+        "edit_snippet": {
+          "file_path": "authentication/utils.py",
+          "start_row": 30,
+          "end_row": 35,
+          "text": "\n\ndef extract_daily_override_from_claims(claims: dict) -> Optional[int]:\n    metadata = claims.get(\"private_metadata\") or {}\n    override = metadata.get(\"dailyLimitOverride\")\n    try:\n",
+          "original_text": "\n\ndef extract_daily_override_from_claims(claims: dict) -> Optional[int]:\n    metadata = claims.get(\"private_metadata\") or {}\n    override = metadata.get(\"dailyLimitOverride\")\n    try:\n",
+          "error_line": 32,
+          "error_line_in_snippet": 3,
+          "snippet_length": 6,
+          "base_indent": ""
+        },
+        "edit_window_type": "lines",
+        "fix_context": {
+          "exists": false
+        }
+      }
+    ],
+    "merged_snippet_groups": [],
+    "standalone_signal_indices": [
+      0
+    ]
+  },
+  "prompts": {
+    "system_prompt": "You are an expert code repair agent. Your task is to make MINIMAL, SURGICAL fixes to code errors.\n\n## CRITICAL PRINCIPLE: MINIMAL CHANGES ONLY\n\nYour job is to fix ONLY the specific error mentioned. You are NOT improving, refactoring, or cleaning up code.\n\n**THE GOLDEN RULE**: Every line in your output that is NOT directly part of the fix MUST be IDENTICAL to the input - same content, same whitespace, same everything.\n\n## How This Works\n\nFor each error signal, you will receive:\n\n1. **Error Information**: Type, message, severity, and rule code\n2. **Edit Snippet**: A small code snippet (~13 lines) containing the error\n   - This is what you need to FIX and RETURN\n   - The error location within the snippet is indicated (e.g., \"Error on line 4 of 13\")\n3. **Context Window**: A larger code window (~30 lines) around the error for understanding\n   - Use this to understand the surrounding code, but DON'T return it\n\n4. **Tailored Context** (varies by signal type - optimized to reduce token usage):\n   - **Imports**: The file's import block (for type definitions, dependencies)\n     - Included for: type errors, undefined names, most issues\n     - Excluded for: import-only errors, bare except blocks\n   - **Enclosing Function**: The function containing the error (for understanding scope/logic)\n     - Included for: type errors, docstring errors, function-level issues\n     - Excluded for: import errors (global scope), bare except (sent separately)\n   - **Try/Except Block**: The try/except block containing the error\n     - Included for: bare except errors (E722)\n     - Excluded for: most other errors\n\nNote: Context is carefully selected to provide what you need while minimizing token usage.\nNot all context is present for every error - you'll only receive relevant context.\n\n## Response Format\n\nFor EACH signal/snippet you receive, respond with this EXACT format:\n\n```\n===== FIX FOR: <file_path> =====\nCONFIDENCE: <0.0-1.0>\nREASONING: <brief explanation of the fix>\n\n```FIXED_CODE\n<complete fixed snippet - ALL lines from edit_snippet, with ONLY the fix applied>\n```\n\nWARNINGS: <any caveats, or \"None\">\n===== END FIX =====\n```\n\n## CRITICAL Rules - READ CAREFULLY\n\n1. **MINIMAL CHANGES ONLY** - Change ONLY what is necessary to fix the specific error. Nothing more.\n\n2. **PRESERVE EVERYTHING ELSE EXACTLY** - Every line that is NOT part of the fix must be returned EXACTLY as it appeared in the input, character-for-character, including:\n   - Comments and documentation\n   - Blank lines (including leading and trailing blank lines)\n   - All whitespace (including trailing newlines at the end of the snippet)\n   - Other variable declarations\n   - Function definitions\n   - String content (including multi-line strings)\n\n   **CRITICAL**: If the input snippet ends with blank lines or newlines, your output MUST end with the exact same number of blank lines/newlines. Do NOT trim trailing whitespace.\n\n3. **DO NOT under any circumstances**:\n   - Delete lines that aren't related to the fix\n   - Add code that isn't required for the fix\n   - \"Clean up\" or \"improve\" surrounding code\n   - Modify comments or documentation\n   - Change formatting on unrelated lines\n   - Remove blank lines\n   - Add blank lines (unless the fix specifically requires it)\n   - Modify string literals or docstrings\n   - Delete function definitions\n   - Remove dictionary entries or list items unrelated to the fix\n\n4. **Maintain RELATIVE indentation** - The snippet has had its base indentation removed. Preserve relative indentation exactly. If a line has 4 spaces in the input, it must have 4 spaces in your output.\n\n5. **One fix block per signal** - If multiple signals, provide multiple fix blocks\n\n6. **Use context for understanding only** - The context window, imports, and enclosing function help you understand the code, but you only return the fixed edit_snippet\n\n## Example - Correct Minimal Fix\n\nInput:\n- Error: \"Need type annotation for 'cache'\" on line 173\n- Edit Snippet (error on line 4 of 7, lines 170-176):\n```\n}\n\nDEPRIORITIZE_QUERIES = {}\ncache = {}\n\n# Model configuration\nEMBEDDING_MODEL = \"text-embedding-3-large\"\n```\n(Note: The snippet ends with a newline after the last line - this MUST be preserved)\n\nCORRECT Response (only `cache = {}` changed to `cache: dict = {}`):\n```\n===== FIX FOR: app/config/tier_queries.py =====\nCONFIDENCE: 0.95\nREASONING: Added dict type annotation to cache variable to satisfy mypy\n\n```FIXED_CODE\n}\n\nDEPRIORITIZE_QUERIES = {}\ncache: dict = {}\n\n# Model configuration\nEMBEDDING_MODEL = \"text-embedding-3-large\"\n```\n\nWARNINGS: None\n===== END FIX =====\n```\n(Note: The output preserves the exact same trailing newline as the input)\n\n## Example - Preserving Trailing Whitespace\n\nInput snippet ending with blank lines (note the TWO newlines after the return statement):\n```\ndef get_clerk_settings() -> ClerkSettings:\n    # Load Clerk token validation settings from config helpers\n    return ClerkSettings.from_config()\n\n\n```\n\nCORRECT - Preserves both trailing newlines:\n```FIXED_CODE\ndef get_clerk_settings() -> ClerkSettings:\n    # Load Clerk token validation settings from config helpers\n    return ClerkSettings.from_config()\n\n\n```\n(Output MUST have the same TWO trailing newlines)\n\nWRONG - Trimming trailing newlines:\n```FIXED_CODE\ndef get_clerk_settings() -> ClerkSettings:\n    # Load Clerk token validation settings from config helpers\n    return ClerkSettings.from_config()\n```\n^ This is WRONG because it removed trailing newlines. The snippet MUST end with the same whitespace as the input.\n\n## Example - WRONG (Deleting Unrelated Content)\n\nIf the input snippet contains documentation or other code, you MUST preserve it:\n\nWRONG - Deleting unrelated lines:\n```FIXED_CODE\ncache: dict = {}\nEMBEDDING_MODEL = \"text-embedding-3-large\"\n```\n^ This is WRONG because it deleted the closing brace, blank lines, DEPRIORITIZE_QUERIES, and the comment.\n\n## Confidence Guidelines\n- High (>0.8): Simple fixes like type annotations, obvious corrections\n- Medium (0.5-0.8): Logic changes, type guards, refactoring\n- Low (<0.5): Complex changes, unclear intent - add detailed warnings\n\n\n\n## Pydocstyle Docstring Error Fixing - Specialized Guidance\n\nYou are fixing MISSING DOCSTRINGS detected by pydocstyle.\n\nRisk Level: LOW\nAdding docstrings improves code maintainability without changing behavior.\n\nSupported Error Codes:\n- D101: Missing docstring in public class\n- D102: Missing docstring in public method\n- D103: Missing docstring in public function\n\nContext Structure:\nYou will receive:\n1. **Edit Snippet**: Opening lines of the class/function (signature + ~6 lines)\n   - This is where you ADD the docstring\n   - Return the edit snippet with docstring inserted after signature\n2. **Enclosing Function/Class Context**: Full implementation (read-only)\n   - Use this to understand what to document\n   - See parameters, return values, logic, side effects\n3. **Imports**: For understanding type hints and dependencies\n\nDocstring Style - Google Format:\nWe use Google-style docstrings. Follow this format:\n\n**For Classes (D101):**\n```python\nclass ClassName:\n    \"\"\"Brief one-line summary of the class purpose.\n\n    Longer description if needed to explain the class behavior,\n    state management, or important usage notes.\n\n    Attributes:\n        attr1: Description of attribute1\n        attr2: Description of attribute2\n    \"\"\"\n```\n\n**For Functions/Methods (D102/D103):**\n```python\ndef function_name(param1: str, param2: int) -> bool:\n    \"\"\"Brief one-line summary of what the function does.\n\n    Longer description if needed to explain the algorithm,\n    side effects, or important usage notes.\n\n    Args:\n        param1: Description of param1\n        param2: Description of param2\n\n    Returns:\n        Description of return value\n\n    Raises:\n        ExceptionType: When this exception is raised\n    \"\"\"\n```\n\nDocstring Writing Guidelines:\n\n1. **First Line (Summary)**:\n   - One concise sentence describing the purpose\n   - Start with a verb (imperative mood): \"Calculate...\", \"Create...\", \"Process...\"\n   - End with a period\n   - Should be ~50-80 characters\n\n2. **Args Section** (if function has parameters):\n   - List each parameter with its purpose\n   - Use type hints from signature (don't repeat them)\n   - Explain what the parameter represents, not just its type\n\n3. **Returns Section** (if function returns a value):\n   - Describe what is returned\n   - Explain meaning, not just the type\n\n4. **Raises Section** (only if function raises exceptions):\n   - Document exceptions explicitly raised in the code\n   - Don't document every possible exception\n\n5. **Keep It Concise**:\n   - Avoid redundant information\n   - Don't just restate the function name\n   - Focus on WHY and WHAT, not HOW (code shows how)\n\nSpecial Cases:\n\n**Properties**: Often just need one line\n```python\n@property\ndef is_active(self) -> bool:\n    \"\"\"Check if user account is currently active.\"\"\"\n```\n\n**Simple setters/getters**: Can be very brief\n```python\ndef set_name(self, name: str) -> None:\n    \"\"\"Set user's display name.\"\"\"\n```\n\n**Private methods (_method)**: Still document if non-trivial\n```python\ndef _validate_email(self, email: str) -> bool:\n    \"\"\"Validate email format using regex pattern.\"\"\"\n```\n\nFixing Strategy:\n\n1. **Analyze the Code Context**:\n   - Look at the full function/class implementation\n   - Understand parameters, return values, logic\n   - Identify any exceptions raised\n   - Note any decorators (@property, @dataclass, etc.)\n\n2. **Write Concise Documentation**:\n   - Start with clear one-line summary\n   - Add Args/Returns sections if needed\n   - Keep it brief but informative\n\n3. **Insert Docstring Correctly**:\n   - Place immediately after class/function signature\n   - Use triple quotes (\"\"\")\n   - Maintain proper indentation\n   - Add blank line after docstring (if more code follows)\n\n4. **Preserve Everything Else**:\n   - Don't modify decorators\n   - Don't change function signature\n   - Don't alter implementation\n   - Only ADD the docstring\n\nConfidence Guidelines:\n- High (>0.8): Simple functions with clear purpose from signature\n- Medium (0.5-0.8): Complex functions, multiple parameters\n- Low (<0.5): Unclear purpose, needs domain knowledge\n\nNEVER do these:\n\u274c Change function signature or implementation\n\u274c Remove or modify decorators\n\u274c Add type hints (they should already be there)\n\u274c Reformat unrelated code\n\u274c Write vague docstrings like \"This function does stuff\"\n\u274c Copy the function name into the docstring without adding value\n\nRemember: You're only adding documentation. The code behavior must not change.\nYour edit snippet should be IDENTICAL except for the added docstring.\n",
+    "user_prompt": "Tool: pydocstyle\nSignal Type: docstring\nNumber of Signals: 1\n\n============================================================\nSIGNAL 1\n============================================================\n\n## Error Information\n- File: authentication/utils.py\n- Message: Missing docstring in public function\n- Rule Code: D103\n- Severity: low\n- Location: Line 32, Column 0\n\n## Edit Snippet (FIX AND RETURN THIS)\nLines 30-35 (error on line 3 of 6)\n```python\n\n\ndef extract_daily_override_from_claims(claims: dict) -> Optional[int]:\n    metadata = claims.get(\"private_metadata\") or {}\n    override = metadata.get(\"dailyLimitOverride\")\n    try:\n\n```\n\n## Context Window (for understanding, DO NOT return)\nLines 2-47\n```python\n\nfrom typing import Optional\n\n\ndef extract_email_from_claims(claims: dict) -> Optional[str]:\n    \"\"\"Extract email from Clerk claims.\"\"\"\n    email = claims.get(\"email\")\n    if email:\n        return email.lower().strip()\n    # Clerk may nest email inside email_addresses array\n    email_addresses = claims.get(\"email_addresses\") or []\n    for entry in email_addresses:\n        if entry.get(\"id\") == claims.get(\"email_address_id\"):\n            extracted_email = entry.get(\"email_address\")\n            if extracted_email:\n                return extracted_email.lower().strip()\n    return None\n\n\ndef extract_roles_from_claims(claims: dict) -> list[str]:\n    \"\"\"Extract roles from Clerk claims.\"\"\"\n    metadata = claims.get(\"public_metadata\") or {}\n    roles = metadata.get(\"roles\")\n    if isinstance(roles, list):\n        return [str(role) for role in roles]\n    if isinstance(roles, str):\n        return [roles]\n    return []\n\n\ndef extract_daily_override_from_claims(claims: dict) -> Optional[int]:\n    metadata = claims.get(\"private_metadata\") or {}\n    override = metadata.get(\"dailyLimitOverride\")\n    try:\n        return int(override) if override is not None else None\n    except (TypeError, ValueError):\n        return None\n\n\ndef normalize_roles(roles: list[str], is_admin: bool = False) -> list[str]:\n    \"\"\"Normalize roles list. Add admin if is_admin is True.\"\"\"\n    normalized = set(roles)\n    if is_admin:\n        normalized.add(\"admin\")\n    return sorted(list(normalized))\n\n\n```\n\n## Enclosing Function\nLines 30-40\n```python\n\n\ndef extract_daily_override_from_claims(claims: dict) -> Optional[int]:\n    metadata = claims.get(\"private_metadata\") or {}\n    override = metadata.get(\"dailyLimitOverride\")\n    try:\n        return int(override) if override is not None else None\n    except (TypeError, ValueError):\n        return None\n\n\n\n```\n\n\nPlease provide fixes for the above signals using the specified response format."
+  },
+  "llm_response": [
+    "===== FIX FOR: authentication/utils.py =====\n",
+    "CONFIDENCE: 0.9\n",
+    "REASONING: Added Google-style docstring for function that extracts daily limit override from Clerk claims, documenting the parameter, return value, and the conversion logic.\n",
+    "\n",
+    "```FIXED_CODE\n",
+    "\n",
+    "\n",
+    "def extract_daily_override_from_claims(claims: dict) -> Optional[int]:\n",
+    "    \"\"\"Extract daily limit override from Clerk claims.\n",
+    "\n",
+    "    Args:\n",
+    "        claims: Dictionary containing Clerk user claims data\n",
+    "\n",
+    "    Returns:\n",
+    "        Daily limit override as integer if present and valid, None otherwise\n",
+    "    \"\"\"\n",
+    "    metadata = claims.get(\"private_metadata\") or {}\n",
+    "    override = metadata.get(\"dailyLimitOverride\")\n",
+    "    try:\n",
+    "\n",
+    "```\n",
+    "\n",
+    "WARNINGS: None\n",
+    "===== END FIX ====="
+  ]
+}

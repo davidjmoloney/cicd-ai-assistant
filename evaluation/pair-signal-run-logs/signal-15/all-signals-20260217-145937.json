@@ -1,0 +1,39 @@
+[
+  {
+    "signal_type": "lint",
+    "severity": "medium",
+    "file_path": "prospecting/enrichment_types.py",
+    "span": {
+      "start": {
+        "row": 53,
+        "column": 21
+      },
+      "end": {
+        "row": 53,
+        "column": 46
+      }
+    },
+    "rule_code": "UP045",
+    "message": "Use `X | None` for type annotations",
+    "docs_url": "https://docs.astral.sh/ruff/rules/non-pep604-annotation-optional",
+    "fix": {
+      "applicability": "safe",
+      "message": "Convert to `X | None`",
+      "edits": [
+        {
+          "span": {
+            "start": {
+              "row": 53,
+              "column": 21
+            },
+            "end": {
+              "row": 53,
+              "column": 46
+            }
+          },
+          "content": "Type[BaseModel] | None"
+        }
+      ]
+    }
+  }
+]

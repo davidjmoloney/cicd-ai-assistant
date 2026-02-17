@@ -1,0 +1,21 @@
+[
+  {
+    "signal_type": "docstring",
+    "severity": "low",
+    "file_path": "authentication/clerk.py",
+    "span": {
+      "start": {
+        "row": 45,
+        "column": 0
+      },
+      "end": {
+        "row": 45,
+        "column": 0
+      }
+    },
+    "rule_code": "D102",
+    "message": "Missing docstring in public method",
+    "docs_url": "http://www.pydocstyle.org/en/stable/error_codes.html#D102",
+    "fix": null
+  }
+]

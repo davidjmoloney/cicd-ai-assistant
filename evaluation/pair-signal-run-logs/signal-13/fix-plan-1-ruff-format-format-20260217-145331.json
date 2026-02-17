@@ -1,0 +1,32 @@
+{
+  "group_tool_id": "ruff-format",
+  "group_signal_type": "format",
+  "file_edits": [
+    {
+      "file_path": "prospecting/enrichment_types.py",
+      "reasoning": "Auto-applied format fixes from ruff-format",
+      "confidence": 1.0,
+      "signal_errors": [],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 530,
+              "column": 1
+            },
+            "end": {
+              "row": 559,
+              "column": 1
+            }
+          },
+          "content": "        pydantic_model=CompanyRadars,\n        needs_llm=False,  # Already resolved by dedicated resolver\n        merge_strategy=\"prefer_resolver\",  # Resolver-exclusive section\n        output_format=\"pydantic_model\",\n    ),\n}\n\n\n# ==================== Helper Functions ====================\n\n\ndef get_field_definition(field_path: str) -> Optional[FieldDefinition]:\n    return ENRICHMENT_FIELD_DEFINITIONS.get(field_path)\n\n\ndef get_fields_needing_llm() -> List[str]:\n    return [path for path, definition in ENRICHMENT_FIELD_DEFINITIONS.items() if definition.needs_llm]\n\n\ndef get_fields_by_category(category: str) -> List[FieldDefinition]:\n    return [definition for path, definition in ENRICHMENT_FIELD_DEFINITIONS.items() if path.startswith(f\"{category}.\")]\n\n\ndef get_output_type(field_path: str) -> FieldType:\n",
+          "description": "Apply 1 formatting change(s)"
+        }
+      ]
+    }
+  ],
+  "summary": "Auto-applied 1 format fix(es) across 1 file(s)",
+  "warnings": [],
+  "confidence": 1.0
+}

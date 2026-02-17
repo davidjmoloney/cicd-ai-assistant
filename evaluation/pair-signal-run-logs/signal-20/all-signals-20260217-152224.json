@@ -1,0 +1,39 @@
+[
+  {
+    "signal_type": "lint",
+    "severity": "low",
+    "file_path": "ria/services/search_service.py",
+    "span": {
+      "start": {
+        "row": 82,
+        "column": 9
+      },
+      "end": {
+        "row": 82,
+        "column": 19
+      }
+    },
+    "rule_code": "B007",
+    "message": "Loop control variable `field_name` not used within loop body",
+    "docs_url": "https://docs.astral.sh/ruff/rules/unused-loop-control-variable",
+    "fix": {
+      "applicability": "unsafe",
+      "message": "Rename unused `field_name` to `_field_name`",
+      "edits": [
+        {
+          "span": {
+            "start": {
+              "row": 82,
+              "column": 9
+            },
+            "end": {
+              "row": 82,
+              "column": 19
+            }
+          },
+          "content": "_field_name"
+        }
+      ]
+    }
+  }
+]

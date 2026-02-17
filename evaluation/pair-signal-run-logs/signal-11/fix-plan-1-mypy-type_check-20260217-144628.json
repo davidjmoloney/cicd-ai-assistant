@@ -1,0 +1,40 @@
+{
+  "group_tool_id": "mypy",
+  "group_signal_type": "type_check",
+  "file_edits": [
+    {
+      "file_path": "ria/views.py",
+      "reasoning": "Added dict type annotation with str keys and int values to by_activity_type variable to satisfy mypy. This is a simple counter dictionary that maps activity type strings to counts.",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "ria/views.py",
+          "line": 666,
+          "column": 13,
+          "message": "Need type annotation for \"by_activity_type\" (hint: \"by_activity_type: dict[<type>, <type>] = ...\")",
+          "rule_code": "var-annotated"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 659,
+              "column": 1
+            },
+            "end": {
+              "row": 673,
+              "column": 99999
+            }
+          },
+          "content": "                offset=0\n            )\n            \n            records = all_activities[\"records\"]\n            \n            # Calculate summary statistics\n            total_activities = len(records)\n            by_activity_type: dict[str, int] = {}\n            by_user = {}\n            \n            for record in records:\n                # Count by activity type\n                activity_type = record.get(\"activity_type\", \"unknown\")\n                by_activity_type[activity_type] = by_activity_type.get(activity_type, 0) + 1\n                \n",
+          "description": "Added dict type annotation with str keys and int values to by_activity_type variable to satisfy mypy. This is a simple counter dictionary that maps activity type strings to counts."
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 1 file(s) for mypy signals",
+  "warnings": [],
+  "confidence": 0.95
+}

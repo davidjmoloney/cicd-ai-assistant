@@ -1,0 +1,32 @@
+{
+  "group_tool_id": "ruff-format",
+  "group_signal_type": "format",
+  "file_edits": [
+    {
+      "file_path": "ria/serializers.py",
+      "reasoning": "Auto-applied format fixes from ruff-format",
+      "confidence": 1.0,
+      "signal_errors": [],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 376,
+              "column": 1
+            },
+            "end": {
+              "row": 392,
+              "column": 1
+            }
+          },
+          "content": "    total_aum = serializers.FloatField(required=False, allow_null=True)\n    total_employees = serializers.IntegerField(required=False, allow_null=True)\n    total_offices = serializers.IntegerField(required=False, allow_null=True)\n    top_3_private_funds = serializers.ListField(child=serializers.DictField(), required=False, allow_null=True)\n    top_3_allocations = serializers.ListField(child=serializers.DictField(), required=False, allow_null=True)\n    total_clients = serializers.IntegerField(required=False, allow_null=True)\n    match_score = serializers.FloatField(required=False, allow_null=True)\n    match_details = serializers.DictField(required=False, allow_null=True)\n",
+          "description": "Apply 1 formatting change(s)"
+        }
+      ]
+    }
+  ],
+  "summary": "Auto-applied 1 format fix(es) across 1 file(s)",
+  "warnings": [],
+  "confidence": 1.0
+}

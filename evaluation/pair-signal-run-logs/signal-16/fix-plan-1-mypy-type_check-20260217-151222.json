@@ -1,0 +1,40 @@
+{
+  "group_tool_id": "mypy",
+  "group_signal_type": "type_check",
+  "file_edits": [
+    {
+      "file_path": "ria/services/search_service.py",
+      "reasoning": "The error occurs because x[\"percentage\"] returns type object (from Dict[str, Any]), but sort() expects a comparable type. Adding a type annotation to cast the percentage as float will resolve this since we already convert it to float when creating the dict.",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "ria/services/search_service.py",
+          "line": 118,
+          "column": 36,
+          "message": "Incompatible return value type (got \"object\", expected \"SupportsDunderLT[Any] | SupportsDunderGT[Any]\")",
+          "rule_code": "return-value"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 98,
+              "column": 1
+            },
+            "end": {
+              "row": 121,
+              "column": 99999
+            }
+          },
+          "content": "\n\ndef get_top_3_allocations(company_record: Dict[str, Any]) -> List[Dict[str, Any]]:\n    \"\"\"Get top 3 SMA allocation categories by percentage for a company.\"\"\"\n    allocations = []\n    \n    for field_name, column_name in SMA_ALLOCATION_COLUMNS.items():\n        if column_name in company_record and company_record[column_name] is not None:\n            try:\n                percentage = float(company_record[column_name])\n                if percentage > 0:\n                    display_name = DISPLAY_NAME_MAPPING.get(column_name, column_name)\n                    allocations.append({\n                        \"category\": display_name,\n                        \"percentage\": percentage\n                    })\n            except (ValueError, TypeError):\n                continue\n    \n    # Sort by percentage (highest first) and return top 3\n    allocations.sort(key=lambda x: float(x[\"percentage\"]), reverse=True)\n    return allocations[:3]\n\n\n",
+          "description": "The error occurs because x[\"percentage\"] returns type object (from Dict[str, Any]), but sort() expects a comparable type. Adding a type annotation to cast the percentage as float will resolve this since we already convert it to float when creating the dict."
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 1 file(s) for mypy signals",
+  "warnings": [],
+  "confidence": 0.95
+}

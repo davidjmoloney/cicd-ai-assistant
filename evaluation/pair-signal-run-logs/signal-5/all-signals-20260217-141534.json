@@ -1,0 +1,39 @@
+[
+  {
+    "signal_type": "lint",
+    "severity": "low",
+    "file_path": "prospecting/enrichment_types.py",
+    "span": {
+      "start": {
+        "row": 12,
+        "column": 1
+      },
+      "end": {
+        "row": 31,
+        "column": 2
+      }
+    },
+    "rule_code": "I001",
+    "message": "Import block is un-sorted or un-formatted",
+    "docs_url": "https://docs.astral.sh/ruff/rules/unsorted-imports",
+    "fix": {
+      "applicability": "safe",
+      "message": "Organize imports",
+      "edits": [
+        {
+          "span": {
+            "start": {
+              "row": 12,
+              "column": 1
+            },
+            "end": {
+              "row": 34,
+              "column": 1
+            }
+          },
+          "content": "from dataclasses import dataclass\nfrom enum import Enum\nfrom typing import Any, Dict, List, Literal, Optional, Type\n\nfrom pydantic import BaseModel\n\n# Import Pydantic models\nfrom prospecting.enrichment_models import (\n    AssetAllocations,\n    CompanyAnalytics,\n    CompanyRadars,\n    FirmOwnershipType,\n    KeyDecisionMakers,\n    MAFundSpinouts,\n    ManagerRelationships,\n    # Nasdaq-exclusive models\n    Opportunities,\n    RecentHires,\n    RecentLeadershipChanges,\n    RecentNews,\n)\n\n\n"
+        }
+      ]
+    }
+  }
+]

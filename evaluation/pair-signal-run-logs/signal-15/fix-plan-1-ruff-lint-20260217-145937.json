@@ -1,0 +1,40 @@
+{
+  "group_tool_id": "ruff",
+  "group_signal_type": "lint",
+  "file_edits": [
+    {
+      "file_path": "prospecting/enrichment_types.py",
+      "reasoning": "Modernizing Optional type annotations to use Python 3.10+ union syntax (X | None) as required by UP045 rule",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "prospecting/enrichment_types.py",
+          "line": 53,
+          "column": 21,
+          "message": "Use `X | None` for type annotations",
+          "rule_code": "UP045"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 46,
+              "column": 1
+            },
+            "end": {
+              "row": 60,
+              "column": 99999
+            }
+          },
+          "content": "    PYDANTIC_MODEL = \"pydantic_model\"  # For fields with Pydantic models\n\n\n@dataclass\nclass FieldDefinition:\n    field_path: str  # e.g., \"firm_information.firm_name\"\n    field_type: FieldType\n    pydantic_model: Type[BaseModel] | None = None  # Reference to Pydantic model if applicable\n    required: bool = False\n    max_length: int | None = None\n    min_length: int | None = None\n    array_item_type: FieldType | None = None\n    nested_schema: Dict[str, 'FieldDefinition'] | None = None\n    needs_llm: bool = False  # Whether this field needs LLM processing\n    merge_strategy: Literal[\"prefer_website\", \"prefer_external\", \"merge\", \"concat\", \"deduplicate\"] = \"merge\"\n",
+          "description": "Modernizing Optional type annotations to use Python 3.10+ union syntax (X | None) as required by UP045 rule"
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 1 file(s) for ruff signals",
+  "warnings": [],
+  "confidence": 0.95
+}

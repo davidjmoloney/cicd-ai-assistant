@@ -1,0 +1,24 @@
+{
+  "success": false,
+  "pr_url": null,
+  "pr_number": null,
+  "branch_name": "cicd-agent-fix/type_check/20260217-135831-f9309d",
+  "error": "No files were modified",
+  "files_changed": [],
+  "skipped_fixes": [],
+  "unchanged_fixes": [
+    {
+      "file_path": "ria/services/query_service.py",
+      "reasoning": "The error indicates that datetime objects are being assigned to dictionary values that expect strings. Looking at the context, this is Django ORM filter syntax where `created_at__gte` and `created_at__lte` are field lookups that expect datetime objects, not strings. The type checker is incorrectly inferring the target type. This is a false positive - Django ORM filters accept datetime objects for datetime field comparisons.",
+      "signal_errors": [
+        {
+          "file_path": "ria/services/query_service.py",
+          "line": 105,
+          "column": 46,
+          "message": "Incompatible types in assignment (expression has type \"datetime\", target has type \"str\")",
+          "rule_code": "assignment"
+        }
+      ]
+    }
+  ]
+}

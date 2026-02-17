@@ -1,0 +1,40 @@
+{
+  "group_tool_id": "pydocstyle",
+  "group_signal_type": "docstring",
+  "file_edits": [
+    {
+      "file_path": "authentication/utils.py",
+      "reasoning": "Added Google-style docstring for function that extracts daily limit override from Clerk claims, documenting the parameter, return value, and the conversion logic.",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "authentication/utils.py",
+          "line": 32,
+          "column": 0,
+          "message": "Missing docstring in public function",
+          "rule_code": "D103"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 30,
+              "column": 1
+            },
+            "end": {
+              "row": 35,
+              "column": 99999
+            }
+          },
+          "content": "\n\ndef extract_daily_override_from_claims(claims: dict) -> Optional[int]:\n    \"\"\"Extract daily limit override from Clerk claims.\n\n    Args:\n        claims: Dictionary containing Clerk user claims data\n\n    Returns:\n        Daily limit override as integer if present and valid, None otherwise\n    \"\"\"\n    metadata = claims.get(\"private_metadata\") or {}\n    override = metadata.get(\"dailyLimitOverride\")\n    try:\n",
+          "description": "Added Google-style docstring for function that extracts daily limit override from Clerk claims, documenting the parameter, return value, and the conversion logic."
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 1 file(s) for pydocstyle signals",
+  "warnings": [],
+  "confidence": 0.9
+}

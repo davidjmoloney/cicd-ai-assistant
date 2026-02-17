@@ -1,0 +1,40 @@
+{
+  "group_tool_id": "mypy",
+  "group_signal_type": "type_check",
+  "file_edits": [
+    {
+      "file_path": "authentication/clerk.py",
+      "reasoning": "Added type assertion after validation check. The code validates that jwks_url is not None/empty before proceeding, so we can safely assert it's not None for the type checker.",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "authentication/clerk.py",
+          "line": 81,
+          "column": 35,
+          "message": "Argument \"jwks_url\" to \"ClerkSettings\" has incompatible type \"str | None\"; expected \"str\"",
+          "rule_code": "arg-type"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 74,
+              "column": 1
+            },
+            "end": {
+              "row": 88,
+              "column": 99999
+            }
+          },
+          "content": "        (\"LP_CLERK_ISSUER\", issuer),\n    ) if not value]\n    if missing:\n        raise ClerkConfigurationError(\n            f\"Missing LP Clerk configuration value(s): {', '.join(missing)}\"\n        )\n\n    assert jwks_url is not None  # Validated above\n    return ClerkSettings(jwks_url=jwks_url, issuer=issuer, audience=audience)\n\n\n_JWKS_CACHE: Dict[str, Dict[str, Any]] = {}\n\n\ndef _fetch_jwks(\n    settings: ClerkSettings,\n",
+          "description": "Added type assertion after validation check. The code validates that jwks_url is not None/empty before proceeding, so we can safely assert it's not None for the type checker."
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 1 file(s) for mypy signals",
+  "warnings": [],
+  "confidence": 0.95
+}

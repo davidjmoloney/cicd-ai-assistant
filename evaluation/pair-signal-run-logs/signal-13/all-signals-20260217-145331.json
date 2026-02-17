@@ -1,0 +1,39 @@
+[
+  {
+    "signal_type": "format",
+    "severity": "low",
+    "file_path": "prospecting/enrichment_types.py",
+    "span": {
+      "start": {
+        "row": 530,
+        "column": 1
+      },
+      "end": {
+        "row": 559,
+        "column": 1
+      }
+    },
+    "rule_code": "FORMAT",
+    "message": "1 formatting region(s) to update (53 lines affected)",
+    "docs_url": "https://docs.astral.sh/ruff/formatter/",
+    "fix": {
+      "applicability": "safe",
+      "message": "Apply 1 formatting change(s)",
+      "edits": [
+        {
+          "span": {
+            "start": {
+              "row": 530,
+              "column": 1
+            },
+            "end": {
+              "row": 559,
+              "column": 1
+            }
+          },
+          "content": "        pydantic_model=CompanyRadars,\n        needs_llm=False,  # Already resolved by dedicated resolver\n        merge_strategy=\"prefer_resolver\",  # Resolver-exclusive section\n        output_format=\"pydantic_model\",\n    ),\n}\n\n\n# ==================== Helper Functions ====================\n\n\ndef get_field_definition(field_path: str) -> Optional[FieldDefinition]:\n    return ENRICHMENT_FIELD_DEFINITIONS.get(field_path)\n\n\ndef get_fields_needing_llm() -> List[str]:\n    return [path for path, definition in ENRICHMENT_FIELD_DEFINITIONS.items() if definition.needs_llm]\n\n\ndef get_fields_by_category(category: str) -> List[FieldDefinition]:\n    return [definition for path, definition in ENRICHMENT_FIELD_DEFINITIONS.items() if path.startswith(f\"{category}.\")]\n\n\ndef get_output_type(field_path: str) -> FieldType:\n"
+        }
+      ]
+    }
+  }
+]

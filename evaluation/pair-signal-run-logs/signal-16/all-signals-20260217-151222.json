@@ -1,0 +1,21 @@
+[
+  {
+    "signal_type": "type_check",
+    "severity": "high",
+    "file_path": "ria/services/search_service.py",
+    "span": {
+      "start": {
+        "row": 118,
+        "column": 36
+      },
+      "end": {
+        "row": 118,
+        "column": 36
+      }
+    },
+    "rule_code": "return-value",
+    "message": "Incompatible return value type (got \"object\", expected \"SupportsDunderLT[Any] | SupportsDunderGT[Any]\")",
+    "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#return-value",
+    "fix": null
+  }
+]

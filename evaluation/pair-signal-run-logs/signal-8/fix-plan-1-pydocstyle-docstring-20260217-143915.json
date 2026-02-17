@@ -1,0 +1,40 @@
+{
+  "group_tool_id": "pydocstyle",
+  "group_signal_type": "docstring",
+  "file_edits": [
+    {
+      "file_path": "ria/services/search_service.py",
+      "reasoning": "Added comprehensive docstring for the search_companies method, documenting all parameters, return value, and the method's purpose of searching and filtering RIA companies with optional fuzzy name matching.",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "ria/services/search_service.py",
+          "line": 274,
+          "column": 0,
+          "message": "Missing docstring in public method",
+          "rule_code": "D102"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 272,
+              "column": 1
+            },
+            "end": {
+              "row": 317,
+              "column": 99999
+            }
+          },
+          "content": "    \n    @staticmethod\n    def search_companies(\n        name: Optional[str] = None,\n        domain: Optional[str] = None,\n        state: Optional[str] = None,\n        city: Optional[str] = None,\n        country: Optional[str] = None,\n        min_aum: Optional[float] = None,\n        max_aum: Optional[float] = None,\n        min_discretionary_aum: Optional[float] = None,\n        max_discretionary_aum: Optional[float] = None,\n        min_non_discretionary_aum: Optional[float] = None,\n        max_non_discretionary_aum: Optional[float] = None,\n        min_total_employees: Optional[int] = None,\n        max_total_employees: Optional[int] = None,\n        min_total_offices: Optional[int] = None,\n        max_total_offices: Optional[int] = None,\n        # Client type filters (Y/N)\n        individual_clients: Optional[str] = None,\n        high_net_worth_clients: Optional[str] = None,\n        banking_clients: Optional[str] = None,\n        investment_companies_clients: Optional[str] = None,\n        pension_clients: Optional[str] = None,\n        charity_clients: Optional[str] = None,\n        state_municipal_clients: Optional[str] = None,\n        investment_advisor_clients: Optional[str] = None,\n        insurance_clients: Optional[str] = None,\n        sovereign_wealth_clients: Optional[str] = None,\n        corporate_clients: Optional[str] = None,\n        # Private funds filter\n        private_funds: Optional[str] = None,\n        # Asset class filters (Y/N)\n        has_hedge_funds: Optional[str] = None,\n        has_liquidity_funds: Optional[str] = None,\n        has_pe_funds: Optional[str] = None,\n        has_real_estate_funds: Optional[str] = None,\n        has_securitized_funds: Optional[str] = None,\n        has_vc_funds: Optional[str] = None,\n        has_other_funds: Optional[str] = None,\n        limit: int = 10,\n        offset: int = 0,\n    ) -> Dict[str, Any]:\n        \"\"\"Search and filter RIA companies with comprehensive filtering and optional fuzzy name matching.\n\n        Performs multi-criteria search across RIA company data with support for geographic,\n        financial, client type, and asset class filters. When a name is provided, uses\n        intelligent fuzzy matching to find similar company names.\n\n        Args:\n            name: Company name for fuzzy search matching\n            domain: Company domain/website filter\n            state: State location filter\n            city: City location filter\n            country: Country location filter\n            min_aum: Minimum assets under management\n            max_aum: Maximum assets under management\n            min_discretionary_aum: Minimum discretionary AUM\n            max_discretionary_aum: Maximum discretionary AUM\n            min_non_discretionary_aum: Minimum non-discretionary AUM\n            max_non_discretionary_aum: Maximum non-discretionary AUM\n            min_total_employees: Minimum number of employees\n            max_total_employees: Maximum number of employees\n            min_total_offices: Minimum number of offices\n            max_total_offices: Maximum number of offices\n            individual_clients: Filter for individual clients (Y/N)\n            high_net_worth_clients: Filter for high net worth clients (Y/N)\n            banking_clients: Filter for banking clients (Y/N)\n            investment_companies_clients: Filter for investment company clients (Y/N)\n            pension_clients: Filter for pension clients (Y/N)\n            charity_clients: Filter for charity clients (Y/N)\n            state_municipal_clients: Filter for state/municipal clients (Y/N)\n            investment_advisor_clients: Filter for investment advisor clients (Y/N)\n            insurance_clients: Filter for insurance clients (Y/N)\n            sovereign_wealth_clients: Filter for sovereign wealth clients (Y/N)\n            corporate_clients: Filter for corporate clients (Y/N)\n            private_funds: Filter for private funds (Y/N)\n            has_hedge_funds: Filter for hedge funds (Y/N)\n            has_liquidity_funds: Filter for liquidity funds (Y/N)\n            has_pe_funds: Filter for private equity funds (Y/N)\n            has_real_estate_funds: Filter for real estate funds (Y/N)\n            has_securitized_funds: Filter for securitized funds (Y/N)\n            has_vc_funds: Filter for venture capital funds (Y/N)\n            has_other_funds: Filter for other fund types (Y/N)\n            limit: Maximum number of results to return\n            offset: Number of results to skip for pagination\n\n        Returns:\n            Dictionary containing search results with total_matches count, matches list,\n            pagination metadata, and filter status information.\n        \"\"\"\n        # Load index data\n        index_cache = get_index_cache()\n        df = index_cache.load()\n",
+          "description": "Added comprehensive docstring for the search_companies method, documenting all parameters, return value, and the method's purpose of searching and filtering RIA companies with optional fuzzy name matching."
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 1 file(s) for pydocstyle signals",
+  "warnings": [],
+  "confidence": 0.9
+}

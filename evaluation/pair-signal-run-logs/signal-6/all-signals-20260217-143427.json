@@ -1,0 +1,21 @@
+[
+  {
+    "signal_type": "type_check",
+    "severity": "high",
+    "file_path": "authentication/clerk.py",
+    "span": {
+      "start": {
+        "row": 81,
+        "column": 35
+      },
+      "end": {
+        "row": 81,
+        "column": 35
+      }
+    },
+    "rule_code": "arg-type",
+    "message": "Argument \"jwks_url\" to \"ClerkSettings\" has incompatible type \"str | None\"; expected \"str\"",
+    "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#arg-type",
+    "fix": null
+  }
+]

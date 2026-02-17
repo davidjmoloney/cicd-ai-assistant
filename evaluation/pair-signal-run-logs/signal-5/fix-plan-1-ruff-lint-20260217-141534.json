@@ -1,0 +1,40 @@
+{
+  "group_tool_id": "ruff",
+  "group_signal_type": "lint",
+  "file_edits": [
+    {
+      "file_path": "prospecting/enrichment_types.py",
+      "reasoning": "Reordered imports to follow isort conventions - standard library imports first, then third-party imports, then local imports. Moved dataclasses and enum before typing, and pydantic before local imports.",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "prospecting/enrichment_types.py",
+          "line": 12,
+          "column": 1,
+          "message": "Import block is un-sorted or un-formatted",
+          "rule_code": "I001"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 1,
+              "column": 1
+            },
+            "end": {
+              "row": 18,
+              "column": 99999
+            }
+          },
+          "content": "\"\"\"\nType system for enrichment fields.\n\nDefines FieldDefinitions that specify:\n- Field data types\n- Merge strategies\n- LLM processing requirements\n- Output formats\n- References to Pydantic models where applicable\n\"\"\"\n\nfrom dataclasses import dataclass\nfrom enum import Enum\nfrom typing import Optional, Dict, List, Type, Literal, Any\n\nfrom pydantic import BaseModel\n\n# Import Pydantic models\nfrom prospecting.enrichment_models import (\n",
+          "description": "Reordered imports to follow isort conventions - standard library imports first, then third-party imports, then local imports. Moved dataclasses and enum before typing, and pydantic before local imports."
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 1 file(s) for ruff signals",
+  "warnings": [],
+  "confidence": 0.95
+}

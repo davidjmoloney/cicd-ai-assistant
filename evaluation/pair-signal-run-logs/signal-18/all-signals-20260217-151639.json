@@ -1,0 +1,39 @@
+[
+  {
+    "signal_type": "format",
+    "severity": "low",
+    "file_path": "ria/services/search_service.py",
+    "span": {
+      "start": {
+        "row": 315,
+        "column": 1
+      },
+      "end": {
+        "row": 334,
+        "column": 1
+      }
+    },
+    "rule_code": "FORMAT",
+    "message": "1 formatting region(s) to update (50 lines affected)",
+    "docs_url": "https://docs.astral.sh/ruff/formatter/",
+    "fix": {
+      "applicability": "safe",
+      "message": "Apply 1 formatting change(s)",
+      "edits": [
+        {
+          "span": {
+            "start": {
+              "row": 315,
+              "column": 1
+            },
+            "end": {
+              "row": 334,
+              "column": 1
+            }
+          },
+          "content": "        # Load index data\n        index_cache = get_index_cache()\n        df = index_cache.load()\n\n        # Ensure required columns exist\n        required_columns = (\n            [\n                CRD_COLUMN,\n                NAME_COLUMN,\n                STATE_COLUMN,\n                CITY_COLUMN,\n                COUNTRY_COLUMN,\n                DOMAIN_COLUMN,\n                AUM_COLUMN,\n                DISCRETIONARY_AUM_COLUMN,\n                NON_DISCRETIONARY_AUM_COLUMN,\n                EMPLOYEES_COLUMN,\n                OFFICES_COLUMN,\n            ]\n            + list(CLIENT_TYPE_COLUMNS.values())\n            + list(FUND_COLUMNS.values())\n        )\n\n        ensure_columns(df, required_columns)\n\n        # Attach domain column\n        df_domain = attach_domain_column(df, DOMAIN_COLUMN)\n\n        # Apply filters (name is not used in filtering - it's used for search after filtering)\n        filtered_df = filter_companies(\n            df_domain,\n"
+        }
+      ]
+    }
+  }
+]

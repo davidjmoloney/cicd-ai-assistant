@@ -1,0 +1,39 @@
+[
+  {
+    "signal_type": "lint",
+    "severity": "low",
+    "file_path": "ria/serializers.py",
+    "span": {
+      "start": {
+        "row": 8,
+        "column": 20
+      },
+      "end": {
+        "row": 8,
+        "column": 24
+      }
+    },
+    "rule_code": "F401",
+    "message": "`typing.List` imported but unused",
+    "docs_url": "https://docs.astral.sh/ruff/rules/unused-import",
+    "fix": {
+      "applicability": "safe",
+      "message": "Remove unused import",
+      "edits": [
+        {
+          "span": {
+            "start": {
+              "row": 8,
+              "column": 1
+            },
+            "end": {
+              "row": 9,
+              "column": 1
+            }
+          },
+          "content": ""
+        }
+      ]
+    }
+  }
+]

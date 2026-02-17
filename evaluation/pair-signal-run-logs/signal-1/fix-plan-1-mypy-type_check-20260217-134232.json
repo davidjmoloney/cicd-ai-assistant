@@ -1,0 +1,40 @@
+{
+  "group_tool_id": "mypy",
+  "group_signal_type": "type_check",
+  "file_edits": [
+    {
+      "file_path": "ria/services/search_service.py",
+      "reasoning": "The type error occurs because x[\"count\"] returns object type, but sort() expects a comparable type. Adding a type annotation to cast it to int resolves the type mismatch since we know count is an integer from the int() conversion above.",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "ria/services/search_service.py",
+          "line": 96,
+          "column": 26,
+          "message": "Argument \"key\" to \"sort\" of \"list\" has incompatible type \"Callable[[dict[str, object]], object]\"; expected \"Callable[[dict[str, object]], SupportsDunderLT[Any] | SupportsDunderGT[Any]]\"",
+          "rule_code": "arg-type"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 89,
+              "column": 1
+            },
+            "end": {
+              "row": 103,
+              "column": 99999
+            }
+          },
+          "content": "                        \"category\": display_name,\n                        \"count\": count\n                    })\n            except (ValueError, TypeError):\n                continue\n    \n    # Sort by count (highest first) and return top 3\n    fund_counts.sort(key=lambda x: int(x[\"count\"]), reverse=True)\n    return fund_counts[:3]\n\n\ndef get_top_3_allocations(company_record: Dict[str, Any]) -> List[Dict[str, Any]]:\n    \"\"\"Get top 3 SMA allocation categories by percentage for a company.\"\"\"\n    allocations = []\n    \n",
+          "description": "The type error occurs because x[\"count\"] returns object type, but sort() expects a comparable type. Adding a type annotation to cast it to int resolves the type mismatch since we know count is an integer from the int() conversion above."
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 1 file(s) for mypy signals",
+  "warnings": [],
+  "confidence": 0.9
+}

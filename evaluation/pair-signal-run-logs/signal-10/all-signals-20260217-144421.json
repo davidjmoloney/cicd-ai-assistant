@@ -1,0 +1,21 @@
+[
+  {
+    "signal_type": "lint",
+    "severity": "medium",
+    "file_path": "ria/services/company_service.py",
+    "span": {
+      "start": {
+        "row": 97,
+        "column": 13
+      },
+      "end": {
+        "row": 97,
+        "column": 68
+      }
+    },
+    "rule_code": "B904",
+    "message": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+    "docs_url": "https://docs.astral.sh/ruff/rules/raise-without-from-inside-except",
+    "fix": null
+  }
+]

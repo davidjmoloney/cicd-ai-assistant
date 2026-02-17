@@ -1,0 +1,27 @@
+[
+  {
+    "tool_id": "mypy",
+    "signal_type": "type_check",
+    "signals": [
+      {
+        "signal_type": "type_check",
+        "severity": "medium",
+        "file_path": "ria/views.py",
+        "span": {
+          "start": {
+            "row": 666,
+            "column": 13
+          },
+          "end": {
+            "row": 666,
+            "column": 13
+          }
+        },
+        "rule_code": "var-annotated",
+        "message": "Need type annotation for \"by_activity_type\" (hint: \"by_activity_type: dict[<type>, <type>] = ...\")",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#var-annotated",
+        "fix": null
+      }
+    ]
+  }
+]

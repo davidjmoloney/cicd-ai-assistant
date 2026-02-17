@@ -1,0 +1,40 @@
+{
+  "group_tool_id": "pydocstyle",
+  "group_signal_type": "docstring",
+  "file_edits": [
+    {
+      "file_path": "ria/serializers.py",
+      "reasoning": "Added Google-style docstring for RIACompanyPreviewSerializer class. Based on the field names and context, this serializer represents a preview/summary view of RIA company data with key metrics and matching information.",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "ria/serializers.py",
+          "line": 370,
+          "column": 0,
+          "message": "Missing docstring in public class",
+          "rule_code": "D101"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 369,
+              "column": 1
+            },
+            "end": {
+              "row": 373,
+              "column": 99999
+            }
+          },
+          "content": "\nclass RIACompanyPreviewSerializer(serializers.Serializer):\n    \"\"\"Serializer for RIA company preview data with key metrics and match information.\n    \n    Used to serialize company overview data including basic info, AUM, employee counts,\n    top funds/allocations, and search match scoring details.\n    \"\"\"\n    name = serializers.CharField(required=False, allow_null=True)\n    crd = serializers.IntegerField(required=False, allow_null=True)\n    city = serializers.CharField(required=False, allow_null=True)\n",
+          "description": "Added Google-style docstring for RIACompanyPreviewSerializer class. Based on the field names and context, this serializer represents a preview/summary view of RIA company data with key metrics and matching information."
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 1 file(s) for pydocstyle signals",
+  "warnings": [],
+  "confidence": 0.9
+}

@@ -1,0 +1,27 @@
+[
+  {
+    "tool_id": "mypy",
+    "signal_type": "type_check",
+    "signals": [
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "ria/services/search_service.py",
+        "span": {
+          "start": {
+            "row": 96,
+            "column": 26
+          },
+          "end": {
+            "row": 96,
+            "column": 26
+          }
+        },
+        "rule_code": "arg-type",
+        "message": "Argument \"key\" to \"sort\" of \"list\" has incompatible type \"Callable[[dict[str, object]], object]\"; expected \"Callable[[dict[str, object]], SupportsDunderLT[Any] | SupportsDunderGT[Any]]\"",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#arg-type",
+        "fix": null
+      }
+    ]
+  }
+]

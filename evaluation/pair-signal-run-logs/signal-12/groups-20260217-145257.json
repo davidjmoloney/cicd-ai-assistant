@@ -1,0 +1,27 @@
+[
+  {
+    "tool_id": "pydocstyle",
+    "signal_type": "docstring",
+    "signals": [
+      {
+        "signal_type": "docstring",
+        "severity": "low",
+        "file_path": "prospecting/enrichment_types.py",
+        "span": {
+          "start": {
+            "row": 50,
+            "column": 0
+          },
+          "end": {
+            "row": 50,
+            "column": 0
+          }
+        },
+        "rule_code": "D101",
+        "message": "Missing docstring in public class",
+        "docs_url": "http://www.pydocstyle.org/en/stable/error_codes.html#D101",
+        "fix": null
+      }
+    ]
+  }
+]

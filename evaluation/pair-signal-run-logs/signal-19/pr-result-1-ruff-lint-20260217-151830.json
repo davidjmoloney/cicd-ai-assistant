@@ -1,0 +1,12 @@
+{
+  "success": true,
+  "pr_url": "https://github.com/davidjmoloney/ardessa-backend-clone-12Feb2026/pull/115",
+  "pr_number": 115,
+  "branch_name": "cicd-agent-fix/lint/20260217-151833-ffc641",
+  "error": null,
+  "files_changed": [
+    "ria/serializers.py"
+  ],
+  "skipped_fixes": [],
+  "unchanged_fixes": []
+}

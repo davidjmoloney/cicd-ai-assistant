@@ -1,0 +1,40 @@
+{
+  "group_tool_id": "ruff",
+  "group_signal_type": "lint",
+  "file_edits": [
+    {
+      "file_path": "ria/services/search_service.py",
+      "reasoning": "The variable `field_name` is not used in the loop body, only `column_name` is used. Replacing `field_name` with `_` to indicate it's intentionally unused.",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "ria/services/search_service.py",
+          "line": 82,
+          "column": 9,
+          "message": "Loop control variable `field_name` not used within loop body",
+          "rule_code": "B007"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 80,
+              "column": 1
+            },
+            "end": {
+              "row": 84,
+              "column": 99999
+            }
+          },
+          "content": "    fund_counts = []\n    \n    for _, column_name in PRIVATE_FUND_COUNT_COLUMNS.items():\n        if column_name in company_record and company_record[column_name] is not None:\n            try:",
+          "description": "The variable `field_name` is not used in the loop body, only `column_name` is used. Replacing `field_name` with `_` to indicate it's intentionally unused."
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 1 file(s) for ruff signals",
+  "warnings": [],
+  "confidence": 0.9
+}

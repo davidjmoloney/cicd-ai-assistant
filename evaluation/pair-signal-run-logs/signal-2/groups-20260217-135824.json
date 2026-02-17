@@ -1,0 +1,27 @@
+[
+  {
+    "tool_id": "mypy",
+    "signal_type": "type_check",
+    "signals": [
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "ria/services/query_service.py",
+        "span": {
+          "start": {
+            "row": 105,
+            "column": 46
+          },
+          "end": {
+            "row": 105,
+            "column": 46
+          }
+        },
+        "rule_code": "assignment",
+        "message": "Incompatible types in assignment (expression has type \"datetime\", target has type \"str\")",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#assignment",
+        "fix": null
+      }
+    ]
+  }
+]

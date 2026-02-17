@@ -1,0 +1,32 @@
+{
+  "group_tool_id": "ruff-format",
+  "group_signal_type": "format",
+  "file_edits": [
+    {
+      "file_path": "ria/views.py",
+      "reasoning": "Auto-applied format fixes from ruff-format",
+      "confidence": 1.0,
+      "signal_errors": [],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 39,
+              "column": 1
+            },
+            "end": {
+              "row": 56,
+              "column": 1
+            }
+          },
+          "content": "from ria.services.pdf_cache_service import get_pdf_cache\nfrom ria.services.location_cache_service import get_location_cache\nfrom ria.services.search_service import (\n    SearchService,\n    to_serializable_records,\n    ensure_columns,\n    attach_domain_column,\n    transform_company_record_for_preview,\n)\nfrom ria.services.company_service import CompanyService\nfrom ria.services.query_service import QueryService\nfrom ria.utils.constants import CRD_COLUMN, NAME_COLUMN, STATE_COLUMN, DOMAIN_COLUMN, AUM_COLUMN\nfrom ria.utils.helpers import (\n    generate_search_id,\n    extract_search_context,\n",
+          "description": "Apply 1 formatting change(s)"
+        }
+      ]
+    }
+  ],
+  "summary": "Auto-applied 1 format fix(es) across 1 file(s)",
+  "warnings": [],
+  "confidence": 1.0
+}

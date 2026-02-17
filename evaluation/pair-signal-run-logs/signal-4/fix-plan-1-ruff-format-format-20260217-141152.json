@@ -1,0 +1,32 @@
+{
+  "group_tool_id": "ruff-format",
+  "group_signal_type": "format",
+  "file_edits": [
+    {
+      "file_path": "ria/utils/helpers.py",
+      "reasoning": "Auto-applied format fixes from ruff-format",
+      "confidence": 1.0,
+      "signal_errors": [],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 23,
+              "column": 1
+            },
+            "end": {
+              "row": 44,
+              "column": 1
+            }
+          },
+          "content": "    # Django uses request.META for headers (prefixed with HTTP_)\n    # FastAPI uses request.headers\n    search_context_header = None\n\n    # Try Django-style header access\n    if hasattr(request, \"META\"):\n        search_context_header = request.META.get(\"HTTP_X_SEARCH_CONTEXT\")\n    # Try FastAPI-style header access (for backward compatibility)\n    elif hasattr(request, \"headers\"):\n        search_context_header = request.headers.get(\"X-Search-Context\")\n\n    if not search_context_header:\n        return None\n\n    try:\n        return json.loads(search_context_header)\n    except json.JSONDecodeError:\n        from common.utils.logging_config import get_logger\n\n        logger = get_logger(__name__)\n        logger.warning(f\"Invalid search context header: {search_context_header}\")\n        return None\n",
+          "description": "Apply 1 formatting change(s)"
+        }
+      ]
+    }
+  ],
+  "summary": "Auto-applied 1 format fix(es) across 1 file(s)",
+  "warnings": [],
+  "confidence": 1.0
+}
