@@ -1,0 +1,397 @@
+{
+  "_debug_metadata": {
+    "timestamp": "20260216_105918",
+    "tool_id": "pydocstyle",
+    "signal_type": "docstring",
+    "num_signals": 4,
+    "signal_files": [
+      "authentication/clerk.py",
+      "ria/views.py",
+      "ria/services/query_service.py"
+    ],
+    "system_prompt_length": 10610,
+    "user_prompt_length": 16170
+  },
+  "context": {
+    "group": {
+      "tool_id": "pydocstyle",
+      "signal_type": "docstring",
+      "group_size": 4
+    },
+    "signals": [
+      {
+        "signal": {
+          "tool_id": "pydocstyle",
+          "signal_type": "docstring",
+          "severity": "low",
+          "rule_code": "D102",
+          "message": "Missing docstring in public method",
+          "docs_url": "http://www.pydocstyle.org/en/stable/error_codes.html#D102",
+          "file_path": "authentication/clerk.py",
+          "span": {
+            "start": {
+              "row": 45,
+              "column": 0
+            },
+            "end": {
+              "row": 45,
+              "column": 0
+            }
+          }
+        },
+        "file_read_error": null,
+        "code_context": {
+          "window": {
+            "file_path": "authentication/clerk.py",
+            "start_row": 15,
+            "end_row": 75,
+            "text": "from jwcrypto import jwk as jwcrypto_jwk\n\nfrom common.utils.config import (\n    get_clerk_audience,\n    get_clerk_issuer,\n    get_clerk_jwks_url,\n    get_lp_clerk_audience,\n    get_lp_clerk_issuer,\n    get_lp_clerk_jwks_url,\n)\n\nlogger = logging.getLogger(__name__)\n\n\nclass ClerkTokenError(RuntimeError):\n    \"\"\"Raised when a Clerk token fails validation.\"\"\"\n\n\nclass ClerkConfigurationError(ClerkTokenError):\n    \"\"\"Raised when mandatory Clerk configuration values are missing.\"\"\"\n\n\n@dataclass(frozen=True)\nclass ClerkSettings:\n    jwks_url: str\n    issuer: str\n    audience: Optional[str] = None\n    cache_ttl_seconds: int = 300\n\n    @classmethod\n    def from_config(cls) -> \"ClerkSettings\":\n        jwks_url = get_clerk_jwks_url()\n        issuer = get_clerk_issuer()\n        audience = get_clerk_audience()\n\n        missing = [name for name, value in (\n            (\"CLERK_JWKS_URL\", jwks_url),\n            (\"CLERK_ISSUER\", issuer),\n        ) if not value]\n        if missing:\n            raise ClerkConfigurationError(\n                f\"Missing Clerk configuration value(s): {', '.join(missing)}\"\n            )\n\n        return cls(jwks_url=jwks_url, issuer=issuer, audience=audience)\n\n\ndef get_clerk_settings() -> ClerkSettings:\n    \"\"\"Load Clerk token validation settings from config helpers.\"\"\"\n    return ClerkSettings.from_config()\n\n\ndef get_lp_clerk_settings() -> ClerkSettings:\n    jwks_url = get_lp_clerk_jwks_url()\n    issuer = get_lp_clerk_issuer()\n    audience = get_lp_clerk_audience()\n\n    missing = [name for name, value in (\n        (\"LP_CLERK_JWKS_URL\", jwks_url),\n        (\"LP_CLERK_ISSUER\", issuer),\n    ) if not value]\n"
+          },
+          "imports": null,
+          "enclosing_function": {
+            "file_path": "authentication/clerk.py",
+            "start_row": 43,
+            "end_row": 61,
+            "text": "\n    @classmethod\n    def from_config(cls) -> \"ClerkSettings\":\n        jwks_url = get_clerk_jwks_url()\n        issuer = get_clerk_issuer()\n        audience = get_clerk_audience()\n\n        missing = [name for name, value in (\n            (\"CLERK_JWKS_URL\", jwks_url),\n            (\"CLERK_ISSUER\", issuer),\n        ) if not value]\n        if missing:\n            raise ClerkConfigurationError(\n                f\"Missing Clerk configuration value(s): {', '.join(missing)}\"\n            )\n\n        return cls(jwks_url=jwks_url, issuer=issuer, audience=audience)\n\n\n"
+          },
+          "try_except_block": null,
+          "class_definition": null,
+          "type_aliases": null,
+          "related_function": null,
+          "module_constants": null
+        },
+        "edit_snippet": {
+          "file_path": "authentication/clerk.py",
+          "start_row": 43,
+          "end_row": 48,
+          "text": "\n@classmethod\ndef from_config(cls) -> \"ClerkSettings\":\n    jwks_url = get_clerk_jwks_url()\n    issuer = get_clerk_issuer()\n    audience = get_clerk_audience()\n",
+          "original_text": "\n    @classmethod\n    def from_config(cls) -> \"ClerkSettings\":\n        jwks_url = get_clerk_jwks_url()\n        issuer = get_clerk_issuer()\n        audience = get_clerk_audience()\n",
+          "error_line": 45,
+          "error_line_in_snippet": 3,
+          "snippet_length": 6,
+          "base_indent": "    "
+        },
+        "edit_window_type": "lines",
+        "fix_context": {
+          "exists": false
+        }
+      },
+      {
+        "signal": {
+          "tool_id": "pydocstyle",
+          "signal_type": "docstring",
+          "severity": "low",
+          "rule_code": "D103",
+          "message": "Missing docstring in public function",
+          "docs_url": "http://www.pydocstyle.org/en/stable/error_codes.html#D103",
+          "file_path": "authentication/clerk.py",
+          "span": {
+            "start": {
+              "row": 67,
+              "column": 0
+            },
+            "end": {
+              "row": 67,
+              "column": 0
+            }
+          }
+        },
+        "file_read_error": null,
+        "code_context": {
+          "window": {
+            "file_path": "authentication/clerk.py",
+            "start_row": 37,
+            "end_row": 97,
+            "text": "@dataclass(frozen=True)\nclass ClerkSettings:\n    jwks_url: str\n    issuer: str\n    audience: Optional[str] = None\n    cache_ttl_seconds: int = 300\n\n    @classmethod\n    def from_config(cls) -> \"ClerkSettings\":\n        jwks_url = get_clerk_jwks_url()\n        issuer = get_clerk_issuer()\n        audience = get_clerk_audience()\n\n        missing = [name for name, value in (\n            (\"CLERK_JWKS_URL\", jwks_url),\n            (\"CLERK_ISSUER\", issuer),\n        ) if not value]\n        if missing:\n            raise ClerkConfigurationError(\n                f\"Missing Clerk configuration value(s): {', '.join(missing)}\"\n            )\n\n        return cls(jwks_url=jwks_url, issuer=issuer, audience=audience)\n\n\ndef get_clerk_settings() -> ClerkSettings:\n    \"\"\"Load Clerk token validation settings from config helpers.\"\"\"\n    return ClerkSettings.from_config()\n\n\ndef get_lp_clerk_settings() -> ClerkSettings:\n    jwks_url = get_lp_clerk_jwks_url()\n    issuer = get_lp_clerk_issuer()\n    audience = get_lp_clerk_audience()\n\n    missing = [name for name, value in (\n        (\"LP_CLERK_JWKS_URL\", jwks_url),\n        (\"LP_CLERK_ISSUER\", issuer),\n    ) if not value]\n    if missing:\n        raise ClerkConfigurationError(\n            f\"Missing LP Clerk configuration value(s): {', '.join(missing)}\"\n        )\n\n    return ClerkSettings(jwks_url=jwks_url, issuer=issuer, audience=audience)\n\n\n_JWKS_CACHE: Dict[str, Dict[str, Any]] = {}\n\n\ndef _fetch_jwks(\n    settings: ClerkSettings,\n    *,\n    http_get: Optional[Callable[[str], Dict[str, Any]]] = None,\n) -> Dict[str, Any]:\n    \"\"\"Fetch Clerk JWKS document with naive in-memory caching.\"\"\"\n    now = time.time()\n\n    cache_entry = _JWKS_CACHE.get(settings.jwks_url)\n    if cache_entry and cache_entry[\"expires_at\"] > now:\n        return cache_entry[\"payload\"]\n"
+          },
+          "imports": null,
+          "enclosing_function": {
+            "file_path": "authentication/clerk.py",
+            "start_row": 65,
+            "end_row": 83,
+            "text": "\n\ndef get_lp_clerk_settings() -> ClerkSettings:\n    jwks_url = get_lp_clerk_jwks_url()\n    issuer = get_lp_clerk_issuer()\n    audience = get_lp_clerk_audience()\n\n    missing = [name for name, value in (\n        (\"LP_CLERK_JWKS_URL\", jwks_url),\n        (\"LP_CLERK_ISSUER\", issuer),\n    ) if not value]\n    if missing:\n        raise ClerkConfigurationError(\n            f\"Missing LP Clerk configuration value(s): {', '.join(missing)}\"\n        )\n\n    return ClerkSettings(jwks_url=jwks_url, issuer=issuer, audience=audience)\n\n\n"
+          },
+          "try_except_block": null,
+          "class_definition": null,
+          "type_aliases": null,
+          "related_function": null,
+          "module_constants": null
+        },
+        "edit_snippet": {
+          "file_path": "authentication/clerk.py",
+          "start_row": 65,
+          "end_row": 70,
+          "text": "\n\ndef get_lp_clerk_settings() -> ClerkSettings:\n    jwks_url = get_lp_clerk_jwks_url()\n    issuer = get_lp_clerk_issuer()\n    audience = get_lp_clerk_audience()\n",
+          "original_text": "\n\ndef get_lp_clerk_settings() -> ClerkSettings:\n    jwks_url = get_lp_clerk_jwks_url()\n    issuer = get_lp_clerk_issuer()\n    audience = get_lp_clerk_audience()\n",
+          "error_line": 67,
+          "error_line_in_snippet": 3,
+          "snippet_length": 6,
+          "base_indent": ""
+        },
+        "edit_window_type": "lines",
+        "fix_context": {
+          "exists": false
+        }
+      },
+      {
+        "signal": {
+          "tool_id": "pydocstyle",
+          "signal_type": "docstring",
+          "severity": "low",
+          "rule_code": "D102",
+          "message": "Missing docstring in public method",
+          "docs_url": "http://www.pydocstyle.org/en/stable/error_codes.html#D102",
+          "file_path": "ria/services/query_service.py",
+          "span": {
+            "start": {
+              "row": 83,
+              "column": 0
+            },
+            "end": {
+              "row": 83,
+              "column": 0
+            }
+          }
+        },
+        "file_read_error": null,
+        "code_context": {
+          "window": {
+            "file_path": "ria/services/query_service.py",
+            "start_row": 53,
+            "end_row": 113,
+            "text": "        \"\"\"\n        try:\n            activity = await RIAUserActivity.objects.acreate(\n                user_id=user_id,\n                session_id=session_id,\n                activity_type=activity_type,\n                search_id=search_id,\n                search_params=search_params,\n                search_timestamp=search_timestamp,\n                company_crd=company_crd,\n                company_name=company_name,\n                company_action=company_action,\n                ip_address=ip_address,\n            )\n            \n            logger.info(\n                f\"Stored RIA activity: {activity_type} for user {user_id}, activity_id: {activity.id}\",\n                extra={\"activity_id\": activity.id, \"user_id\": user_id, \"activity_type\": activity_type}\n            )\n            return activity.id\n            \n        except Exception as e:\n            logger.error(\n                f\"Failed to store RIA activity: {str(e)}\",\n                extra={\"user_id\": user_id, \"activity_type\": activity_type},\n                exc_info=True\n            )\n            raise\n\n    @staticmethod\n    async def get_ria_activity(\n        user_id: Optional[str] = None,\n        search_id: Optional[str] = None,\n        activity_type: Optional[str] = None,\n        from_date: Optional[datetime] = None,\n        to_date: Optional[datetime] = None,\n        limit: int = 50,\n        offset: int = 0\n    ) -> Dict[str, Any]:\n        try:\n            # Build query filters\n            filters = {}\n            \n            if user_id:\n                filters['user_id'] = user_id\n            if search_id:\n                filters['search_id'] = search_id\n            if activity_type:\n                filters['activity_type'] = activity_type\n            if from_date:\n                filters['created_at__gte'] = from_date\n            if to_date:\n                filters['created_at__lte'] = to_date\n            \n            # Get total count\n            total_count = await RIAUserActivity.objects.filter(**filters).acount()\n            \n            # Get paginated results\n            queryset = RIAUserActivity.objects.filter(**filters).order_by('search_id', 'created_at')\n            records = []\n            \n"
+          },
+          "imports": {
+            "file_path": "ria/services/query_service.py",
+            "start_row": 1,
+            "end_row": 16,
+            "text": "\"\"\"\nQuery Service\n\nThis service handles all database operations for RIA using Django ORM.\nReplaces asyncpg database calls with Django ORM queries.\n\"\"\"\n\nfrom typing import Optional, Dict, Any, List\nfrom datetime import datetime\n\nfrom django.db import transaction\nfrom django.utils import timezone\n\nfrom ria.models import RIAUserActivity\nfrom common.utils.logging_config import get_logger\n\n"
+          },
+          "enclosing_function": {
+            "file_path": "ria/services/query_service.py",
+            "start_row": 81,
+            "end_row": 148,
+            "text": "\n    @staticmethod\n    async def get_ria_activity(\n        user_id: Optional[str] = None,\n        search_id: Optional[str] = None,\n        activity_type: Optional[str] = None,\n        from_date: Optional[datetime] = None,\n        to_date: Optional[datetime] = None,\n        limit: int = 50,\n        offset: int = 0\n    ) -> Dict[str, Any]:\n        try:\n            # Build query filters\n            filters = {}\n            \n            if user_id:\n                filters['user_id'] = user_id\n            if search_id:\n                filters['search_id'] = search_id\n            if activity_type:\n                filters['activity_type'] = activity_type\n            if from_date:\n                filters['created_at__gte'] = from_date\n            if to_date:\n                filters['created_at__lte'] = to_date\n            \n            # Get total count\n            total_count = await RIAUserActivity.objects.filter(**filters).acount()\n            \n            # Get paginated results\n            queryset = RIAUserActivity.objects.filter(**filters).order_by('search_id', 'created_at')\n            records = []\n            \n            async for activity in queryset[offset:offset + limit]:\n                records.append({\n                    \"id\": activity.id,\n                    \"user_id\": activity.user_id,\n                    \"session_id\": activity.session_id,\n                    \"activity_type\": activity.activity_type,\n                    \"search_id\": activity.search_id,\n                    \"search_params\": activity.search_params,\n                    \"search_timestamp\": activity.search_timestamp.isoformat() if activity.search_timestamp else None,\n                    \"company_crd\": activity.company_crd,\n                    \"company_name\": activity.company_name,\n                    \"company_action\": activity.company_action,\n                    \"ip_address\": activity.ip_address,\n                    \"created_at\": activity.created_at.isoformat() if activity.created_at else None,\n                })\n            \n            return {\n                \"records\": records,\n                \"total_count\": total_count,\n                \"limit\": limit,\n                \"offset\": offset\n            }\n            \n        except Exception as e:\n            logger.error(\n                f\"Failed to get RIA activity: {str(e)}\",\n                extra={\n                    \"user_id\": user_id,\n                    \"search_id\": search_id,\n                    \"activity_type\": activity_type\n                },\n                exc_info=True\n            )\n            raise\n\n"
+          },
+          "try_except_block": null,
+          "class_definition": null,
+          "type_aliases": null,
+          "related_function": null,
+          "module_constants": null
+        },
+        "edit_snippet": {
+          "file_path": "ria/services/query_service.py",
+          "start_row": 81,
+          "end_row": 94,
+          "text": "\n@staticmethod\nasync def get_ria_activity(\n    user_id: Optional[str] = None,\n    search_id: Optional[str] = None,\n    activity_type: Optional[str] = None,\n    from_date: Optional[datetime] = None,\n    to_date: Optional[datetime] = None,\n    limit: int = 50,\n    offset: int = 0\n) -> Dict[str, Any]:\n    try:\n        # Build query filters\n        filters = {}\n",
+          "original_text": "\n    @staticmethod\n    async def get_ria_activity(\n        user_id: Optional[str] = None,\n        search_id: Optional[str] = None,\n        activity_type: Optional[str] = None,\n        from_date: Optional[datetime] = None,\n        to_date: Optional[datetime] = None,\n        limit: int = 50,\n        offset: int = 0\n    ) -> Dict[str, Any]:\n        try:\n            # Build query filters\n            filters = {}\n",
+          "error_line": 83,
+          "error_line_in_snippet": 3,
+          "snippet_length": 14,
+          "base_indent": "    "
+        },
+        "edit_window_type": "lines",
+        "fix_context": {
+          "exists": false
+        }
+      },
+      {
+        "signal": {
+          "tool_id": "pydocstyle",
+          "signal_type": "docstring",
+          "severity": "low",
+          "rule_code": "D101",
+          "message": "Missing docstring in public class",
+          "docs_url": "http://www.pydocstyle.org/en/stable/error_codes.html#D101",
+          "file_path": "ria/views.py",
+          "span": {
+            "start": {
+              "row": 250,
+              "column": 0
+            },
+            "end": {
+              "row": 250,
+              "column": 0
+            }
+          }
+        },
+        "file_read_error": null,
+        "code_context": {
+          "window": {
+            "file_path": "ria/views.py",
+            "start_row": 220,
+            "end_row": 280,
+            "text": "        \n        try:\n            # Use SearchService for comprehensive search\n            search_service = SearchService()\n            result = search_service.search_companies(**search_params)\n            \n            # Track activity\n            search_id = generate_search_id()\n            await track_ria_activity(\n                request=request,\n                activity_type='search',\n                search_id=search_id,\n                search_params=format_search_params_for_storage(search_params),\n                search_timestamp=datetime.now(),\n            )\n            \n            # The result from SearchService already has the correct structure\n            # Just validate and return\n            response_serializer = RIACompanyLookupResponseSerializer(data=result)\n            response_serializer.is_valid()\n            \n            return Response(response_serializer.data, status=status.HTTP_200_OK)\n            \n        except ValidationError:\n            raise\n        except Exception as e:\n            logger.error(f\"Failed to perform company lookup: {str(e)}\", exc_info=True)\n            raise APIException(detail=f\"Failed to perform company lookup: {str(e)}\")\n\n\nclass RIACompanyDetailView(AsyncAPIView):\n    permission_classes = [IsAuthenticated]\n    \n    async def get(self, request: Request, crd: int):\n        \"\"\"Handle GET request for company details.\"\"\"\n        logger.info(f\"RIA company detail request for CRD: {crd}\")\n        \n        try:\n            index_cache = get_index_cache()\n            df = index_cache.load()\n            logger.info(f\"Loaded index data for CRD {crd}: {df.height} rows\")\n        except Exception as e:\n            logger.error(f\"Failed to load index data for CRD {crd}: {str(e)}\", exc_info=True)\n            raise APIException(detail=f\"Failed to load index data: {str(e)}\")\n        \n        ensure_columns(df, [CRD_COLUMN])\n        company_df = df.filter(pl.col(CRD_COLUMN).cast(pl.Int64, strict=False) == crd)\n        \n        if company_df.is_empty():\n            logger.warning(f\"CRD {crd} not found in index\")\n            raise NotFound(detail=\"CRD not found in latest index\")\n        \n        index_row = company_df.head(1).to_dicts()[0]\n        \n        try:\n            company_service = CompanyService()\n            trends = company_service.load_trends_json(crd)\n            logger.info(f\"Loaded trends for CRD {crd}\")\n        except ValueError as e:\n            logger.warning(f\"Trends not found for CRD {crd}: {str(e)}\")\n            trends = {}\n"
+          },
+          "imports": {
+            "file_path": "ria/views.py",
+            "start_row": 1,
+            "end_row": 26,
+            "text": "\"\"\"\nDjango REST Framework views for RIA API.\n\nConverted from FastAPI routes in prospecting_api.py.\nAll views use class-based approach with Django async support.\n\"\"\"\n\nimport json\nimport io\nfrom datetime import datetime\nfrom typing import Dict, Any, Optional\n\nimport boto3\nimport polars as pl\nfrom botocore.exceptions import ClientError\nfrom django.http import StreamingHttpResponse, FileResponse\nfrom rest_framework.views import APIView\nfrom rest_framework.response import Response\nfrom rest_framework import status\nfrom rest_framework.permissions import IsAuthenticated\nfrom authentication.permissions import IsAdmin\nfrom rest_framework.exceptions import NotFound, PermissionDenied, ValidationError, APIException\nfrom rest_framework.request import Request\nfrom common.views import AsyncAPIView\n\nfrom ria.serializers import (\n"
+          },
+          "enclosing_function": null,
+          "try_except_block": null,
+          "class_definition": {
+            "file_path": "ria/views.py",
+            "start_row": 248,
+            "end_row": 250,
+            "text": "\n\nclass RIACompanyDetailView(AsyncAPIView):\n"
+          },
+          "type_aliases": null,
+          "related_function": null,
+          "module_constants": null
+        },
+        "edit_snippet": {
+          "file_path": "ria/views.py",
+          "start_row": 248,
+          "end_row": 253,
+          "text": "\n\nclass RIACompanyDetailView(AsyncAPIView):\n    permission_classes = [IsAuthenticated]\n    \n    async def get(self, request: Request, crd: int):\n",
+          "original_text": "\n\nclass RIACompanyDetailView(AsyncAPIView):\n    permission_classes = [IsAuthenticated]\n    \n    async def get(self, request: Request, crd: int):\n",
+          "error_line": 250,
+          "error_line_in_snippet": 3,
+          "snippet_length": 6,
+          "base_indent": ""
+        },
+        "edit_window_type": "lines",
+        "fix_context": {
+          "exists": false
+        }
+      }
+    ],
+    "merged_snippet_groups": [],
+    "standalone_signal_indices": [
+      0,
+      1,
+      2,
+      3
+    ]
+  },
+  "prompts": {
+    "system_prompt": "You are an expert code repair agent. Your task is to make MINIMAL, SURGICAL fixes to code errors.\n\n## CRITICAL PRINCIPLE: MINIMAL CHANGES ONLY\n\nYour job is to fix ONLY the specific error mentioned. You are NOT improving, refactoring, or cleaning up code.\n\n**THE GOLDEN RULE**: Every line in your output that is NOT directly part of the fix MUST be IDENTICAL to the input - same content, same whitespace, same everything.\n\n## How This Works\n\nFor each error signal, you will receive:\n\n1. **Error Information**: Type, message, severity, and rule code\n2. **Edit Snippet**: A small code snippet (~13 lines) containing the error\n   - This is what you need to FIX and RETURN\n   - The error location within the snippet is indicated (e.g., \"Error on line 4 of 13\")\n3. **Context Window**: A larger code window (~30 lines) around the error for understanding\n   - Use this to understand the surrounding code, but DON'T return it\n\n4. **Tailored Context** (varies by signal type - optimized to reduce token usage):\n   - **Imports**: The file's import block (for type definitions, dependencies)\n     - Included for: type errors, undefined names, most issues\n     - Excluded for: import-only errors, bare except blocks\n   - **Enclosing Function**: The function containing the error (for understanding scope/logic)\n     - Included for: type errors, docstring errors, function-level issues\n     - Excluded for: import errors (global scope), bare except (sent separately)\n   - **Try/Except Block**: The try/except block containing the error\n     - Included for: bare except errors (E722)\n     - Excluded for: most other errors\n\nNote: Context is carefully selected to provide what you need while minimizing token usage.\nNot all context is present for every error - you'll only receive relevant context.\n\n## Response Format\n\nFor EACH signal/snippet you receive, respond with this EXACT format:\n\n```\n===== FIX FOR: <file_path> =====\nCONFIDENCE: <0.0-1.0>\nREASONING: <brief explanation of the fix>\n\n```FIXED_CODE\n<complete fixed snippet - ALL lines from edit_snippet, with ONLY the fix applied>\n```\n\nWARNINGS: <any caveats, or \"None\">\n===== END FIX =====\n```\n\n## CRITICAL Rules - READ CAREFULLY\n\n1. **MINIMAL CHANGES ONLY** - Change ONLY what is necessary to fix the specific error. Nothing more.\n\n2. **PRESERVE EVERYTHING ELSE EXACTLY** - Every line that is NOT part of the fix must be returned EXACTLY as it appeared in the input, character-for-character, including:\n   - Comments and documentation\n   - Blank lines (including leading and trailing blank lines)\n   - All whitespace (including trailing newlines at the end of the snippet)\n   - Other variable declarations\n   - Function definitions\n   - String content (including multi-line strings)\n\n   **CRITICAL**: If the input snippet ends with blank lines or newlines, your output MUST end with the exact same number of blank lines/newlines. Do NOT trim trailing whitespace.\n\n3. **DO NOT under any circumstances**:\n   - Delete lines that aren't related to the fix\n   - Add code that isn't required for the fix\n   - \"Clean up\" or \"improve\" surrounding code\n   - Modify comments or documentation\n   - Change formatting on unrelated lines\n   - Remove blank lines\n   - Add blank lines (unless the fix specifically requires it)\n   - Modify string literals or docstrings\n   - Delete function definitions\n   - Remove dictionary entries or list items unrelated to the fix\n\n4. **Maintain RELATIVE indentation** - The snippet has had its base indentation removed. Preserve relative indentation exactly. If a line has 4 spaces in the input, it must have 4 spaces in your output.\n\n5. **One fix block per signal** - If multiple signals, provide multiple fix blocks\n\n6. **Use context for understanding only** - The context window, imports, and enclosing function help you understand the code, but you only return the fixed edit_snippet\n\n## Example - Correct Minimal Fix\n\nInput:\n- Error: \"Need type annotation for 'cache'\" on line 173\n- Edit Snippet (error on line 4 of 7, lines 170-176):\n```\n}\n\nDEPRIORITIZE_QUERIES = {}\ncache = {}\n\n# Model configuration\nEMBEDDING_MODEL = \"text-embedding-3-large\"\n```\n(Note: The snippet ends with a newline after the last line - this MUST be preserved)\n\nCORRECT Response (only `cache = {}` changed to `cache: dict = {}`):\n```\n===== FIX FOR: app/config/tier_queries.py =====\nCONFIDENCE: 0.95\nREASONING: Added dict type annotation to cache variable to satisfy mypy\n\n```FIXED_CODE\n}\n\nDEPRIORITIZE_QUERIES = {}\ncache: dict = {}\n\n# Model configuration\nEMBEDDING_MODEL = \"text-embedding-3-large\"\n```\n\nWARNINGS: None\n===== END FIX =====\n```\n(Note: The output preserves the exact same trailing newline as the input)\n\n## Example - Preserving Trailing Whitespace\n\nInput snippet ending with blank lines (note the TWO newlines after the return statement):\n```\ndef get_clerk_settings() -> ClerkSettings:\n    # Load Clerk token validation settings from config helpers\n    return ClerkSettings.from_config()\n\n\n```\n\nCORRECT - Preserves both trailing newlines:\n```FIXED_CODE\ndef get_clerk_settings() -> ClerkSettings:\n    # Load Clerk token validation settings from config helpers\n    return ClerkSettings.from_config()\n\n\n```\n(Output MUST have the same TWO trailing newlines)\n\nWRONG - Trimming trailing newlines:\n```FIXED_CODE\ndef get_clerk_settings() -> ClerkSettings:\n    # Load Clerk token validation settings from config helpers\n    return ClerkSettings.from_config()\n```\n^ This is WRONG because it removed trailing newlines. The snippet MUST end with the same whitespace as the input.\n\n## Example - WRONG (Deleting Unrelated Content)\n\nIf the input snippet contains documentation or other code, you MUST preserve it:\n\nWRONG - Deleting unrelated lines:\n```FIXED_CODE\ncache: dict = {}\nEMBEDDING_MODEL = \"text-embedding-3-large\"\n```\n^ This is WRONG because it deleted the closing brace, blank lines, DEPRIORITIZE_QUERIES, and the comment.\n\n## Confidence Guidelines\n- High (>0.8): Simple fixes like type annotations, obvious corrections\n- Medium (0.5-0.8): Logic changes, type guards, refactoring\n- Low (<0.5): Complex changes, unclear intent - add detailed warnings\n\n\n\n## Pydocstyle Docstring Error Fixing - Specialized Guidance\n\nYou are fixing MISSING DOCSTRINGS detected by pydocstyle.\n\nRisk Level: LOW\nAdding docstrings improves code maintainability without changing behavior.\n\nSupported Error Codes:\n- D101: Missing docstring in public class\n- D102: Missing docstring in public method\n- D103: Missing docstring in public function\n\nContext Structure:\nYou will receive:\n1. **Edit Snippet**: Opening lines of the class/function (signature + ~6 lines)\n   - This is where you ADD the docstring\n   - Return the edit snippet with docstring inserted after signature\n2. **Enclosing Function/Class Context**: Full implementation (read-only)\n   - Use this to understand what to document\n   - See parameters, return values, logic, side effects\n3. **Imports**: For understanding type hints and dependencies\n\nDocstring Style - Google Format:\nWe use Google-style docstrings. Follow this format:\n\n**For Classes (D101):**\n```python\nclass ClassName:\n    \"\"\"Brief one-line summary of the class purpose.\n\n    Longer description if needed to explain the class behavior,\n    state management, or important usage notes.\n\n    Attributes:\n        attr1: Description of attribute1\n        attr2: Description of attribute2\n    \"\"\"\n```\n\n**For Functions/Methods (D102/D103):**\n```python\ndef function_name(param1: str, param2: int) -> bool:\n    \"\"\"Brief one-line summary of what the function does.\n\n    Longer description if needed to explain the algorithm,\n    side effects, or important usage notes.\n\n    Args:\n        param1: Description of param1\n        param2: Description of param2\n\n    Returns:\n        Description of return value\n\n    Raises:\n        ExceptionType: When this exception is raised\n    \"\"\"\n```\n\nDocstring Writing Guidelines:\n\n1. **First Line (Summary)**:\n   - One concise sentence describing the purpose\n   - Start with a verb (imperative mood): \"Calculate...\", \"Create...\", \"Process...\"\n   - End with a period\n   - Should be ~50-80 characters\n\n2. **Args Section** (if function has parameters):\n   - List each parameter with its purpose\n   - Use type hints from signature (don't repeat them)\n   - Explain what the parameter represents, not just its type\n\n3. **Returns Section** (if function returns a value):\n   - Describe what is returned\n   - Explain meaning, not just the type\n\n4. **Raises Section** (only if function raises exceptions):\n   - Document exceptions explicitly raised in the code\n   - Don't document every possible exception\n\n5. **Keep It Concise**:\n   - Avoid redundant information\n   - Don't just restate the function name\n   - Focus on WHY and WHAT, not HOW (code shows how)\n\nSpecial Cases:\n\n**Properties**: Often just need one line\n```python\n@property\ndef is_active(self) -> bool:\n    \"\"\"Check if user account is currently active.\"\"\"\n```\n\n**Simple setters/getters**: Can be very brief\n```python\ndef set_name(self, name: str) -> None:\n    \"\"\"Set user's display name.\"\"\"\n```\n\n**Private methods (_method)**: Still document if non-trivial\n```python\ndef _validate_email(self, email: str) -> bool:\n    \"\"\"Validate email format using regex pattern.\"\"\"\n```\n\nFixing Strategy:\n\n1. **Analyze the Code Context**:\n   - Look at the full function/class implementation\n   - Understand parameters, return values, logic\n   - Identify any exceptions raised\n   - Note any decorators (@property, @dataclass, etc.)\n\n2. **Write Concise Documentation**:\n   - Start with clear one-line summary\n   - Add Args/Returns sections if needed\n   - Keep it brief but informative\n\n3. **Insert Docstring Correctly**:\n   - Place immediately after class/function signature\n   - Use triple quotes (\"\"\")\n   - Maintain proper indentation\n   - Add blank line after docstring (if more code follows)\n\n4. **Preserve Everything Else**:\n   - Don't modify decorators\n   - Don't change function signature\n   - Don't alter implementation\n   - Only ADD the docstring\n\nConfidence Guidelines:\n- High (>0.8): Simple functions with clear purpose from signature\n- Medium (0.5-0.8): Complex functions, multiple parameters\n- Low (<0.5): Unclear purpose, needs domain knowledge\n\nNEVER do these:\n\u274c Change function signature or implementation\n\u274c Remove or modify decorators\n\u274c Add type hints (they should already be there)\n\u274c Reformat unrelated code\n\u274c Write vague docstrings like \"This function does stuff\"\n\u274c Copy the function name into the docstring without adding value\n\nRemember: You're only adding documentation. The code behavior must not change.\nYour edit snippet should be IDENTICAL except for the added docstring.\n",
+    "user_prompt": "Tool: pydocstyle\nSignal Type: docstring\nNumber of Signals: 4\n\n============================================================\nSIGNAL 1\n============================================================\n\n## Error Information\n- File: authentication/clerk.py\n- Message: Missing docstring in public method\n- Rule Code: D102\n- Severity: low\n- Location: Line 45, Column 0\n\n## Edit Snippet (FIX AND RETURN THIS)\nLines 43-48 (error on line 3 of 6)\n```python\n\n@classmethod\ndef from_config(cls) -> \"ClerkSettings\":\n    jwks_url = get_clerk_jwks_url()\n    issuer = get_clerk_issuer()\n    audience = get_clerk_audience()\n\n```\n\n## Context Window (for understanding, DO NOT return)\nLines 15-75\n```python\nfrom jwcrypto import jwk as jwcrypto_jwk\n\nfrom common.utils.config import (\n    get_clerk_audience,\n    get_clerk_issuer,\n    get_clerk_jwks_url,\n    get_lp_clerk_audience,\n    get_lp_clerk_issuer,\n    get_lp_clerk_jwks_url,\n)\n\nlogger = logging.getLogger(__name__)\n\n\nclass ClerkTokenError(RuntimeError):\n    \"\"\"Raised when a Clerk token fails validation.\"\"\"\n\n\nclass ClerkConfigurationError(ClerkTokenError):\n    \"\"\"Raised when mandatory Clerk configuration values are missing.\"\"\"\n\n\n@dataclass(frozen=True)\nclass ClerkSettings:\n    jwks_url: str\n    issuer: str\n    audience: Optional[str] = None\n    cache_ttl_seconds: int = 300\n\n    @classmethod\n    def from_config(cls) -> \"ClerkSettings\":\n        jwks_url = get_clerk_jwks_url()\n        issuer = get_clerk_issuer()\n        audience = get_clerk_audience()\n\n        missing = [name for name, value in (\n            (\"CLERK_JWKS_URL\", jwks_url),\n            (\"CLERK_ISSUER\", issuer),\n        ) if not value]\n        if missing:\n            raise ClerkConfigurationError(\n                f\"Missing Clerk configuration value(s): {', '.join(missing)}\"\n            )\n\n        return cls(jwks_url=jwks_url, issuer=issuer, audience=audience)\n\n\ndef get_clerk_settings() -> ClerkSettings:\n    \"\"\"Load Clerk token validation settings from config helpers.\"\"\"\n    return ClerkSettings.from_config()\n\n\ndef get_lp_clerk_settings() -> ClerkSettings:\n    jwks_url = get_lp_clerk_jwks_url()\n    issuer = get_lp_clerk_issuer()\n    audience = get_lp_clerk_audience()\n\n    missing = [name for name, value in (\n        (\"LP_CLERK_JWKS_URL\", jwks_url),\n        (\"LP_CLERK_ISSUER\", issuer),\n    ) if not value]\n\n```\n\n## Enclosing Function\nLines 43-61\n```python\n\n    @classmethod\n    def from_config(cls) -> \"ClerkSettings\":\n        jwks_url = get_clerk_jwks_url()\n        issuer = get_clerk_issuer()\n        audience = get_clerk_audience()\n\n        missing = [name for name, value in (\n            (\"CLERK_JWKS_URL\", jwks_url),\n            (\"CLERK_ISSUER\", issuer),\n        ) if not value]\n        if missing:\n            raise ClerkConfigurationError(\n                f\"Missing Clerk configuration value(s): {', '.join(missing)}\"\n            )\n\n        return cls(jwks_url=jwks_url, issuer=issuer, audience=audience)\n\n\n\n```\n\n\n============================================================\nSIGNAL 2\n============================================================\n\n## Error Information\n- File: authentication/clerk.py\n- Message: Missing docstring in public function\n- Rule Code: D103\n- Severity: low\n- Location: Line 67, Column 0\n\n## Edit Snippet (FIX AND RETURN THIS)\nLines 65-70 (error on line 3 of 6)\n```python\n\n\ndef get_lp_clerk_settings() -> ClerkSettings:\n    jwks_url = get_lp_clerk_jwks_url()\n    issuer = get_lp_clerk_issuer()\n    audience = get_lp_clerk_audience()\n\n```\n\n## Context Window (for understanding, DO NOT return)\nLines 37-97\n```python\n@dataclass(frozen=True)\nclass ClerkSettings:\n    jwks_url: str\n    issuer: str\n    audience: Optional[str] = None\n    cache_ttl_seconds: int = 300\n\n    @classmethod\n    def from_config(cls) -> \"ClerkSettings\":\n        jwks_url = get_clerk_jwks_url()\n        issuer = get_clerk_issuer()\n        audience = get_clerk_audience()\n\n        missing = [name for name, value in (\n            (\"CLERK_JWKS_URL\", jwks_url),\n            (\"CLERK_ISSUER\", issuer),\n        ) if not value]\n        if missing:\n            raise ClerkConfigurationError(\n                f\"Missing Clerk configuration value(s): {', '.join(missing)}\"\n            )\n\n        return cls(jwks_url=jwks_url, issuer=issuer, audience=audience)\n\n\ndef get_clerk_settings() -> ClerkSettings:\n    \"\"\"Load Clerk token validation settings from config helpers.\"\"\"\n    return ClerkSettings.from_config()\n\n\ndef get_lp_clerk_settings() -> ClerkSettings:\n    jwks_url = get_lp_clerk_jwks_url()\n    issuer = get_lp_clerk_issuer()\n    audience = get_lp_clerk_audience()\n\n    missing = [name for name, value in (\n        (\"LP_CLERK_JWKS_URL\", jwks_url),\n        (\"LP_CLERK_ISSUER\", issuer),\n    ) if not value]\n    if missing:\n        raise ClerkConfigurationError(\n            f\"Missing LP Clerk configuration value(s): {', '.join(missing)}\"\n        )\n\n    return ClerkSettings(jwks_url=jwks_url, issuer=issuer, audience=audience)\n\n\n_JWKS_CACHE: Dict[str, Dict[str, Any]] = {}\n\n\ndef _fetch_jwks(\n    settings: ClerkSettings,\n    *,\n    http_get: Optional[Callable[[str], Dict[str, Any]]] = None,\n) -> Dict[str, Any]:\n    \"\"\"Fetch Clerk JWKS document with naive in-memory caching.\"\"\"\n    now = time.time()\n\n    cache_entry = _JWKS_CACHE.get(settings.jwks_url)\n    if cache_entry and cache_entry[\"expires_at\"] > now:\n        return cache_entry[\"payload\"]\n\n```\n\n## Enclosing Function\nLines 65-83\n```python\n\n\ndef get_lp_clerk_settings() -> ClerkSettings:\n    jwks_url = get_lp_clerk_jwks_url()\n    issuer = get_lp_clerk_issuer()\n    audience = get_lp_clerk_audience()\n\n    missing = [name for name, value in (\n        (\"LP_CLERK_JWKS_URL\", jwks_url),\n        (\"LP_CLERK_ISSUER\", issuer),\n    ) if not value]\n    if missing:\n        raise ClerkConfigurationError(\n            f\"Missing LP Clerk configuration value(s): {', '.join(missing)}\"\n        )\n\n    return ClerkSettings(jwks_url=jwks_url, issuer=issuer, audience=audience)\n\n\n\n```\n\n\n============================================================\nSIGNAL 3\n============================================================\n\n## Error Information\n- File: ria/services/query_service.py\n- Message: Missing docstring in public method\n- Rule Code: D102\n- Severity: low\n- Location: Line 83, Column 0\n\n## Edit Snippet (FIX AND RETURN THIS)\nLines 81-94 (error on line 3 of 14)\n```python\n\n@staticmethod\nasync def get_ria_activity(\n    user_id: Optional[str] = None,\n    search_id: Optional[str] = None,\n    activity_type: Optional[str] = None,\n    from_date: Optional[datetime] = None,\n    to_date: Optional[datetime] = None,\n    limit: int = 50,\n    offset: int = 0\n) -> Dict[str, Any]:\n    try:\n        # Build query filters\n        filters = {}\n\n```\n\n## Context Window (for understanding, DO NOT return)\nLines 53-113\n```python\n        \"\"\"\n        try:\n            activity = await RIAUserActivity.objects.acreate(\n                user_id=user_id,\n                session_id=session_id,\n                activity_type=activity_type,\n                search_id=search_id,\n                search_params=search_params,\n                search_timestamp=search_timestamp,\n                company_crd=company_crd,\n                company_name=company_name,\n                company_action=company_action,\n                ip_address=ip_address,\n            )\n            \n            logger.info(\n                f\"Stored RIA activity: {activity_type} for user {user_id}, activity_id: {activity.id}\",\n                extra={\"activity_id\": activity.id, \"user_id\": user_id, \"activity_type\": activity_type}\n            )\n            return activity.id\n            \n        except Exception as e:\n            logger.error(\n                f\"Failed to store RIA activity: {str(e)}\",\n                extra={\"user_id\": user_id, \"activity_type\": activity_type},\n                exc_info=True\n            )\n            raise\n\n    @staticmethod\n    async def get_ria_activity(\n        user_id: Optional[str] = None,\n        search_id: Optional[str] = None,\n        activity_type: Optional[str] = None,\n        from_date: Optional[datetime] = None,\n        to_date: Optional[datetime] = None,\n        limit: int = 50,\n        offset: int = 0\n    ) -> Dict[str, Any]:\n        try:\n            # Build query filters\n            filters = {}\n            \n            if user_id:\n                filters['user_id'] = user_id\n            if search_id:\n                filters['search_id'] = search_id\n            if activity_type:\n                filters['activity_type'] = activity_type\n            if from_date:\n                filters['created_at__gte'] = from_date\n            if to_date:\n                filters['created_at__lte'] = to_date\n            \n            # Get total count\n            total_count = await RIAUserActivity.objects.filter(**filters).acount()\n            \n            # Get paginated results\n            queryset = RIAUserActivity.objects.filter(**filters).order_by('search_id', 'created_at')\n            records = []\n            \n\n```\n\n## Imports\n```python\n\"\"\"\nQuery Service\n\nThis service handles all database operations for RIA using Django ORM.\nReplaces asyncpg database calls with Django ORM queries.\n\"\"\"\n\nfrom typing import Optional, Dict, Any, List\nfrom datetime import datetime\n\nfrom django.db import transaction\nfrom django.utils import timezone\n\nfrom ria.models import RIAUserActivity\nfrom common.utils.logging_config import get_logger\n\n\n```\n\n## Enclosing Function\nLines 81-148\n```python\n\n    @staticmethod\n    async def get_ria_activity(\n        user_id: Optional[str] = None,\n        search_id: Optional[str] = None,\n        activity_type: Optional[str] = None,\n        from_date: Optional[datetime] = None,\n        to_date: Optional[datetime] = None,\n        limit: int = 50,\n        offset: int = 0\n    ) -> Dict[str, Any]:\n        try:\n            # Build query filters\n            filters = {}\n            \n            if user_id:\n                filters['user_id'] = user_id\n            if search_id:\n                filters['search_id'] = search_id\n            if activity_type:\n                filters['activity_type'] = activity_type\n            if from_date:\n                filters['created_at__gte'] = from_date\n            if to_date:\n                filters['created_at__lte'] = to_date\n            \n            # Get total count\n            total_count = await RIAUserActivity.objects.filter(**filters).acount()\n            \n            # Get paginated results\n            queryset = RIAUserActivity.objects.filter(**filters).order_by('search_id', 'created_at')\n            records = []\n            \n            async for activity in queryset[offset:offset + limit]:\n                records.append({\n                    \"id\": activity.id,\n                    \"user_id\": activity.user_id,\n                    \"session_id\": activity.session_id,\n                    \"activity_type\": activity.activity_type,\n                    \"search_id\": activity.search_id,\n                    \"search_params\": activity.search_params,\n                    \"search_timestamp\": activity.search_timestamp.isoformat() if activity.search_timestamp else None,\n                    \"company_crd\": activity.company_crd,\n                    \"company_name\": activity.company_name,\n                    \"company_action\": activity.company_action,\n                    \"ip_address\": activity.ip_address,\n                    \"created_at\": activity.created_at.isoformat() if activity.created_at else None,\n                })\n            \n            return {\n                \"records\": records,\n                \"total_count\": total_count,\n                \"limit\": limit,\n                \"offset\": offset\n            }\n            \n        except Exception as e:\n            logger.error(\n                f\"Failed to get RIA activity: {str(e)}\",\n                extra={\n                    \"user_id\": user_id,\n                    \"search_id\": search_id,\n                    \"activity_type\": activity_type\n                },\n                exc_info=True\n            )\n            raise\n\n\n```\n\n\n============================================================\nSIGNAL 4\n============================================================\n\n## Error Information\n- File: ria/views.py\n- Message: Missing docstring in public class\n- Rule Code: D101\n- Severity: low\n- Location: Line 250, Column 0\n\n## Edit Snippet (FIX AND RETURN THIS)\nLines 248-253 (error on line 3 of 6)\n```python\n\n\nclass RIACompanyDetailView(AsyncAPIView):\n    permission_classes = [IsAuthenticated]\n    \n    async def get(self, request: Request, crd: int):\n\n```\n\n## Context Window (for understanding, DO NOT return)\nLines 220-280\n```python\n        \n        try:\n            # Use SearchService for comprehensive search\n            search_service = SearchService()\n            result = search_service.search_companies(**search_params)\n            \n            # Track activity\n            search_id = generate_search_id()\n            await track_ria_activity(\n                request=request,\n                activity_type='search',\n                search_id=search_id,\n                search_params=format_search_params_for_storage(search_params),\n                search_timestamp=datetime.now(),\n            )\n            \n            # The result from SearchService already has the correct structure\n            # Just validate and return\n            response_serializer = RIACompanyLookupResponseSerializer(data=result)\n            response_serializer.is_valid()\n            \n            return Response(response_serializer.data, status=status.HTTP_200_OK)\n            \n        except ValidationError:\n            raise\n        except Exception as e:\n            logger.error(f\"Failed to perform company lookup: {str(e)}\", exc_info=True)\n            raise APIException(detail=f\"Failed to perform company lookup: {str(e)}\")\n\n\nclass RIACompanyDetailView(AsyncAPIView):\n    permission_classes = [IsAuthenticated]\n    \n    async def get(self, request: Request, crd: int):\n        \"\"\"Handle GET request for company details.\"\"\"\n        logger.info(f\"RIA company detail request for CRD: {crd}\")\n        \n        try:\n            index_cache = get_index_cache()\n            df = index_cache.load()\n            logger.info(f\"Loaded index data for CRD {crd}: {df.height} rows\")\n        except Exception as e:\n            logger.error(f\"Failed to load index data for CRD {crd}: {str(e)}\", exc_info=True)\n            raise APIException(detail=f\"Failed to load index data: {str(e)}\")\n        \n        ensure_columns(df, [CRD_COLUMN])\n        company_df = df.filter(pl.col(CRD_COLUMN).cast(pl.Int64, strict=False) == crd)\n        \n        if company_df.is_empty():\n            logger.warning(f\"CRD {crd} not found in index\")\n            raise NotFound(detail=\"CRD not found in latest index\")\n        \n        index_row = company_df.head(1).to_dicts()[0]\n        \n        try:\n            company_service = CompanyService()\n            trends = company_service.load_trends_json(crd)\n            logger.info(f\"Loaded trends for CRD {crd}\")\n        except ValueError as e:\n            logger.warning(f\"Trends not found for CRD {crd}: {str(e)}\")\n            trends = {}\n\n```\n\n## Imports\n```python\n\"\"\"\nDjango REST Framework views for RIA API.\n\nConverted from FastAPI routes in prospecting_api.py.\nAll views use class-based approach with Django async support.\n\"\"\"\n\nimport json\nimport io\nfrom datetime import datetime\nfrom typing import Dict, Any, Optional\n\nimport boto3\nimport polars as pl\nfrom botocore.exceptions import ClientError\nfrom django.http import StreamingHttpResponse, FileResponse\nfrom rest_framework.views import APIView\nfrom rest_framework.response import Response\nfrom rest_framework import status\nfrom rest_framework.permissions import IsAuthenticated\nfrom authentication.permissions import IsAdmin\nfrom rest_framework.exceptions import NotFound, PermissionDenied, ValidationError, APIException\nfrom rest_framework.request import Request\nfrom common.views import AsyncAPIView\n\nfrom ria.serializers import (\n\n```\n\n## Class Definition\nLines 248-250\n```python\n\n\nclass RIACompanyDetailView(AsyncAPIView):\n\n```\n\n\nPlease provide fixes for the above signals using the specified response format."
+  },
+  "llm_response": [
+    "===== FIX FOR: authentication/clerk.py =====\n",
+    "CONFIDENCE: 0.9\n",
+    "REASONING: Added docstring for classmethod that creates ClerkSettings from configuration values with validation\n",
+    "\n",
+    "```FIXED_CODE\n",
+    "\n",
+    "@classmethod\n",
+    "def from_config(cls) -> \"ClerkSettings\":\n",
+    "    \"\"\"Create ClerkSettings instance from configuration values.\n",
+    "    \n",
+    "    Loads Clerk authentication settings from environment configuration\n",
+    "    and validates that required values are present.\n",
+    "    \n",
+    "    Returns:\n",
+    "        ClerkSettings: Configured settings instance\n",
+    "        \n",
+    "    Raises:\n",
+    "        ClerkConfigurationError: If required configuration values are missing\n",
+    "    \"\"\"\n",
+    "    jwks_url = get_clerk_jwks_url()\n",
+    "    issuer = get_clerk_issuer()\n",
+    "    audience = get_clerk_audience()\n",
+    "\n",
+    "```\n",
+    "\n",
+    "WARNINGS: None\n",
+    "===== END FIX =====\n",
+    "\n",
+    "===== FIX FOR: authentication/clerk.py =====\n",
+    "CONFIDENCE: 0.9\n",
+    "REASONING: Added docstring for function that creates LP Clerk settings with validation\n",
+    "\n",
+    "```FIXED_CODE\n",
+    "\n",
+    "\n",
+    "def get_lp_clerk_settings() -> ClerkSettings:\n",
+    "    \"\"\"Load LP Clerk token validation settings from configuration.\n",
+    "    \n",
+    "    Creates ClerkSettings instance using LP-specific configuration values\n",
+    "    and validates that required settings are present.\n",
+    "    \n",
+    "    Returns:\n",
+    "        ClerkSettings: Configured LP Clerk settings instance\n",
+    "        \n",
+    "    Raises:\n",
+    "        ClerkConfigurationError: If required LP configuration values are missing\n",
+    "    \"\"\"\n",
+    "    jwks_url = get_lp_clerk_jwks_url()\n",
+    "    issuer = get_lp_clerk_issuer()\n",
+    "    audience = get_lp_clerk_audience()\n",
+    "\n",
+    "```\n",
+    "\n",
+    "WARNINGS: None\n",
+    "===== END FIX =====\n",
+    "\n",
+    "===== FIX FOR: ria/services/query_service.py =====\n",
+    "CONFIDENCE: 0.85\n",
+    "REASONING: Added docstring for async method that retrieves RIA activity records with filtering and pagination\n",
+    "\n",
+    "```FIXED_CODE\n",
+    "\n",
+    "@staticmethod\n",
+    "async def get_ria_activity(\n",
+    "    user_id: Optional[str] = None,\n",
+    "    search_id: Optional[str] = None,\n",
+    "    activity_type: Optional[str] = None,\n",
+    "    from_date: Optional[datetime] = None,\n",
+    "    to_date: Optional[datetime] = None,\n",
+    "    limit: int = 50,\n",
+    "    offset: int = 0\n",
+    ") -> Dict[str, Any]:\n",
+    "    \"\"\"Retrieve RIA user activity records with optional filtering and pagination.\n",
+    "    \n",
+    "    Queries the RIAUserActivity model with optional filters and returns\n",
+    "    paginated results with total count.\n",
+    "    \n",
+    "    Args:\n",
+    "        user_id: Filter by specific user ID\n",
+    "        search_id: Filter by specific search ID\n",
+    "        activity_type: Filter by activity type\n",
+    "        from_date: Filter records created on or after this date\n",
+    "        to_date: Filter records created on or before this date\n",
+    "        limit: Maximum number of records to return\n",
+    "        offset: Number of records to skip for pagination\n",
+    "        \n",
+    "    Returns:\n",
+    "        Dict containing records list, total_count, limit, and offset\n",
+    "        \n",
+    "    Raises:\n",
+    "        Exception: If database query fails\n",
+    "    \"\"\"\n",
+    "    try:\n",
+    "        # Build query filters\n",
+    "        filters = {}\n",
+    "\n",
+    "```\n",
+    "\n",
+    "WARNINGS: None\n",
+    "===== END FIX =====\n",
+    "\n",
+    "===== FIX FOR: ria/views.py =====\n",
+    "CONFIDENCE: 0.9\n",
+    "REASONING: Added docstring for Django REST Framework view class that handles RIA company detail requests\n",
+    "\n",
+    "```FIXED_CODE\n",
+    "\n",
+    "\n",
+    "class RIACompanyDetailView(AsyncAPIView):\n",
+    "    \"\"\"API view for retrieving detailed information about RIA companies.\n",
+    "    \n",
+    "    Provides GET endpoint to fetch company details by CRD number,\n",
+    "    including index data and trends information.\n",
+    "    \"\"\"\n",
+    "    permission_classes = [IsAuthenticated]\n",
+    "    \n",
+    "    async def get(self, request: Request, crd: int):\n",
+    "\n",
+    "```\n",
+    "\n",
+    "WARNINGS: None\n",
+    "===== END FIX ====="
+  ]
+}

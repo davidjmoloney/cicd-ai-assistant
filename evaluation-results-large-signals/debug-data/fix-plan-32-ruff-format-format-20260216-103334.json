@@ -1,0 +1,77 @@
+{
+  "group_tool_id": "ruff-format",
+  "group_signal_type": "format",
+  "file_edits": [
+    {
+      "file_path": "ria/views.py",
+      "reasoning": "Auto-applied format fixes from ruff-format",
+      "confidence": 1.0,
+      "signal_errors": [],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 249,
+              "column": 1
+            },
+            "end": {
+              "row": 260,
+              "column": 1
+            }
+          },
+          "content": "\nclass RIACompanyDetailView(AsyncAPIView):\n    permission_classes = [IsAuthenticated]\n\n    async def get(self, request: Request, crd: int):\n        \"\"\"Handle GET request for company details.\"\"\"\n        logger.info(f\"RIA company detail request for CRD: {crd}\")\n\n        try:\n            index_cache = get_index_cache()\n            df = index_cache.load()\n",
+          "description": "Apply 4 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 318,
+              "column": 1
+            },
+            "end": {
+              "row": 347,
+              "column": 1
+            }
+          },
+          "content": "        }\n        response_serializer = RIACompanyDetailSerializer(data=response_data)\n        response_serializer.is_valid()\n\n        return Response(response_serializer.data, status=status.HTTP_200_OK)\n\n\nclass RIAPdfListView(AsyncAPIView):\n    \"\"\"GET /ria/company/{crd}/pdfs - List all available PDFs for a specific CRD.\"\"\"\n\n    permission_classes = [IsAuthenticated]\n\n    async def get(self, request: Request, crd: int):\n        \"\"\"Handle GET request for PDF list.\"\"\"\n        logger.info(f\"PDF list request for CRD: {crd}\")\n\n        try:\n            company_service = CompanyService()\n            pdfs = company_service.get_company_pdfs(crd)\n            logger.info(f\"Found {len(pdfs)} PDF records for CRD {crd}\")\n\n            return Response({\"crd\": crd, \"pdf_count\": len(pdfs), \"pdfs\": pdfs}, status=status.HTTP_200_OK)\n\n        except Exception as e:\n            logger.error(f\"Failed to list PDFs for CRD {crd}: {str(e)}\", exc_info=True)\n            raise APIException(detail=f\"Failed to list PDFs: {str(e)}\")\n",
+          "description": "Apply 4 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 474,
+              "column": 1
+            },
+            "end": {
+              "row": 493,
+              "column": 1
+            }
+          },
+          "content": "\nclass RIALocationMetadataView(AsyncAPIView):\n    permission_classes = [IsAuthenticated]\n\n    async def get(self, request: Request):\n        \"\"\"Handle GET request for location metadata.\"\"\"\n        logger.info(\"RIA location metadata request\")\n\n        try:\n            location_cache = get_location_cache()\n            location_data = location_cache.get_location_data()\n            logger.info(f\"Returning {len(location_data['countries'])} countries and {len(location_data['cities'])} cities\")\n\n            serializer = RIALocationMetadataSerializer(data=location_data)\n            serializer.is_valid()\n\n            return Response(serializer.data, status=status.HTTP_200_OK)\n        except Exception as e:\n            logger.error(f\"Failed to get location metadata: {str(e)}\", exc_info=True)\n",
+          "description": "Apply 4 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 580,
+              "column": 1
+            },
+            "end": {
+              "row": 638,
+              "column": 1
+            }
+          },
+          "content": "# Admin Endpoints\n# ============================================================================\n\n\nclass RIAActivityAdminView(AsyncAPIView):\n    \"\"\"GET /admin/ria/activity - Admin endpoint to retrieve RIA activity history.\"\"\"\n\n    permission_classes = [IsAuthenticated, IsAdmin]\n\n    async def get(self, request: Request):\n        \"\"\"Handle GET request for activity admin.\"\"\"\n        serializer = RIAActivityAdminSerializer(data=request.query_params)\n        serializer.is_valid(raise_exception=True)\n\n        user_id = serializer.validated_data.get(\"user_id\")\n        search_id = serializer.validated_data.get(\"search_id\")\n        activity_type = serializer.validated_data.get(\"activity_type\")\n        from_date = serializer.validated_data.get(\"from_date\")\n        to_date = serializer.validated_data.get(\"to_date\")\n        limit = serializer.validated_data.get(\"limit\", 50)\n        offset = serializer.validated_data.get(\"offset\", 0)\n\n        logger.info(f\"Admin RIA activity request: user_id={user_id}, search_id={search_id}, activity_type={activity_type}\")\n\n        try:\n            activity_data = await QueryService.get_ria_activity(\n                user_id=user_id, search_id=search_id, activity_type=activity_type, from_date=from_date, to_date=to_date, limit=limit, offset=offset\n            )\n\n            response_data = {\n                \"records\": activity_data[\"records\"],\n                \"pagination\": {\n                    \"total_count\": activity_data[\"total_count\"],\n                    \"limit\": activity_data[\"limit\"],\n                    \"offset\": activity_data[\"offset\"],\n                    \"has_more\": (activity_data[\"offset\"] + activity_data[\"limit\"]) < activity_data[\"total_count\"],\n                },\n                \"filters\": {\n                    \"user_id\": user_id,\n                    \"search_id\": search_id,\n                    \"activity_type\": activity_type,\n                    \"from_date\": from_date.isoformat() if from_date else None,\n                    \"to_date\": to_date.isoformat() if to_date else None,\n                },\n            }\n\n            response_serializer = RIAActivityListResponseSerializer(data=response_data)\n            response_serializer.is_valid()\n\n            return Response(response_serializer.data, status=status.HTTP_200_OK)\n\n        except Exception as e:\n            logger.error(f\"Failed to retrieve RIA activity: {str(e)}\", exc_info=True)\n            raise APIException(detail=f\"Failed to retrieve RIA activity: {str(e)}\")\n",
+          "description": "Apply 4 formatting change(s)"
+        }
+      ]
+    }
+  ],
+  "summary": "Auto-applied 1 format fix(es) across 1 file(s)",
+  "warnings": [],
+  "confidence": 1.0
+}

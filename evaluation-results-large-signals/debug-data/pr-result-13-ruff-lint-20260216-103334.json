@@ -1,0 +1,12 @@
+{
+  "success": true,
+  "pr_url": "https://github.com/davidjmoloney/ardessa-backend-clone-12Feb2026/pull/54",
+  "pr_number": 54,
+  "branch_name": "cicd-agent-fix/lint/20260216-104929-e2aae7",
+  "error": null,
+  "files_changed": [
+    "ria/utils/helpers.py"
+  ],
+  "skipped_fixes": [],
+  "unchanged_fixes": []
+}

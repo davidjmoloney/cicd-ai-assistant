@@ -1,0 +1,32 @@
+{
+  "group_tool_id": "ruff-format",
+  "group_signal_type": "format",
+  "file_edits": [
+    {
+      "file_path": "authentication/admin.py",
+      "reasoning": "Auto-applied format fixes from ruff-format",
+      "confidence": 1.0,
+      "signal_errors": [],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 6,
+              "column": 1
+            },
+            "end": {
+              "row": 41,
+              "column": 1
+            }
+          },
+          "content": "class UserProfileInline(admin.StackedInline):\n    model = UserProfile\n    can_delete = False\n    verbose_name_plural = \"Profile Details\"\n    fields = (\"firm_description\", \"key_differentiators\", \"key_objectives\", \"investor_profile\", \"first_name\", \"last_name\", \"created_at\", \"updated_at\")\n    readonly_fields = (\"created_at\", \"updated_at\")\n    extra = 0\n    classes = (\"collapse\",)\n",
+          "description": "Apply 1 formatting change(s)"
+        }
+      ]
+    }
+  ],
+  "summary": "Auto-applied 1 format fix(es) across 1 file(s)",
+  "warnings": [],
+  "confidence": 1.0
+}

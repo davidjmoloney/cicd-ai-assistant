@@ -1,0 +1,92 @@
+{
+  "group_tool_id": "ruff-format",
+  "group_signal_type": "format",
+  "file_edits": [
+    {
+      "file_path": "authentication/clerk.py",
+      "reasoning": "Auto-applied format fixes from ruff-format",
+      "confidence": 1.0,
+      "signal_errors": [],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 47,
+              "column": 1
+            },
+            "end": {
+              "row": 61,
+              "column": 1
+            }
+          },
+          "content": "        issuer = get_clerk_issuer()\n        audience = get_clerk_audience()\n\n        missing = [\n            name\n            for name, value in (\n                (\"CLERK_JWKS_URL\", jwks_url),\n                (\"CLERK_ISSUER\", issuer),\n            )\n            if not value\n        ]\n        if missing:\n            raise ClerkConfigurationError(f\"Missing Clerk configuration value(s): {', '.join(missing)}\")\n\n        return cls(jwks_url=jwks_url, issuer=issuer, audience=audience)\n\n",
+          "description": "Apply 5 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 69,
+              "column": 1
+            },
+            "end": {
+              "row": 83,
+              "column": 1
+            }
+          },
+          "content": "    issuer = get_lp_clerk_issuer()\n    audience = get_lp_clerk_audience()\n\n    missing = [\n        name\n        for name, value in (\n            (\"LP_CLERK_JWKS_URL\", jwks_url),\n            (\"LP_CLERK_ISSUER\", issuer),\n        )\n        if not value\n    ]\n    if missing:\n        raise ClerkConfigurationError(f\"Missing LP Clerk configuration value(s): {', '.join(missing)}\")\n\n    return ClerkSettings(jwks_url=jwks_url, issuer=issuer, audience=audience)\n\n",
+          "description": "Apply 5 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 100,
+              "column": 1
+            },
+            "end": {
+              "row": 106,
+              "column": 1
+            }
+          },
+          "content": "    if http_get is not None:\n        fetcher = http_get\n    else:\n\n        def fetcher(url: str) -> Dict[str, Any]:\n            logger.info(f\"\ud83d\udd0d Fetching JWKS from: {url}\")\n            try:\n",
+          "description": "Apply 5 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 181,
+              "column": 1
+            },
+            "end": {
+              "row": 188,
+              "column": 1
+            }
+          },
+          "content": "            # Convert empty string to None (don't verify audience)\n            audience = audience if audience else None\n        verify_aud = bool(audience)\n\n        # PyJWT decode with proper options\n        # Add leeway to handle clock skew between server and Clerk\n        claims = jwt.decode(\n",
+          "description": "Apply 5 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 207,
+              "column": 1
+            },
+            "end": {
+              "row": 211,
+              "column": 1
+            }
+          },
+          "content": "def clear_jwks_cache() -> None:\n    \"\"\"Reset the in-memory JWKS cache (useful for tests).\"\"\"\n    _JWKS_CACHE.clear()\n",
+          "description": "Apply 5 formatting change(s)"
+        }
+      ]
+    }
+  ],
+  "summary": "Auto-applied 1 format fix(es) across 1 file(s)",
+  "warnings": [],
+  "confidence": 1.0
+}

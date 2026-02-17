@@ -1,0 +1,109 @@
+{
+  "group_tool_id": "ruff",
+  "group_signal_type": "lint",
+  "file_edits": [
+    {
+      "file_path": "ria/services/search_service.py",
+      "reasoning": "Removed f-string prefix from string literal that has no placeholders",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "ria/services/search_service.py",
+          "line": 52,
+          "column": 21,
+          "message": "f-string without any placeholders",
+          "rule_code": "F541"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 50,
+              "column": 1
+            },
+            "end": {
+              "row": 54,
+              "column": 99999
+            }
+          },
+          "content": "        logger.warning(f\"\u26a0\ufe0f Dataset missing {len(missing)} columns: {', '.join(missing)}\")\n        logger.info(f\"Available columns: {len(df.columns)} total\")\n        logger.info(\"Missing columns will be handled gracefully in filters\")\n    else:\n        logger.info(f\"\u2705 All {len(required)} required columns found in dataset\")\n",
+          "description": "Removed f-string prefix from string literal that has no placeholders"
+        }
+      ]
+    },
+    {
+      "file_path": "ria/services/search_service.py",
+      "reasoning": "Renamed unused loop variable field_name to _ to indicate it's intentionally unused",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "ria/services/search_service.py",
+          "line": 82,
+          "column": 9,
+          "message": "Loop control variable `field_name` not used within loop body",
+          "rule_code": "B007"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 80,
+              "column": 1
+            },
+            "end": {
+              "row": 84,
+              "column": 99999
+            }
+          },
+          "content": "    fund_counts = []\n    \n    for _, column_name in PRIVATE_FUND_COUNT_COLUMNS.items():\n        if column_name in company_record and company_record[column_name] is not None:\n            try:\n",
+          "description": "Renamed unused loop variable field_name to _ to indicate it's intentionally unused"
+        }
+      ]
+    },
+    {
+      "file_path": "ria/services/search_service.py",
+      "reasoning": "Updated Dict to dict for modern type annotation and renamed unused loop variable field_name to _",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "ria/services/search_service.py",
+          "line": 100,
+          "column": 67,
+          "message": "Use `dict` instead of `Dict` for type annotation",
+          "rule_code": "UP006"
+        },
+        {
+          "file_path": "ria/services/search_service.py",
+          "line": 104,
+          "column": 9,
+          "message": "Loop control variable `field_name` not used within loop body",
+          "rule_code": "B007"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 98,
+              "column": 1
+            },
+            "end": {
+              "row": 106,
+              "column": 99999
+            }
+          },
+          "content": "\n\ndef get_top_3_allocations(company_record: dict[str, Any]) -> list[dict[str, Any]]:\n    \"\"\"Get top 3 SMA allocation categories by percentage for a company.\"\"\"\n    allocations = []\n    \n    for _, column_name in SMA_ALLOCATION_COLUMNS.items():\n        if column_name in company_record and company_record[column_name] is not None:\n            try:\n",
+          "description": "Updated Dict to dict for modern type annotation and renamed unused loop variable field_name to _"
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 3 file(s) for ruff signals",
+  "warnings": [],
+  "confidence": 0.9333333333333332
+}

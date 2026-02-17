@@ -1,0 +1,109 @@
+{
+  "group_tool_id": "ruff",
+  "group_signal_type": "lint",
+  "file_edits": [
+    {
+      "file_path": "ria/services/query_service.py",
+      "reasoning": "Changed Dict to dict for modern Python type annotation as required by UP006 rule",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "ria/services/query_service.py",
+          "line": 29,
+          "column": 33,
+          "message": "Use `dict` instead of `Dict` for type annotation",
+          "rule_code": "UP006"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 27,
+              "column": 1
+            },
+            "end": {
+              "row": 31,
+              "column": 99999
+            }
+          },
+          "content": "        activity_type: str,\n        search_id: Optional[str] = None,\n        search_params: Optional[dict[str, Any]] = None,\n        search_timestamp: Optional[datetime] = None,\n        company_crd: Optional[str] = None,\n",
+          "description": "Changed Dict to dict for modern Python type annotation as required by UP006 rule"
+        }
+      ]
+    },
+    {
+      "file_path": "ria/services/query_service.py",
+      "reasoning": "Changed Dict to dict for modern Python type annotation as required by UP006 rule",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "ria/services/query_service.py",
+          "line": 91,
+          "column": 10,
+          "message": "Use `dict` instead of `Dict` for type annotation",
+          "rule_code": "UP006"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 89,
+              "column": 1
+            },
+            "end": {
+              "row": 93,
+              "column": 99999
+            }
+          },
+          "content": "        limit: int = 50,\n        offset: int = 0\n    ) -> dict[str, Any]:\n        try:\n            # Build query filters\n",
+          "description": "Changed Dict to dict for modern Python type annotation as required by UP006 rule"
+        }
+      ]
+    },
+    {
+      "file_path": "ria/views.py",
+      "reasoning": "Fixed two issues: 1) Removed unused import attach_domain_column (F401), 2) Changed Dict to dict for modern Python type annotation (UP035)",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "ria/views.py",
+          "line": 45,
+          "column": 5,
+          "message": "`ria.services.search_service.attach_domain_column` imported but unused",
+          "rule_code": "F401"
+        },
+        {
+          "file_path": "ria/views.py",
+          "line": 11,
+          "column": 1,
+          "message": "`typing.Dict` is deprecated, use `dict` instead",
+          "rule_code": "UP035"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 1,
+              "column": 1
+            },
+            "end": {
+              "row": 26,
+              "column": 99999
+            }
+          },
+          "content": "\"\"\"\nDjango REST Framework views for RIA API.\n\nConverted from FastAPI routes in prospecting_api.py.\nAll views use class-based approach with Django async support.\n\"\"\"\n\nimport json\nimport io\nfrom datetime import datetime\nfrom typing import Any, Optional\n\nimport boto3\nimport polars as pl\nfrom botocore.exceptions import ClientError\nfrom django.http import StreamingHttpResponse, FileResponse\nfrom rest_framework.views import APIView\nfrom rest_framework.response import Response\nfrom rest_framework import status\nfrom rest_framework.permissions import IsAuthenticated\nfrom authentication.permissions import IsAdmin\nfrom rest_framework.exceptions import NotFound, PermissionDenied, ValidationError, APIException\nfrom rest_framework.request import Request\nfrom common.views import AsyncAPIView\n\nfrom ria.serializers import (\n",
+          "description": "Fixed two issues: 1) Removed unused import attach_domain_column (F401), 2) Changed Dict to dict for modern Python type annotation (UP035)"
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 3 file(s) for ruff signals",
+  "warnings": [],
+  "confidence": 0.9499999999999998
+}

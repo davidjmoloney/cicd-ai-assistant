@@ -1,0 +1,102 @@
+{
+  "group_tool_id": "pydocstyle",
+  "group_signal_type": "docstring",
+  "file_edits": [
+    {
+      "file_path": "ria/views.py",
+      "reasoning": "Added docstring for RIALocationMetadataView class describing its purpose as a REST API endpoint for location metadata",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "ria/views.py",
+          "line": 475,
+          "column": 0,
+          "message": "Missing docstring in public class",
+          "rule_code": "D101"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 473,
+              "column": 1
+            },
+            "end": {
+              "row": 478,
+              "column": 99999
+            }
+          },
+          "content": "\n\nclass RIALocationMetadataView(AsyncAPIView):\n    \"\"\"GET /ria/metadata/location - Get combined location metadata (countries and cities).\"\"\"\n    permission_classes = [IsAuthenticated]\n    \n    async def get(self, request: Request):\n",
+          "description": "Added docstring for RIALocationMetadataView class describing its purpose as a REST API endpoint for location metadata"
+        }
+      ]
+    },
+    {
+      "file_path": "ria/services/search_service.py",
+      "reasoning": "Added comprehensive docstring for search_companies method describing its purpose, parameters, and return value",
+      "confidence": 0.85,
+      "signal_errors": [
+        {
+          "file_path": "ria/services/search_service.py",
+          "line": 274,
+          "column": 0,
+          "message": "Missing docstring in public method",
+          "rule_code": "D102"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 272,
+              "column": 1
+            },
+            "end": {
+              "row": 317,
+              "column": 99999
+            }
+          },
+          "content": "    \n    @staticmethod\n    def search_companies(\n        name: Optional[str] = None,\n        domain: Optional[str] = None,\n        state: Optional[str] = None,\n        city: Optional[str] = None,\n        country: Optional[str] = None,\n        min_aum: Optional[float] = None,\n        max_aum: Optional[float] = None,\n        min_discretionary_aum: Optional[float] = None,\n        max_discretionary_aum: Optional[float] = None,\n        min_non_discretionary_aum: Optional[float] = None,\n        max_non_discretionary_aum: Optional[float] = None,\n        min_total_employees: Optional[int] = None,\n        max_total_employees: Optional[int] = None,\n        min_total_offices: Optional[int] = None,\n        max_total_offices: Optional[int] = None,\n        # Client type filters (Y/N)\n        individual_clients: Optional[str] = None,\n        high_net_worth_clients: Optional[str] = None,\n        banking_clients: Optional[str] = None,\n        investment_companies_clients: Optional[str] = None,\n        pension_clients: Optional[str] = None,\n        charity_clients: Optional[str] = None,\n        state_municipal_clients: Optional[str] = None,\n        investment_advisor_clients: Optional[str] = None,\n        insurance_clients: Optional[str] = None,\n        sovereign_wealth_clients: Optional[str] = None,\n        corporate_clients: Optional[str] = None,\n        # Private funds filter\n        private_funds: Optional[str] = None,\n        # Asset class filters (Y/N)\n        has_hedge_funds: Optional[str] = None,\n        has_liquidity_funds: Optional[str] = None,\n        has_pe_funds: Optional[str] = None,\n        has_real_estate_funds: Optional[str] = None,\n        has_securitized_funds: Optional[str] = None,\n        has_vc_funds: Optional[str] = None,\n        has_other_funds: Optional[str] = None,\n        limit: int = 10,\n        offset: int = 0,\n    ) -> Dict[str, Any]:\n        \"\"\"Search and filter RIA companies with intelligent fuzzy name matching.\n\n        Applies comprehensive filtering on company data including location, AUM ranges,\n        employee counts, client types, and fund types. Supports intelligent fuzzy\n        name matching with similarity scoring when name parameter is provided.\n\n        Args:\n            name: Company name for fuzzy search matching\n            domain: Exact domain match filter\n            state: Exact state match filter\n            city: Exact city match filter\n            country: Exact country match filter\n            min_aum: Minimum assets under management\n            max_aum: Maximum assets under management\n            min_discretionary_aum: Minimum discretionary AUM\n            max_discretionary_aum: Maximum discretionary AUM\n            min_non_discretionary_aum: Minimum non-discretionary AUM\n            max_non_discretionary_aum: Maximum non-discretionary AUM\n            min_total_employees: Minimum employee count\n            max_total_employees: Maximum employee count\n            min_total_offices: Minimum office count\n            max_total_offices: Maximum office count\n            individual_clients: Filter by individual clients (Y/N)\n            high_net_worth_clients: Filter by high net worth clients (Y/N)\n            banking_clients: Filter by banking clients (Y/N)\n            investment_companies_clients: Filter by investment company clients (Y/N)\n            pension_clients: Filter by pension clients (Y/N)\n            charity_clients: Filter by charity clients (Y/N)\n            state_municipal_clients: Filter by state/municipal clients (Y/N)\n            investment_advisor_clients: Filter by investment advisor clients (Y/N)\n            insurance_clients: Filter by insurance clients (Y/N)\n            sovereign_wealth_clients: Filter by sovereign wealth clients (Y/N)\n            corporate_clients: Filter by corporate clients (Y/N)\n            private_funds: Filter by private funds presence (Y/N)\n            has_hedge_funds: Filter by hedge funds presence (Y/N)\n            has_liquidity_funds: Filter by liquidity funds presence (Y/N)\n            has_pe_funds: Filter by private equity funds presence (Y/N)\n            has_real_estate_funds: Filter by real estate funds presence (Y/N)\n            has_securitized_funds: Filter by securitized funds presence (Y/N)\n            has_vc_funds: Filter by venture capital funds presence (Y/N)\n            has_other_funds: Filter by other funds presence (Y/N)\n            limit: Maximum number of results to return\n            offset: Number of results to skip for pagination\n\n        Returns:\n            Dictionary containing total matches, paginated results, pagination metadata,\n            and filter status information. Results include match scores for name searches.\n        \"\"\"\n        # Load index data\n        index_cache = get_index_cache()\n        df = index_cache.load()\n",
+          "description": "Added comprehensive docstring for search_companies method describing its purpose, parameters, and return value"
+        }
+      ]
+    },
+    {
+      "file_path": "ria/services/search_service.py",
+      "reasoning": "Added comprehensive docstring for filter_companies function describing its filtering capabilities and parameters",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "ria/services/search_service.py",
+          "line": 443,
+          "column": 0,
+          "message": "Missing docstring in public function",
+          "rule_code": "D103"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 441,
+              "column": 1
+            },
+            "end": {
+              "row": 481,
+              "column": 99999
+            }
+          },
+          "content": "\n\ndef filter_companies(\n    df: pl.DataFrame,\n    domain: Optional[str] = None,\n    state: Optional[str] = None,\n    city: Optional[str] = None,\n    country: Optional[str] = None,\n    min_aum: Optional[float] = None,\n    max_aum: Optional[float] = None,\n    min_discretionary_aum: Optional[float] = None,\n    max_discretionary_aum: Optional[float] = None,\n    min_non_discretionary_aum: Optional[float] = None,\n    max_non_discretionary_aum: Optional[float] = None,\n    min_total_employees: Optional[int] = None,\n    max_total_employees: Optional[int] = None,\n    min_total_offices: Optional[int] = None,\n    max_total_offices: Optional[int] = None,\n    individual_clients: Optional[str] = None,\n    high_net_worth_clients: Optional[str] = None,\n    banking_clients: Optional[str] = None,\n    investment_companies_clients: Optional[str] = None,\n    pension_clients: Optional[str] = None,\n    charity_clients: Optional[str] = None,\n    state_municipal_clients: Optional[str] = None,\n    investment_advisor_clients: Optional[str] = None,\n    insurance_clients: Optional[str] = None,\n    sovereign_wealth_clients: Optional[str] = None,\n    corporate_clients: Optional[str] = None,\n    private_funds: Optional[str] = None,\n    has_hedge_funds: Optional[str] = None,\n    has_liquidity_funds: Optional[str] = None,\n    has_pe_funds: Optional[str] = None,\n    has_real_estate_funds: Optional[str] = None,\n    has_securitized_funds: Optional[str] = None,\n    has_vc_funds: Optional[str] = None,\n    has_other_funds: Optional[str] = None,\n) -> pl.DataFrame:\n    \"\"\"Filter RIA companies DataFrame based on multiple criteria.\n\n    Applies comprehensive filtering including location, financial metrics,\n    client types, and fund types. Handles both string and numeric column\n    types with proper type conversion and null value handling.\n\n    Args:\n        df: Input DataFrame containing RIA company data\n        domain: Filter by exact domain match\n        state: Filter by exact state match\n        city: Filter by exact city match\n        country: Filter by exact country match\n        min_aum: Minimum assets under management threshold\n        max_aum: Maximum assets under management threshold\n        min_discretionary_aum: Minimum discretionary AUM threshold\n        max_discretionary_aum: Maximum discretionary AUM threshold\n        min_non_discretionary_aum: Minimum non-discretionary AUM threshold\n        max_non_discretionary_aum: Maximum non-discretionary AUM threshold\n        min_total_employees: Minimum employee count threshold\n        max_total_employees: Maximum employee count threshold\n        min_total_offices: Minimum office count threshold\n        max_total_offices: Maximum office count threshold\n        individual_clients: Filter by individual clients presence (Y/N)\n        high_net_worth_clients: Filter by high net worth clients presence (Y/N)\n        banking_clients: Filter by banking clients presence (Y/N)\n        investment_companies_clients: Filter by investment company clients presence (Y/N)\n        pension_clients: Filter by pension clients presence (Y/N)\n        charity_clients: Filter by charity clients presence (Y/N)\n        state_municipal_clients: Filter by state/municipal clients presence (Y/N)\n        investment_advisor_clients: Filter by investment advisor clients presence (Y/N)\n        insurance_clients: Filter by insurance clients presence (Y/N)\n        sovereign_wealth_clients: Filter by sovereign wealth clients presence (Y/N)\n        corporate_clients: Filter by corporate clients presence (Y/N)\n        private_funds: Filter by private funds presence (Y/N)\n        has_hedge_funds: Filter by hedge funds presence (Y/N)\n        has_liquidity_funds: Filter by liquidity funds presence (Y/N)\n        has_pe_funds: Filter by private equity funds presence (Y/N)\n        has_real_estate_funds: Filter by real estate funds presence (Y/N)\n        has_securitized_funds: Filter by securitized funds presence (Y/N)\n        has_vc_funds: Filter by venture capital funds presence (Y/N)\n        has_other_funds: Filter by other funds presence (Y/N)\n\n    Returns:\n        Filtered DataFrame containing only companies matching all specified criteria.\n    \"\"\"\n    filtered_df = df\n    \n    # Location filters (exact match)\n",
+          "description": "Added comprehensive docstring for filter_companies function describing its filtering capabilities and parameters"
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 3 file(s) for pydocstyle signals",
+  "warnings": [],
+  "confidence": 0.8833333333333333
+}

@@ -1,0 +1,36 @@
+============================================================
+CI/CD AI Assistant — Run Report
+============================================================
+
+Start time : 2026-02-16T10:33:34.274932+00:00
+End time   : 2026-02-16T11:02:30.876643+00:00
+Duration   : 1736.6s
+
+── Parsing ──────────────────────────────────────────────
+Artifacts found  : 4
+Artifacts parsed : 4
+Total signals    : 95
+  docstring           : 15
+  format              : 10
+  lint                : 45
+  type_check          : 25
+
+── Fix Planning ─────────────────────────────────────────
+Signal groups    : 33
+Fix plans OK     : 33
+Fix plans failed : 0
+LLM calls        : 23
+Direct fixes     : 10
+
+── PR Generation ────────────────────────────────────────
+PRs created      : 32
+PRs failed       : 1
+Signals fixed    : 53
+  docstring           : 12
+  format              : 10
+  lint                : 22
+  type_check          : 9
+Signals skipped  : 0
+Signals unchanged: 2
+
+============================================================

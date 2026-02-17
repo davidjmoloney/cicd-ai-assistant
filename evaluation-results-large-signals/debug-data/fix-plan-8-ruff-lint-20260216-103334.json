@@ -1,0 +1,133 @@
+{
+  "group_tool_id": "ruff",
+  "group_signal_type": "lint",
+  "file_edits": [
+    {
+      "file_path": "authentication/utils.py",
+      "reasoning": "Modernizing type annotation from Optional[str] to str | None as recommended by UP045",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "authentication/utils.py",
+          "line": 6,
+          "column": 48,
+          "message": "Use `X | None` for type annotations",
+          "rule_code": "UP045"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 1,
+              "column": 1
+            },
+            "end": {
+              "row": 13,
+              "column": 99999
+            }
+          },
+          "content": "\"\"\"Helper functions for extracting data from Clerk JWT claims.\"\"\"\n\nfrom typing import Optional\n\n\ndef extract_email_from_claims(claims: dict) -> str | None:\n    \"\"\"Extract email from Clerk claims.\"\"\"\n    email = claims.get(\"email\")\n    if email:\n        return email.lower().strip()\n    # Clerk may nest email inside email_addresses array\n    email_addresses = claims.get(\"email_addresses\") or []\n    for entry in email_addresses:\n",
+          "description": "Modernizing type annotation from Optional[str] to str | None as recommended by UP045"
+        }
+      ]
+    },
+    {
+      "file_path": "authentication/utils.py",
+      "reasoning": "Modernizing type annotation from Optional[int] to int | None as recommended by UP045",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "authentication/utils.py",
+          "line": 32,
+          "column": 57,
+          "message": "Use `X | None` for type annotations",
+          "rule_code": "UP045"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 25,
+              "column": 1
+            },
+            "end": {
+              "row": 39,
+              "column": 99999
+            }
+          },
+          "content": "    if isinstance(roles, list):\n        return [str(role) for role in roles]\n    if isinstance(roles, str):\n        return [roles]\n    return []\n\n\ndef extract_daily_override_from_claims(claims: dict) -> int | None:\n    metadata = claims.get(\"private_metadata\") or {}\n    override = metadata.get(\"dailyLimitOverride\")\n    try:\n        return int(override) if override is not None else None\n    except (TypeError, ValueError):\n        return None\n\n",
+          "description": "Modernizing type annotation from Optional[int] to int | None as recommended by UP045"
+        }
+      ]
+    },
+    {
+      "file_path": "ria/utils/helpers.py",
+      "reasoning": "Modernizing type annotation from Optional[dict] to dict | None as recommended by UP045",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "ria/utils/helpers.py",
+          "line": 22,
+          "column": 40,
+          "message": "Use `X | None` for type annotations",
+          "rule_code": "UP045"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 15,
+              "column": 1
+            },
+            "end": {
+              "row": 29,
+              "column": 99999
+            }
+          },
+          "content": "\n\ndef generate_search_id() -> str:\n    \"\"\"Generate a unique search ID for tracking related activities.\"\"\"\n    return f\"search_{int(time.time() * 1000)}_{uuid.uuid4().hex[:9]}\"\n\n\ndef extract_search_context(request) -> dict | None:\n    # Django uses request.META for headers (prefixed with HTTP_)\n    # FastAPI uses request.headers\n    search_context_header = None\n    \n    # Try Django-style header access\n    if hasattr(request, 'META'):\n        search_context_header = request.META.get('HTTP_X_SEARCH_CONTEXT')\n",
+          "description": "Modernizing type annotation from Optional[dict] to dict | None as recommended by UP045"
+        }
+      ]
+    },
+    {
+      "file_path": "ria/services/company_service.py",
+      "reasoning": "Adding 'from e' to raise statements to properly chain exceptions as required by B904",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "ria/services/company_service.py",
+          "line": 97,
+          "column": 13,
+          "message": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+          "rule_code": "B904"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 90,
+              "column": 1
+            },
+            "end": {
+              "row": 104,
+              "column": 99999
+            }
+          },
+          "content": "    try:\n        # Download trend data from S3\n        response = s3_client.get_object(Bucket=bucket, Key=s3_path)\n        content = response['Body'].read().decode('utf-8')\n        return json.loads(content)\n    except ClientError as e:\n        if e.response['Error']['Code'] == 'NoSuchKey':\n            raise ValueError(f\"Trend data not found for CRD {crd}\") from e\n        else:\n            raise RuntimeError(f\"Failed to load trend data: {str(e)}\") from e\n    except json.JSONDecodeError as e:\n        raise ValueError(f\"Invalid trend data format: {str(e)}\") from e\n\n\ndef pdf_records_for_crd(crd: int) -> List[Dict[str, Any]]:\n",
+          "description": "Adding 'from e' to raise statements to properly chain exceptions as required by B904"
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 4 file(s) for ruff signals",
+  "warnings": [],
+  "confidence": 0.9374999999999999
+}

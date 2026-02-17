@@ -1,0 +1,133 @@
+{
+  "group_tool_id": "pydocstyle",
+  "group_signal_type": "docstring",
+  "file_edits": [
+    {
+      "file_path": "authentication/clerk.py",
+      "reasoning": "Added docstring for classmethod that creates ClerkSettings from configuration values with validation",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "authentication/clerk.py",
+          "line": 45,
+          "column": 0,
+          "message": "Missing docstring in public method",
+          "rule_code": "D102"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 43,
+              "column": 1
+            },
+            "end": {
+              "row": 48,
+              "column": 99999
+            }
+          },
+          "content": "\n    @classmethod\n    def from_config(cls) -> \"ClerkSettings\":\n        \"\"\"Create ClerkSettings instance from configuration values.\n    \n        Loads Clerk authentication settings from environment configuration\n        and validates that required values are present.\n    \n        Returns:\n            ClerkSettings: Configured settings instance\n        \n        Raises:\n            ClerkConfigurationError: If required configuration values are missing\n        \"\"\"\n        jwks_url = get_clerk_jwks_url()\n        issuer = get_clerk_issuer()\n        audience = get_clerk_audience()\n",
+          "description": "Added docstring for classmethod that creates ClerkSettings from configuration values with validation"
+        }
+      ]
+    },
+    {
+      "file_path": "authentication/clerk.py",
+      "reasoning": "Added docstring for function that creates LP Clerk settings with validation",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "authentication/clerk.py",
+          "line": 67,
+          "column": 0,
+          "message": "Missing docstring in public function",
+          "rule_code": "D103"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 65,
+              "column": 1
+            },
+            "end": {
+              "row": 70,
+              "column": 99999
+            }
+          },
+          "content": "\n\ndef get_lp_clerk_settings() -> ClerkSettings:\n    \"\"\"Load LP Clerk token validation settings from configuration.\n    \n    Creates ClerkSettings instance using LP-specific configuration values\n    and validates that required settings are present.\n    \n    Returns:\n        ClerkSettings: Configured LP Clerk settings instance\n        \n    Raises:\n        ClerkConfigurationError: If required LP configuration values are missing\n    \"\"\"\n    jwks_url = get_lp_clerk_jwks_url()\n    issuer = get_lp_clerk_issuer()\n    audience = get_lp_clerk_audience()\n",
+          "description": "Added docstring for function that creates LP Clerk settings with validation"
+        }
+      ]
+    },
+    {
+      "file_path": "ria/services/query_service.py",
+      "reasoning": "Added docstring for async method that retrieves RIA activity records with filtering and pagination",
+      "confidence": 0.85,
+      "signal_errors": [
+        {
+          "file_path": "ria/services/query_service.py",
+          "line": 83,
+          "column": 0,
+          "message": "Missing docstring in public method",
+          "rule_code": "D102"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 81,
+              "column": 1
+            },
+            "end": {
+              "row": 94,
+              "column": 99999
+            }
+          },
+          "content": "\n    @staticmethod\n    async def get_ria_activity(\n        user_id: Optional[str] = None,\n        search_id: Optional[str] = None,\n        activity_type: Optional[str] = None,\n        from_date: Optional[datetime] = None,\n        to_date: Optional[datetime] = None,\n        limit: int = 50,\n        offset: int = 0\n    ) -> Dict[str, Any]:\n        \"\"\"Retrieve RIA user activity records with optional filtering and pagination.\n    \n        Queries the RIAUserActivity model with optional filters and returns\n        paginated results with total count.\n    \n        Args:\n            user_id: Filter by specific user ID\n            search_id: Filter by specific search ID\n            activity_type: Filter by activity type\n            from_date: Filter records created on or after this date\n            to_date: Filter records created on or before this date\n            limit: Maximum number of records to return\n            offset: Number of records to skip for pagination\n        \n        Returns:\n            Dict containing records list, total_count, limit, and offset\n        \n        Raises:\n            Exception: If database query fails\n        \"\"\"\n        try:\n            # Build query filters\n            filters = {}\n",
+          "description": "Added docstring for async method that retrieves RIA activity records with filtering and pagination"
+        }
+      ]
+    },
+    {
+      "file_path": "ria/views.py",
+      "reasoning": "Added docstring for Django REST Framework view class that handles RIA company detail requests",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "ria/views.py",
+          "line": 250,
+          "column": 0,
+          "message": "Missing docstring in public class",
+          "rule_code": "D101"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 248,
+              "column": 1
+            },
+            "end": {
+              "row": 253,
+              "column": 99999
+            }
+          },
+          "content": "\n\nclass RIACompanyDetailView(AsyncAPIView):\n    \"\"\"API view for retrieving detailed information about RIA companies.\n    \n    Provides GET endpoint to fetch company details by CRD number,\n    including index data and trends information.\n    \"\"\"\n    permission_classes = [IsAuthenticated]\n    \n    async def get(self, request: Request, crd: int):\n",
+          "description": "Added docstring for Django REST Framework view class that handles RIA company detail requests"
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 4 file(s) for pydocstyle signals",
+  "warnings": [],
+  "confidence": 0.8875
+}

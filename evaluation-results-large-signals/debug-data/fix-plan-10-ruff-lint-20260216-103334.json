@@ -1,0 +1,133 @@
+{
+  "group_tool_id": "ruff",
+  "group_signal_type": "lint",
+  "file_edits": [
+    {
+      "file_path": "ria/services/query_service.py",
+      "reasoning": "Converting Optional[type] to type | None syntax for modern Python type annotations",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "ria/services/query_service.py",
+          "line": 88,
+          "column": 18,
+          "message": "Use `X | None` for type annotations",
+          "rule_code": "UP045"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 81,
+              "column": 1
+            },
+            "end": {
+              "row": 95,
+              "column": 99999
+            }
+          },
+          "content": "\n    @staticmethod\n    async def get_ria_activity(\n        user_id: str | None = None,\n        search_id: str | None = None,\n        activity_type: str | None = None,\n        from_date: datetime | None = None,\n        to_date: datetime | None = None,\n        limit: int = 50,\n        offset: int = 0\n    ) -> Dict[str, Any]:\n        try:\n            # Build query filters\n            filters = {}\n            \n",
+          "description": "Converting Optional[type] to type | None syntax for modern Python type annotations"
+        }
+      ]
+    },
+    {
+      "file_path": "ria/views.py",
+      "reasoning": "Converting Optional[type] to type | None syntax for modern Python type annotations",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "ria/views.py",
+          "line": 82,
+          "column": 16,
+          "message": "Use `X | None` for type annotations",
+          "rule_code": "UP045"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 75,
+              "column": 1
+            },
+            "end": {
+              "row": 89,
+              "column": 99999
+            }
+          },
+          "content": "        ip = request.META.get('REMOTE_ADDR', 'unknown')\n    return ip\n\n\nasync def track_ria_activity(\n    request: Request,\n    activity_type: str,\n    search_id: str | None = None,\n    search_params: Dict[str, Any] | None = None,\n    search_timestamp: datetime | None = None,\n    company_crd: str | None = None,\n    company_name: str | None = None,\n    company_action: str | None = None,\n) -> None:\n    \"\"\"Track RIA activity in the database.\"\"\"\n",
+          "description": "Converting Optional[type] to type | None syntax for modern Python type annotations"
+        }
+      ]
+    },
+    {
+      "file_path": "ria/views.py",
+      "reasoning": "Adding 'from e' to the raise statement to properly chain the exception and distinguish it from errors in exception handling",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "ria/views.py",
+          "line": 167,
+          "column": 13,
+          "message": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+          "rule_code": "B904"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 160,
+              "column": 1
+            },
+            "end": {
+              "row": 174,
+              "column": 99999
+            }
+          },
+          "content": "        \n        try:\n            index_cache = get_index_cache()\n            df = index_cache.load()\n            logger.info(f\"Loaded index data: {df.height} rows, {len(df.columns)} columns\")\n        except Exception as e:\n            logger.error(f\"Failed to load index data: {str(e)}\", exc_info=True)\n            raise APIException(detail=f\"Failed to load index data: {str(e)}\") from e\n        \n        ensure_columns(df, [CRD_COLUMN, NAME_COLUMN, STATE_COLUMN, DOMAIN_COLUMN])\n        filtered = df\n        \n        if state:\n            filtered = filtered.filter(pl.col(STATE_COLUMN).str.to_uppercase() == state.upper())\n        if name:\n",
+          "description": "Adding 'from e' to the raise statement to properly chain the exception and distinguish it from errors in exception handling"
+        }
+      ]
+    },
+    {
+      "file_path": "ria/views.py",
+      "reasoning": "Adding 'from e' to the raise statement to properly chain the exception and distinguish it from errors in exception handling",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "ria/views.py",
+          "line": 472,
+          "column": 13,
+          "message": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+          "rule_code": "B904"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 465,
+              "column": 1
+            },
+            "end": {
+              "row": 479,
+              "column": 99999
+            }
+          },
+          "content": "            location_cache = get_location_cache()\n            location_data = location_cache.get_location_data()\n            logger.info(f\"Returning {len(location_data['cities'])} distinct cities\")\n            \n            return Response({\"cities\": location_data[\"cities\"]}, status=status.HTTP_200_OK)\n        except Exception as e:\n            logger.error(f\"Failed to get cities: {str(e)}\", exc_info=True)\n            raise APIException(detail=\"Failed to load cities\") from e\n\n\nclass RIALocationMetadataView(AsyncAPIView):\n    permission_classes = [IsAuthenticated]\n    \n    async def get(self, request: Request):\n        \"\"\"Handle GET request for location metadata.\"\"\"\n",
+          "description": "Adding 'from e' to the raise statement to properly chain the exception and distinguish it from errors in exception handling"
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 4 file(s) for ruff signals",
+  "warnings": [],
+  "confidence": 0.9249999999999999
+}

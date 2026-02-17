@@ -1,0 +1,3122 @@
+[
+  {
+    "tool_id": "mypy",
+    "signal_type": "type_check",
+    "signals": [
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "prospecting/enrichment_types.py",
+        "span": {
+          "start": {
+            "row": 89,
+            "column": 24
+          },
+          "end": {
+            "row": 89,
+            "column": 24
+          }
+        },
+        "rule_code": "arg-type",
+        "message": "Argument \"merge_strategy\" to \"FieldDefinition\" has incompatible type \"Literal['prefer_coresignal']\"; expected \"Literal['prefer_website', 'prefer_external', 'merge', 'concat', 'deduplicate']\"",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#arg-type",
+        "fix": null
+      },
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "prospecting/enrichment_types.py",
+        "span": {
+          "start": {
+            "row": 178,
+            "column": 24
+          },
+          "end": {
+            "row": 178,
+            "column": 24
+          }
+        },
+        "rule_code": "arg-type",
+        "message": "Argument \"merge_strategy\" to \"FieldDefinition\" has incompatible type \"Literal['prefer_perplexity']\"; expected \"Literal['prefer_website', 'prefer_external', 'merge', 'concat', 'deduplicate']\"",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#arg-type",
+        "fix": null
+      },
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "prospecting/enrichment_types.py",
+        "span": {
+          "start": {
+            "row": 207,
+            "column": 24
+          },
+          "end": {
+            "row": 207,
+            "column": 24
+          }
+        },
+        "rule_code": "arg-type",
+        "message": "Argument \"merge_strategy\" to \"FieldDefinition\" has incompatible type \"Literal['prefer_perplexity']\"; expected \"Literal['prefer_website', 'prefer_external', 'merge', 'concat', 'deduplicate']\"",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#arg-type",
+        "fix": null
+      },
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "prospecting/enrichment_types.py",
+        "span": {
+          "start": {
+            "row": 260,
+            "column": 24
+          },
+          "end": {
+            "row": 260,
+            "column": 24
+          }
+        },
+        "rule_code": "arg-type",
+        "message": "Argument \"merge_strategy\" to \"FieldDefinition\" has incompatible type \"Literal['prefer_perplexity']\"; expected \"Literal['prefer_website', 'prefer_external', 'merge', 'concat', 'deduplicate']\"",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#arg-type",
+        "fix": null
+      }
+    ]
+  },
+  {
+    "tool_id": "mypy",
+    "signal_type": "type_check",
+    "signals": [
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "prospecting/enrichment_types.py",
+        "span": {
+          "start": {
+            "row": 290,
+            "column": 24
+          },
+          "end": {
+            "row": 290,
+            "column": 24
+          }
+        },
+        "rule_code": "arg-type",
+        "message": "Argument \"merge_strategy\" to \"FieldDefinition\" has incompatible type \"Literal['prefer_perplexity']\"; expected \"Literal['prefer_website', 'prefer_external', 'merge', 'concat', 'deduplicate']\"",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#arg-type",
+        "fix": null
+      },
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "prospecting/enrichment_types.py",
+        "span": {
+          "start": {
+            "row": 304,
+            "column": 24
+          },
+          "end": {
+            "row": 304,
+            "column": 24
+          }
+        },
+        "rule_code": "arg-type",
+        "message": "Argument \"merge_strategy\" to \"FieldDefinition\" has incompatible type \"Literal['prefer_perplexity']\"; expected \"Literal['prefer_website', 'prefer_external', 'merge', 'concat', 'deduplicate']\"",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#arg-type",
+        "fix": null
+      },
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "prospecting/enrichment_types.py",
+        "span": {
+          "start": {
+            "row": 344,
+            "column": 24
+          },
+          "end": {
+            "row": 344,
+            "column": 24
+          }
+        },
+        "rule_code": "arg-type",
+        "message": "Argument \"merge_strategy\" to \"FieldDefinition\" has incompatible type \"Literal['prefer_coresignal']\"; expected \"Literal['prefer_website', 'prefer_external', 'merge', 'concat', 'deduplicate']\"",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#arg-type",
+        "fix": null
+      },
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "prospecting/enrichment_types.py",
+        "span": {
+          "start": {
+            "row": 360,
+            "column": 24
+          },
+          "end": {
+            "row": 360,
+            "column": 24
+          }
+        },
+        "rule_code": "arg-type",
+        "message": "Argument \"merge_strategy\" to \"FieldDefinition\" has incompatible type \"Literal['prefer_perplexity']\"; expected \"Literal['prefer_website', 'prefer_external', 'merge', 'concat', 'deduplicate']\"",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#arg-type",
+        "fix": null
+      }
+    ]
+  },
+  {
+    "tool_id": "mypy",
+    "signal_type": "type_check",
+    "signals": [
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "prospecting/enrichment_types.py",
+        "span": {
+          "start": {
+            "row": 428,
+            "column": 24
+          },
+          "end": {
+            "row": 428,
+            "column": 24
+          }
+        },
+        "rule_code": "arg-type",
+        "message": "Argument \"merge_strategy\" to \"FieldDefinition\" has incompatible type \"Literal['prefer_coresignal']\"; expected \"Literal['prefer_website', 'prefer_external', 'merge', 'concat', 'deduplicate']\"",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#arg-type",
+        "fix": null
+      },
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "prospecting/enrichment_types.py",
+        "span": {
+          "start": {
+            "row": 458,
+            "column": 24
+          },
+          "end": {
+            "row": 458,
+            "column": 24
+          }
+        },
+        "rule_code": "arg-type",
+        "message": "Argument \"merge_strategy\" to \"FieldDefinition\" has incompatible type \"Literal['prefer_nasdaq']\"; expected \"Literal['prefer_website', 'prefer_external', 'merge', 'concat', 'deduplicate']\"",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#arg-type",
+        "fix": null
+      },
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "prospecting/enrichment_types.py",
+        "span": {
+          "start": {
+            "row": 465,
+            "column": 24
+          },
+          "end": {
+            "row": 465,
+            "column": 24
+          }
+        },
+        "rule_code": "arg-type",
+        "message": "Argument \"merge_strategy\" to \"FieldDefinition\" has incompatible type \"Literal['prefer_nasdaq']\"; expected \"Literal['prefer_website', 'prefer_external', 'merge', 'concat', 'deduplicate']\"",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#arg-type",
+        "fix": null
+      },
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "prospecting/enrichment_types.py",
+        "span": {
+          "start": {
+            "row": 481,
+            "column": 24
+          },
+          "end": {
+            "row": 481,
+            "column": 24
+          }
+        },
+        "rule_code": "arg-type",
+        "message": "Argument \"merge_strategy\" to \"FieldDefinition\" has incompatible type \"Literal['prefer_nasdaq']\"; expected \"Literal['prefer_website', 'prefer_external', 'merge', 'concat', 'deduplicate']\"",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#arg-type",
+        "fix": null
+      }
+    ]
+  },
+  {
+    "tool_id": "mypy",
+    "signal_type": "type_check",
+    "signals": [
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "prospecting/enrichment_types.py",
+        "span": {
+          "start": {
+            "row": 522,
+            "column": 24
+          },
+          "end": {
+            "row": 522,
+            "column": 24
+          }
+        },
+        "rule_code": "arg-type",
+        "message": "Argument \"merge_strategy\" to \"FieldDefinition\" has incompatible type \"Literal['prefer_resolver']\"; expected \"Literal['prefer_website', 'prefer_external', 'merge', 'concat', 'deduplicate']\"",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#arg-type",
+        "fix": null
+      },
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "authentication/clerk.py",
+        "span": {
+          "start": {
+            "row": 59,
+            "column": 29
+          },
+          "end": {
+            "row": 59,
+            "column": 29
+          }
+        },
+        "rule_code": "arg-type",
+        "message": "Argument \"jwks_url\" to \"ClerkSettings\" has incompatible type \"str | None\"; expected \"str\"",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#arg-type",
+        "fix": null
+      },
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "authentication/clerk.py",
+        "span": {
+          "start": {
+            "row": 59,
+            "column": 46
+          },
+          "end": {
+            "row": 59,
+            "column": 46
+          }
+        },
+        "rule_code": "arg-type",
+        "message": "Argument \"issuer\" to \"ClerkSettings\" has incompatible type \"str | None\"; expected \"str\"",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#arg-type",
+        "fix": null
+      },
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "authentication/clerk.py",
+        "span": {
+          "start": {
+            "row": 81,
+            "column": 35
+          },
+          "end": {
+            "row": 81,
+            "column": 35
+          }
+        },
+        "rule_code": "arg-type",
+        "message": "Argument \"jwks_url\" to \"ClerkSettings\" has incompatible type \"str | None\"; expected \"str\"",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#arg-type",
+        "fix": null
+      }
+    ]
+  },
+  {
+    "tool_id": "mypy",
+    "signal_type": "type_check",
+    "signals": [
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "authentication/clerk.py",
+        "span": {
+          "start": {
+            "row": 81,
+            "column": 52
+          },
+          "end": {
+            "row": 81,
+            "column": 52
+          }
+        },
+        "rule_code": "arg-type",
+        "message": "Argument \"issuer\" to \"ClerkSettings\" has incompatible type \"str | None\"; expected \"str\"",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#arg-type",
+        "fix": null
+      },
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "ria/services/query_service.py",
+        "span": {
+          "start": {
+            "row": 103,
+            "column": 46
+          },
+          "end": {
+            "row": 103,
+            "column": 46
+          }
+        },
+        "rule_code": "assignment",
+        "message": "Incompatible types in assignment (expression has type \"datetime\", target has type \"str\")",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#assignment",
+        "fix": null
+      },
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "ria/services/query_service.py",
+        "span": {
+          "start": {
+            "row": 105,
+            "column": 46
+          },
+          "end": {
+            "row": 105,
+            "column": 46
+          }
+        },
+        "rule_code": "assignment",
+        "message": "Incompatible types in assignment (expression has type \"datetime\", target has type \"str\")",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#assignment",
+        "fix": null
+      },
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "ria/services/search_service.py",
+        "span": {
+          "start": {
+            "row": 96,
+            "column": 26
+          },
+          "end": {
+            "row": 96,
+            "column": 26
+          }
+        },
+        "rule_code": "arg-type",
+        "message": "Argument \"key\" to \"sort\" of \"list\" has incompatible type \"Callable[[dict[str, object]], object]\"; expected \"Callable[[dict[str, object]], SupportsDunderLT[Any] | SupportsDunderGT[Any]]\"",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#arg-type",
+        "fix": null
+      }
+    ]
+  },
+  {
+    "tool_id": "mypy",
+    "signal_type": "type_check",
+    "signals": [
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "ria/services/search_service.py",
+        "span": {
+          "start": {
+            "row": 96,
+            "column": 36
+          },
+          "end": {
+            "row": 96,
+            "column": 36
+          }
+        },
+        "rule_code": "return-value",
+        "message": "Incompatible return value type (got \"object\", expected \"SupportsDunderLT[Any] | SupportsDunderGT[Any]\")",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#return-value",
+        "fix": null
+      },
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "ria/services/search_service.py",
+        "span": {
+          "start": {
+            "row": 118,
+            "column": 26
+          },
+          "end": {
+            "row": 118,
+            "column": 26
+          }
+        },
+        "rule_code": "arg-type",
+        "message": "Argument \"key\" to \"sort\" of \"list\" has incompatible type \"Callable[[dict[str, object]], object]\"; expected \"Callable[[dict[str, object]], SupportsDunderLT[Any] | SupportsDunderGT[Any]]\"",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#arg-type",
+        "fix": null
+      },
+      {
+        "signal_type": "type_check",
+        "severity": "high",
+        "file_path": "ria/services/search_service.py",
+        "span": {
+          "start": {
+            "row": 118,
+            "column": 36
+          },
+          "end": {
+            "row": 118,
+            "column": 36
+          }
+        },
+        "rule_code": "return-value",
+        "message": "Incompatible return value type (got \"object\", expected \"SupportsDunderLT[Any] | SupportsDunderGT[Any]\")",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#return-value",
+        "fix": null
+      },
+      {
+        "signal_type": "type_check",
+        "severity": "medium",
+        "file_path": "ria/views.py",
+        "span": {
+          "start": {
+            "row": 666,
+            "column": 13
+          },
+          "end": {
+            "row": 666,
+            "column": 13
+          }
+        },
+        "rule_code": "var-annotated",
+        "message": "Need type annotation for \"by_activity_type\" (hint: \"by_activity_type: dict[<type>, <type>] = ...\")",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#var-annotated",
+        "fix": null
+      }
+    ]
+  },
+  {
+    "tool_id": "mypy",
+    "signal_type": "type_check",
+    "signals": [
+      {
+        "signal_type": "type_check",
+        "severity": "medium",
+        "file_path": "ria/views.py",
+        "span": {
+          "start": {
+            "row": 667,
+            "column": 13
+          },
+          "end": {
+            "row": 667,
+            "column": 13
+          }
+        },
+        "rule_code": "var-annotated",
+        "message": "Need type annotation for \"by_user\" (hint: \"by_user: dict[<type>, <type>] = ...\")",
+        "docs_url": "https://mypy.readthedocs.io/en/stable/error_code_list.html#var-annotated",
+        "fix": null
+      }
+    ]
+  },
+  {
+    "tool_id": "ruff",
+    "signal_type": "lint",
+    "signals": [
+      {
+        "signal_type": "lint",
+        "severity": "medium",
+        "file_path": "authentication/utils.py",
+        "span": {
+          "start": {
+            "row": 6,
+            "column": 48
+          },
+          "end": {
+            "row": 6,
+            "column": 61
+          }
+        },
+        "rule_code": "UP045",
+        "message": "Use `X | None` for type annotations",
+        "docs_url": "https://docs.astral.sh/ruff/rules/non-pep604-annotation-optional",
+        "fix": {
+          "applicability": "safe",
+          "message": "Convert to `X | None`",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 6,
+                  "column": 48
+                },
+                "end": {
+                  "row": 6,
+                  "column": 61
+                }
+              },
+              "content": "str | None"
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "medium",
+        "file_path": "authentication/utils.py",
+        "span": {
+          "start": {
+            "row": 32,
+            "column": 57
+          },
+          "end": {
+            "row": 32,
+            "column": 70
+          }
+        },
+        "rule_code": "UP045",
+        "message": "Use `X | None` for type annotations",
+        "docs_url": "https://docs.astral.sh/ruff/rules/non-pep604-annotation-optional",
+        "fix": {
+          "applicability": "safe",
+          "message": "Convert to `X | None`",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 32,
+                  "column": 57
+                },
+                "end": {
+                  "row": 32,
+                  "column": 70
+                }
+              },
+              "content": "int | None"
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "medium",
+        "file_path": "ria/utils/helpers.py",
+        "span": {
+          "start": {
+            "row": 22,
+            "column": 40
+          },
+          "end": {
+            "row": 22,
+            "column": 54
+          }
+        },
+        "rule_code": "UP045",
+        "message": "Use `X | None` for type annotations",
+        "docs_url": "https://docs.astral.sh/ruff/rules/non-pep604-annotation-optional",
+        "fix": {
+          "applicability": "safe",
+          "message": "Convert to `X | None`",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 22,
+                  "column": 40
+                },
+                "end": {
+                  "row": 22,
+                  "column": 54
+                }
+              },
+              "content": "dict | None"
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "medium",
+        "file_path": "ria/services/company_service.py",
+        "span": {
+          "start": {
+            "row": 97,
+            "column": 13
+          },
+          "end": {
+            "row": 97,
+            "column": 68
+          }
+        },
+        "rule_code": "B904",
+        "message": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+        "docs_url": "https://docs.astral.sh/ruff/rules/raise-without-from-inside-except",
+        "fix": null
+      }
+    ]
+  },
+  {
+    "tool_id": "ruff",
+    "signal_type": "lint",
+    "signals": [
+      {
+        "signal_type": "lint",
+        "severity": "medium",
+        "file_path": "ria/services/company_service.py",
+        "span": {
+          "start": {
+            "row": 99,
+            "column": 13
+          },
+          "end": {
+            "row": 99,
+            "column": 71
+          }
+        },
+        "rule_code": "B904",
+        "message": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+        "docs_url": "https://docs.astral.sh/ruff/rules/raise-without-from-inside-except",
+        "fix": null
+      },
+      {
+        "signal_type": "lint",
+        "severity": "medium",
+        "file_path": "ria/services/company_service.py",
+        "span": {
+          "start": {
+            "row": 101,
+            "column": 9
+          },
+          "end": {
+            "row": 101,
+            "column": 65
+          }
+        },
+        "rule_code": "B904",
+        "message": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+        "docs_url": "https://docs.astral.sh/ruff/rules/raise-without-from-inside-except",
+        "fix": null
+      },
+      {
+        "signal_type": "lint",
+        "severity": "medium",
+        "file_path": "authentication/clerk.py",
+        "span": {
+          "start": {
+            "row": 41,
+            "column": 15
+          },
+          "end": {
+            "row": 41,
+            "column": 28
+          }
+        },
+        "rule_code": "UP045",
+        "message": "Use `X | None` for type annotations",
+        "docs_url": "https://docs.astral.sh/ruff/rules/non-pep604-annotation-optional",
+        "fix": {
+          "applicability": "safe",
+          "message": "Convert to `X | None`",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 41,
+                  "column": 15
+                },
+                "end": {
+                  "row": 41,
+                  "column": 28
+                }
+              },
+              "content": "str | None"
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "medium",
+        "file_path": "ria/services/query_service.py",
+        "span": {
+          "start": {
+            "row": 34,
+            "column": 21
+          },
+          "end": {
+            "row": 34,
+            "column": 34
+          }
+        },
+        "rule_code": "UP045",
+        "message": "Use `X | None` for type annotations",
+        "docs_url": "https://docs.astral.sh/ruff/rules/non-pep604-annotation-optional",
+        "fix": {
+          "applicability": "safe",
+          "message": "Convert to `X | None`",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 34,
+                  "column": 21
+                },
+                "end": {
+                  "row": 34,
+                  "column": 34
+                }
+              },
+              "content": "str | None"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "tool_id": "ruff",
+    "signal_type": "lint",
+    "signals": [
+      {
+        "signal_type": "lint",
+        "severity": "medium",
+        "file_path": "ria/services/query_service.py",
+        "span": {
+          "start": {
+            "row": 88,
+            "column": 18
+          },
+          "end": {
+            "row": 88,
+            "column": 36
+          }
+        },
+        "rule_code": "UP045",
+        "message": "Use `X | None` for type annotations",
+        "docs_url": "https://docs.astral.sh/ruff/rules/non-pep604-annotation-optional",
+        "fix": {
+          "applicability": "safe",
+          "message": "Convert to `X | None`",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 88,
+                  "column": 18
+                },
+                "end": {
+                  "row": 88,
+                  "column": 36
+                }
+              },
+              "content": "datetime | None"
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "medium",
+        "file_path": "ria/views.py",
+        "span": {
+          "start": {
+            "row": 82,
+            "column": 16
+          },
+          "end": {
+            "row": 82,
+            "column": 29
+          }
+        },
+        "rule_code": "UP045",
+        "message": "Use `X | None` for type annotations",
+        "docs_url": "https://docs.astral.sh/ruff/rules/non-pep604-annotation-optional",
+        "fix": {
+          "applicability": "safe",
+          "message": "Convert to `X | None`",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 82,
+                  "column": 16
+                },
+                "end": {
+                  "row": 82,
+                  "column": 29
+                }
+              },
+              "content": "str | None"
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "medium",
+        "file_path": "ria/views.py",
+        "span": {
+          "start": {
+            "row": 167,
+            "column": 13
+          },
+          "end": {
+            "row": 167,
+            "column": 78
+          }
+        },
+        "rule_code": "B904",
+        "message": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+        "docs_url": "https://docs.astral.sh/ruff/rules/raise-without-from-inside-except",
+        "fix": null
+      },
+      {
+        "signal_type": "lint",
+        "severity": "medium",
+        "file_path": "ria/views.py",
+        "span": {
+          "start": {
+            "row": 472,
+            "column": 13
+          },
+          "end": {
+            "row": 472,
+            "column": 63
+          }
+        },
+        "rule_code": "B904",
+        "message": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+        "docs_url": "https://docs.astral.sh/ruff/rules/raise-without-from-inside-except",
+        "fix": null
+      }
+    ]
+  },
+  {
+    "tool_id": "ruff",
+    "signal_type": "lint",
+    "signals": [
+      {
+        "signal_type": "lint",
+        "severity": "medium",
+        "file_path": "ria/views.py",
+        "span": {
+          "start": {
+            "row": 695,
+            "column": 13
+          },
+          "end": {
+            "row": 695,
+            "column": 92
+          }
+        },
+        "rule_code": "B904",
+        "message": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+        "docs_url": "https://docs.astral.sh/ruff/rules/raise-without-from-inside-except",
+        "fix": null
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "authentication/admin.py",
+        "span": {
+          "start": {
+            "row": 1,
+            "column": 1
+          },
+          "end": {
+            "row": 3,
+            "column": 38
+          }
+        },
+        "rule_code": "I001",
+        "message": "Import block is un-sorted or un-formatted",
+        "docs_url": "https://docs.astral.sh/ruff/rules/unsorted-imports",
+        "fix": {
+          "applicability": "safe",
+          "message": "Organize imports",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 1,
+                  "column": 1
+                },
+                "end": {
+                  "row": 6,
+                  "column": 1
+                }
+              },
+              "content": "from django.contrib import admin\nfrom django.contrib.auth.admin import UserAdmin as BaseUserAdmin\n\nfrom .models import User, UserProfile\n\n\n"
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/serializers.py",
+        "span": {
+          "start": {
+            "row": 7,
+            "column": 1
+          },
+          "end": {
+            "row": 8,
+            "column": 45
+          }
+        },
+        "rule_code": "I001",
+        "message": "Import block is un-sorted or un-formatted",
+        "docs_url": "https://docs.astral.sh/ruff/rules/unsorted-imports",
+        "fix": {
+          "applicability": "safe",
+          "message": "Organize imports",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 7,
+                  "column": 1
+                },
+                "end": {
+                  "row": 11,
+                  "column": 1
+                }
+              },
+              "content": "from typing import Any, Dict, List, Optional\n\nfrom rest_framework import serializers\n\n"
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/serializers.py",
+        "span": {
+          "start": {
+            "row": 8,
+            "column": 1
+          },
+          "end": {
+            "row": 8,
+            "column": 45
+          }
+        },
+        "rule_code": "UP035",
+        "message": "`typing.List` is deprecated, use `list` instead",
+        "docs_url": "https://docs.astral.sh/ruff/rules/deprecated-import",
+        "fix": null
+      }
+    ]
+  },
+  {
+    "tool_id": "ruff",
+    "signal_type": "lint",
+    "signals": [
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/serializers.py",
+        "span": {
+          "start": {
+            "row": 8,
+            "column": 1
+          },
+          "end": {
+            "row": 8,
+            "column": 45
+          }
+        },
+        "rule_code": "UP035",
+        "message": "`typing.Dict` is deprecated, use `dict` instead",
+        "docs_url": "https://docs.astral.sh/ruff/rules/deprecated-import",
+        "fix": null
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/serializers.py",
+        "span": {
+          "start": {
+            "row": 8,
+            "column": 20
+          },
+          "end": {
+            "row": 8,
+            "column": 24
+          }
+        },
+        "rule_code": "F401",
+        "message": "`typing.List` imported but unused",
+        "docs_url": "https://docs.astral.sh/ruff/rules/unused-import",
+        "fix": {
+          "applicability": "safe",
+          "message": "Remove unused import",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 8,
+                  "column": 1
+                },
+                "end": {
+                  "row": 9,
+                  "column": 1
+                }
+              },
+              "content": ""
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/serializers.py",
+        "span": {
+          "start": {
+            "row": 8,
+            "column": 26
+          },
+          "end": {
+            "row": 8,
+            "column": 30
+          }
+        },
+        "rule_code": "F401",
+        "message": "`typing.Dict` imported but unused",
+        "docs_url": "https://docs.astral.sh/ruff/rules/unused-import",
+        "fix": {
+          "applicability": "safe",
+          "message": "Remove unused import",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 8,
+                  "column": 1
+                },
+                "end": {
+                  "row": 9,
+                  "column": 1
+                }
+              },
+              "content": ""
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/serializers.py",
+        "span": {
+          "start": {
+            "row": 8,
+            "column": 32
+          },
+          "end": {
+            "row": 8,
+            "column": 35
+          }
+        },
+        "rule_code": "F401",
+        "message": "`typing.Any` imported but unused",
+        "docs_url": "https://docs.astral.sh/ruff/rules/unused-import",
+        "fix": {
+          "applicability": "safe",
+          "message": "Remove unused import",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 8,
+                  "column": 1
+                },
+                "end": {
+                  "row": 9,
+                  "column": 1
+                }
+              },
+              "content": ""
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "tool_id": "ruff",
+    "signal_type": "lint",
+    "signals": [
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/utils/helpers.py",
+        "span": {
+          "start": {
+            "row": 11,
+            "column": 1
+          },
+          "end": {
+            "row": 14,
+            "column": 39
+          }
+        },
+        "rule_code": "I001",
+        "message": "Import block is un-sorted or un-formatted",
+        "docs_url": "https://docs.astral.sh/ruff/rules/unsorted-imports",
+        "fix": {
+          "applicability": "safe",
+          "message": "Organize imports",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 11,
+                  "column": 1
+                },
+                "end": {
+                  "row": 17,
+                  "column": 1
+                }
+              },
+              "content": "import json\nimport time\nimport uuid\nfrom typing import Any, Dict, Optional\n\n\n"
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/utils/helpers.py",
+        "span": {
+          "start": {
+            "row": 14,
+            "column": 1
+          },
+          "end": {
+            "row": 14,
+            "column": 39
+          }
+        },
+        "rule_code": "UP035",
+        "message": "`typing.Dict` is deprecated, use `dict` instead",
+        "docs_url": "https://docs.astral.sh/ruff/rules/deprecated-import",
+        "fix": null
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/utils/helpers.py",
+        "span": {
+          "start": {
+            "row": 14,
+            "column": 30
+          },
+          "end": {
+            "row": 14,
+            "column": 34
+          }
+        },
+        "rule_code": "F401",
+        "message": "`typing.Dict` imported but unused",
+        "docs_url": "https://docs.astral.sh/ruff/rules/unused-import",
+        "fix": {
+          "applicability": "safe",
+          "message": "Remove unused import",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 14,
+                  "column": 1
+                },
+                "end": {
+                  "row": 14,
+                  "column": 39
+                }
+              },
+              "content": "from typing import Optional"
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/utils/helpers.py",
+        "span": {
+          "start": {
+            "row": 14,
+            "column": 36
+          },
+          "end": {
+            "row": 14,
+            "column": 39
+          }
+        },
+        "rule_code": "F401",
+        "message": "`typing.Any` imported but unused",
+        "docs_url": "https://docs.astral.sh/ruff/rules/unused-import",
+        "fix": {
+          "applicability": "safe",
+          "message": "Remove unused import",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 14,
+                  "column": 1
+                },
+                "end": {
+                  "row": 14,
+                  "column": 39
+                }
+              },
+              "content": "from typing import Optional"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "tool_id": "ruff",
+    "signal_type": "lint",
+    "signals": [
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/services/company_service.py",
+        "span": {
+          "start": {
+            "row": 11,
+            "column": 1
+          },
+          "end": {
+            "row": 11,
+            "column": 45
+          }
+        },
+        "rule_code": "UP035",
+        "message": "`typing.Dict` is deprecated, use `dict` instead",
+        "docs_url": "https://docs.astral.sh/ruff/rules/deprecated-import",
+        "fix": null
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/services/company_service.py",
+        "span": {
+          "start": {
+            "row": 21,
+            "column": 17
+          },
+          "end": {
+            "row": 21,
+            "column": 28
+          }
+        },
+        "rule_code": "F401",
+        "message": "`ria.utils.constants.NAME_COLUMN` imported but unused",
+        "docs_url": "https://docs.astral.sh/ruff/rules/unused-import",
+        "fix": {
+          "applicability": "safe",
+          "message": "Remove unused import",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 20,
+                  "column": 1
+                },
+                "end": {
+                  "row": 22,
+                  "column": 2
+                }
+              },
+              "content": "from ria.utils.constants import (\n    CRD_COLUMN\n)"
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/services/company_service.py",
+        "span": {
+          "start": {
+            "row": 21,
+            "column": 30
+          },
+          "end": {
+            "row": 21,
+            "column": 41
+          }
+        },
+        "rule_code": "F401",
+        "message": "`ria.utils.constants.CITY_COLUMN` imported but unused",
+        "docs_url": "https://docs.astral.sh/ruff/rules/unused-import",
+        "fix": {
+          "applicability": "safe",
+          "message": "Remove unused import",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 20,
+                  "column": 1
+                },
+                "end": {
+                  "row": 22,
+                  "column": 2
+                }
+              },
+              "content": "from ria.utils.constants import (\n    CRD_COLUMN\n)"
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/services/company_service.py",
+        "span": {
+          "start": {
+            "row": 21,
+            "column": 57
+          },
+          "end": {
+            "row": 21,
+            "column": 71
+          }
+        },
+        "rule_code": "F401",
+        "message": "`ria.utils.constants.COUNTRY_COLUMN` imported but unused",
+        "docs_url": "https://docs.astral.sh/ruff/rules/unused-import",
+        "fix": {
+          "applicability": "safe",
+          "message": "Remove unused import",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 20,
+                  "column": 1
+                },
+                "end": {
+                  "row": 22,
+                  "column": 2
+                }
+              },
+              "content": "from ria.utils.constants import (\n    CRD_COLUMN\n)"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "tool_id": "ruff",
+    "signal_type": "lint",
+    "signals": [
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/services/company_service.py",
+        "span": {
+          "start": {
+            "row": 33,
+            "column": 41
+          },
+          "end": {
+            "row": 33,
+            "column": 45
+          }
+        },
+        "rule_code": "UP006",
+        "message": "Use `dict` instead of `Dict` for type annotation",
+        "docs_url": "https://docs.astral.sh/ruff/rules/non-pep585-annotation",
+        "fix": {
+          "applicability": "safe",
+          "message": "Replace with `dict`",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 33,
+                  "column": 41
+                },
+                "end": {
+                  "row": 33,
+                  "column": 45
+                }
+              },
+              "content": "dict"
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/services/company_service.py",
+        "span": {
+          "start": {
+            "row": 56,
+            "column": 39
+          },
+          "end": {
+            "row": 56,
+            "column": 43
+          }
+        },
+        "rule_code": "UP006",
+        "message": "Use `list` instead of `List` for type annotation",
+        "docs_url": "https://docs.astral.sh/ruff/rules/non-pep585-annotation",
+        "fix": {
+          "applicability": "safe",
+          "message": "Replace with `list`",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 56,
+                  "column": 39
+                },
+                "end": {
+                  "row": 56,
+                  "column": 43
+                }
+              },
+              "content": "list"
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/services/company_service.py",
+        "span": {
+          "start": {
+            "row": 104,
+            "column": 43
+          },
+          "end": {
+            "row": 104,
+            "column": 47
+          }
+        },
+        "rule_code": "UP006",
+        "message": "Use `dict` instead of `Dict` for type annotation",
+        "docs_url": "https://docs.astral.sh/ruff/rules/non-pep585-annotation",
+        "fix": {
+          "applicability": "safe",
+          "message": "Replace with `dict`",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 104,
+                  "column": 43
+                },
+                "end": {
+                  "row": 104,
+                  "column": 47
+                }
+              },
+              "content": "dict"
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "authentication/clerk.py",
+        "span": {
+          "start": {
+            "row": 45,
+            "column": 29
+          },
+          "end": {
+            "row": 45,
+            "column": 44
+          }
+        },
+        "rule_code": "UP037",
+        "message": "Remove quotes from type annotation",
+        "docs_url": "https://docs.astral.sh/ruff/rules/quoted-annotation",
+        "fix": {
+          "applicability": "safe",
+          "message": "Remove quotes",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 45,
+                  "column": 29
+                },
+                "end": {
+                  "row": 45,
+                  "column": 44
+                }
+              },
+              "content": "ClerkSettings"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "tool_id": "ruff",
+    "signal_type": "lint",
+    "signals": [
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "authentication/clerk.py",
+        "span": {
+          "start": {
+            "row": 132,
+            "column": 51
+          },
+          "end": {
+            "row": 132,
+            "column": 55
+          }
+        },
+        "rule_code": "UP006",
+        "message": "Use `dict` instead of `Dict` for type annotation",
+        "docs_url": "https://docs.astral.sh/ruff/rules/non-pep585-annotation",
+        "fix": {
+          "applicability": "safe",
+          "message": "Replace with `dict`",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 132,
+                  "column": 51
+                },
+                "end": {
+                  "row": 132,
+                  "column": 55
+                }
+              },
+              "content": "dict"
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/services/query_service.py",
+        "span": {
+          "start": {
+            "row": 8,
+            "column": 1
+          },
+          "end": {
+            "row": 15,
+            "column": 51
+          }
+        },
+        "rule_code": "I001",
+        "message": "Import block is un-sorted or un-formatted",
+        "docs_url": "https://docs.astral.sh/ruff/rules/unsorted-imports",
+        "fix": {
+          "applicability": "safe",
+          "message": "Organize imports",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 8,
+                  "column": 1
+                },
+                "end": {
+                  "row": 17,
+                  "column": 1
+                }
+              },
+              "content": "from datetime import datetime\nfrom typing import Any, Dict, List, Optional\n\nfrom django.db import transaction\nfrom django.utils import timezone\n\nfrom common.utils.logging_config import get_logger\nfrom ria.models import RIAUserActivity\n\n"
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/services/query_service.py",
+        "span": {
+          "start": {
+            "row": 8,
+            "column": 41
+          },
+          "end": {
+            "row": 8,
+            "column": 45
+          }
+        },
+        "rule_code": "F401",
+        "message": "`typing.List` imported but unused",
+        "docs_url": "https://docs.astral.sh/ruff/rules/unused-import",
+        "fix": {
+          "applicability": "safe",
+          "message": "Remove unused import: `typing.List`",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 8,
+                  "column": 1
+                },
+                "end": {
+                  "row": 8,
+                  "column": 45
+                }
+              },
+              "content": "from typing import Optional, Dict, Any"
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/services/query_service.py",
+        "span": {
+          "start": {
+            "row": 12,
+            "column": 26
+          },
+          "end": {
+            "row": 12,
+            "column": 34
+          }
+        },
+        "rule_code": "F401",
+        "message": "`django.utils.timezone` imported but unused",
+        "docs_url": "https://docs.astral.sh/ruff/rules/unused-import",
+        "fix": {
+          "applicability": "safe",
+          "message": "Remove unused import: `django.utils.timezone`",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 12,
+                  "column": 1
+                },
+                "end": {
+                  "row": 13,
+                  "column": 1
+                }
+              },
+              "content": ""
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "tool_id": "ruff",
+    "signal_type": "lint",
+    "signals": [
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/services/query_service.py",
+        "span": {
+          "start": {
+            "row": 29,
+            "column": 33
+          },
+          "end": {
+            "row": 29,
+            "column": 37
+          }
+        },
+        "rule_code": "UP006",
+        "message": "Use `dict` instead of `Dict` for type annotation",
+        "docs_url": "https://docs.astral.sh/ruff/rules/non-pep585-annotation",
+        "fix": {
+          "applicability": "safe",
+          "message": "Replace with `dict`",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 29,
+                  "column": 33
+                },
+                "end": {
+                  "row": 29,
+                  "column": 37
+                }
+              },
+              "content": "dict"
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/services/query_service.py",
+        "span": {
+          "start": {
+            "row": 91,
+            "column": 10
+          },
+          "end": {
+            "row": 91,
+            "column": 14
+          }
+        },
+        "rule_code": "UP006",
+        "message": "Use `dict` instead of `Dict` for type annotation",
+        "docs_url": "https://docs.astral.sh/ruff/rules/non-pep585-annotation",
+        "fix": {
+          "applicability": "safe",
+          "message": "Replace with `dict`",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 91,
+                  "column": 10
+                },
+                "end": {
+                  "row": 91,
+                  "column": 14
+                }
+              },
+              "content": "dict"
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/views.py",
+        "span": {
+          "start": {
+            "row": 11,
+            "column": 1
+          },
+          "end": {
+            "row": 11,
+            "column": 39
+          }
+        },
+        "rule_code": "UP035",
+        "message": "`typing.Dict` is deprecated, use `dict` instead",
+        "docs_url": "https://docs.astral.sh/ruff/rules/deprecated-import",
+        "fix": null
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/views.py",
+        "span": {
+          "start": {
+            "row": 45,
+            "column": 5
+          },
+          "end": {
+            "row": 45,
+            "column": 25
+          }
+        },
+        "rule_code": "F401",
+        "message": "`ria.services.search_service.attach_domain_column` imported but unused",
+        "docs_url": "https://docs.astral.sh/ruff/rules/unused-import",
+        "fix": {
+          "applicability": "safe",
+          "message": "Remove unused import",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 41,
+                  "column": 1
+                },
+                "end": {
+                  "row": 47,
+                  "column": 2
+                }
+              },
+              "content": "from ria.services.search_service import (\n    SearchService, \n    to_serializable_records, \n    ensure_columns,\n)"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "tool_id": "ruff",
+    "signal_type": "lint",
+    "signals": [
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/services/search_service.py",
+        "span": {
+          "start": {
+            "row": 52,
+            "column": 21
+          },
+          "end": {
+            "row": 52,
+            "column": 77
+          }
+        },
+        "rule_code": "F541",
+        "message": "f-string without any placeholders",
+        "docs_url": "https://docs.astral.sh/ruff/rules/f-string-missing-placeholders",
+        "fix": {
+          "applicability": "safe",
+          "message": "Remove extraneous `f` prefix",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 52,
+                  "column": 21
+                },
+                "end": {
+                  "row": 52,
+                  "column": 77
+                }
+              },
+              "content": "\"Missing columns will be handled gracefully in filters\""
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/services/search_service.py",
+        "span": {
+          "start": {
+            "row": 82,
+            "column": 9
+          },
+          "end": {
+            "row": 82,
+            "column": 19
+          }
+        },
+        "rule_code": "B007",
+        "message": "Loop control variable `field_name` not used within loop body",
+        "docs_url": "https://docs.astral.sh/ruff/rules/unused-loop-control-variable",
+        "fix": {
+          "applicability": "unsafe",
+          "message": "Rename unused `field_name` to `_field_name`",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 82,
+                  "column": 9
+                },
+                "end": {
+                  "row": 82,
+                  "column": 19
+                }
+              },
+              "content": "_field_name"
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/services/search_service.py",
+        "span": {
+          "start": {
+            "row": 100,
+            "column": 67
+          },
+          "end": {
+            "row": 100,
+            "column": 71
+          }
+        },
+        "rule_code": "UP006",
+        "message": "Use `dict` instead of `Dict` for type annotation",
+        "docs_url": "https://docs.astral.sh/ruff/rules/non-pep585-annotation",
+        "fix": {
+          "applicability": "safe",
+          "message": "Replace with `dict`",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 100,
+                  "column": 67
+                },
+                "end": {
+                  "row": 100,
+                  "column": 71
+                }
+              },
+              "content": "dict"
+            }
+          ]
+        }
+      },
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/services/search_service.py",
+        "span": {
+          "start": {
+            "row": 104,
+            "column": 9
+          },
+          "end": {
+            "row": 104,
+            "column": 19
+          }
+        },
+        "rule_code": "B007",
+        "message": "Loop control variable `field_name` not used within loop body",
+        "docs_url": "https://docs.astral.sh/ruff/rules/unused-loop-control-variable",
+        "fix": {
+          "applicability": "unsafe",
+          "message": "Rename unused `field_name` to `_field_name`",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 104,
+                  "column": 9
+                },
+                "end": {
+                  "row": 104,
+                  "column": 19
+                }
+              },
+              "content": "_field_name"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "tool_id": "ruff",
+    "signal_type": "lint",
+    "signals": [
+      {
+        "signal_type": "lint",
+        "severity": "low",
+        "file_path": "ria/services/search_service.py",
+        "span": {
+          "start": {
+            "row": 191,
+            "column": 84
+          },
+          "end": {
+            "row": 191,
+            "column": 88
+          }
+        },
+        "rule_code": "UP006",
+        "message": "Use `list` instead of `List` for type annotation",
+        "docs_url": "https://docs.astral.sh/ruff/rules/non-pep585-annotation",
+        "fix": {
+          "applicability": "safe",
+          "message": "Replace with `list`",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 191,
+                  "column": 84
+                },
+                "end": {
+                  "row": 191,
+                  "column": 88
+                }
+              },
+              "content": "list"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "tool_id": "pydocstyle",
+    "signal_type": "docstring",
+    "signals": [
+      {
+        "signal_type": "docstring",
+        "severity": "low",
+        "file_path": "authentication/admin.py",
+        "span": {
+          "start": {
+            "row": 6,
+            "column": 0
+          },
+          "end": {
+            "row": 6,
+            "column": 0
+          }
+        },
+        "rule_code": "D101",
+        "message": "Missing docstring in public class",
+        "docs_url": "http://www.pydocstyle.org/en/stable/error_codes.html#D101",
+        "fix": null
+      },
+      {
+        "signal_type": "docstring",
+        "severity": "low",
+        "file_path": "authentication/admin.py",
+        "span": {
+          "start": {
+            "row": 19,
+            "column": 0
+          },
+          "end": {
+            "row": 19,
+            "column": 0
+          }
+        },
+        "rule_code": "D101",
+        "message": "Missing docstring in public class",
+        "docs_url": "http://www.pydocstyle.org/en/stable/error_codes.html#D101",
+        "fix": null
+      },
+      {
+        "signal_type": "docstring",
+        "severity": "low",
+        "file_path": "authentication/utils.py",
+        "span": {
+          "start": {
+            "row": 32,
+            "column": 0
+          },
+          "end": {
+            "row": 32,
+            "column": 0
+          }
+        },
+        "rule_code": "D103",
+        "message": "Missing docstring in public function",
+        "docs_url": "http://www.pydocstyle.org/en/stable/error_codes.html#D103",
+        "fix": null
+      },
+      {
+        "signal_type": "docstring",
+        "severity": "low",
+        "file_path": "ria/serializers.py",
+        "span": {
+          "start": {
+            "row": 370,
+            "column": 0
+          },
+          "end": {
+            "row": 370,
+            "column": 0
+          }
+        },
+        "rule_code": "D101",
+        "message": "Missing docstring in public class",
+        "docs_url": "http://www.pydocstyle.org/en/stable/error_codes.html#D101",
+        "fix": null
+      }
+    ]
+  },
+  {
+    "tool_id": "pydocstyle",
+    "signal_type": "docstring",
+    "signals": [
+      {
+        "signal_type": "docstring",
+        "severity": "low",
+        "file_path": "ria/serializers.py",
+        "span": {
+          "start": {
+            "row": 428,
+            "column": 0
+          },
+          "end": {
+            "row": 428,
+            "column": 0
+          }
+        },
+        "rule_code": "D101",
+        "message": "Missing docstring in public class",
+        "docs_url": "http://www.pydocstyle.org/en/stable/error_codes.html#D101",
+        "fix": null
+      },
+      {
+        "signal_type": "docstring",
+        "severity": "low",
+        "file_path": "ria/utils/helpers.py",
+        "span": {
+          "start": {
+            "row": 22,
+            "column": 0
+          },
+          "end": {
+            "row": 22,
+            "column": 0
+          }
+        },
+        "rule_code": "D103",
+        "message": "Missing docstring in public function",
+        "docs_url": "http://www.pydocstyle.org/en/stable/error_codes.html#D103",
+        "fix": null
+      },
+      {
+        "signal_type": "docstring",
+        "severity": "low",
+        "file_path": "prospecting/enrichment_types.py",
+        "span": {
+          "start": {
+            "row": 565,
+            "column": 0
+          },
+          "end": {
+            "row": 565,
+            "column": 0
+          }
+        },
+        "rule_code": "D103",
+        "message": "Missing docstring in public function",
+        "docs_url": "http://www.pydocstyle.org/en/stable/error_codes.html#D103",
+        "fix": null
+      },
+      {
+        "signal_type": "docstring",
+        "severity": "low",
+        "file_path": "authentication/clerk.py",
+        "span": {
+          "start": {
+            "row": 38,
+            "column": 0
+          },
+          "end": {
+            "row": 38,
+            "column": 0
+          }
+        },
+        "rule_code": "D101",
+        "message": "Missing docstring in public class",
+        "docs_url": "http://www.pydocstyle.org/en/stable/error_codes.html#D101",
+        "fix": null
+      }
+    ]
+  },
+  {
+    "tool_id": "pydocstyle",
+    "signal_type": "docstring",
+    "signals": [
+      {
+        "signal_type": "docstring",
+        "severity": "low",
+        "file_path": "authentication/clerk.py",
+        "span": {
+          "start": {
+            "row": 45,
+            "column": 0
+          },
+          "end": {
+            "row": 45,
+            "column": 0
+          }
+        },
+        "rule_code": "D102",
+        "message": "Missing docstring in public method",
+        "docs_url": "http://www.pydocstyle.org/en/stable/error_codes.html#D102",
+        "fix": null
+      },
+      {
+        "signal_type": "docstring",
+        "severity": "low",
+        "file_path": "authentication/clerk.py",
+        "span": {
+          "start": {
+            "row": 67,
+            "column": 0
+          },
+          "end": {
+            "row": 67,
+            "column": 0
+          }
+        },
+        "rule_code": "D103",
+        "message": "Missing docstring in public function",
+        "docs_url": "http://www.pydocstyle.org/en/stable/error_codes.html#D103",
+        "fix": null
+      },
+      {
+        "signal_type": "docstring",
+        "severity": "low",
+        "file_path": "ria/services/query_service.py",
+        "span": {
+          "start": {
+            "row": 83,
+            "column": 0
+          },
+          "end": {
+            "row": 83,
+            "column": 0
+          }
+        },
+        "rule_code": "D102",
+        "message": "Missing docstring in public method",
+        "docs_url": "http://www.pydocstyle.org/en/stable/error_codes.html#D102",
+        "fix": null
+      },
+      {
+        "signal_type": "docstring",
+        "severity": "low",
+        "file_path": "ria/views.py",
+        "span": {
+          "start": {
+            "row": 250,
+            "column": 0
+          },
+          "end": {
+            "row": 250,
+            "column": 0
+          }
+        },
+        "rule_code": "D101",
+        "message": "Missing docstring in public class",
+        "docs_url": "http://www.pydocstyle.org/en/stable/error_codes.html#D101",
+        "fix": null
+      }
+    ]
+  },
+  {
+    "tool_id": "pydocstyle",
+    "signal_type": "docstring",
+    "signals": [
+      {
+        "signal_type": "docstring",
+        "severity": "low",
+        "file_path": "ria/views.py",
+        "span": {
+          "start": {
+            "row": 475,
+            "column": 0
+          },
+          "end": {
+            "row": 475,
+            "column": 0
+          }
+        },
+        "rule_code": "D101",
+        "message": "Missing docstring in public class",
+        "docs_url": "http://www.pydocstyle.org/en/stable/error_codes.html#D101",
+        "fix": null
+      },
+      {
+        "signal_type": "docstring",
+        "severity": "low",
+        "file_path": "ria/services/search_service.py",
+        "span": {
+          "start": {
+            "row": 274,
+            "column": 0
+          },
+          "end": {
+            "row": 274,
+            "column": 0
+          }
+        },
+        "rule_code": "D102",
+        "message": "Missing docstring in public method",
+        "docs_url": "http://www.pydocstyle.org/en/stable/error_codes.html#D102",
+        "fix": null
+      },
+      {
+        "signal_type": "docstring",
+        "severity": "low",
+        "file_path": "ria/services/search_service.py",
+        "span": {
+          "start": {
+            "row": 443,
+            "column": 0
+          },
+          "end": {
+            "row": 443,
+            "column": 0
+          }
+        },
+        "rule_code": "D103",
+        "message": "Missing docstring in public function",
+        "docs_url": "http://www.pydocstyle.org/en/stable/error_codes.html#D103",
+        "fix": null
+      }
+    ]
+  },
+  {
+    "tool_id": "ruff-format",
+    "signal_type": "format",
+    "signals": [
+      {
+        "signal_type": "format",
+        "severity": "low",
+        "file_path": "authentication/admin.py",
+        "span": {
+          "start": {
+            "row": 6,
+            "column": 1
+          },
+          "end": {
+            "row": 41,
+            "column": 1
+          }
+        },
+        "rule_code": "FORMAT",
+        "message": "1 formatting region(s) to update (18 lines affected)",
+        "docs_url": "https://docs.astral.sh/ruff/formatter/",
+        "fix": {
+          "applicability": "safe",
+          "message": "Apply 1 formatting change(s)",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 6,
+                  "column": 1
+                },
+                "end": {
+                  "row": 41,
+                  "column": 1
+                }
+              },
+              "content": "class UserProfileInline(admin.StackedInline):\n    model = UserProfile\n    can_delete = False\n    verbose_name_plural = \"Profile Details\"\n    fields = (\"firm_description\", \"key_differentiators\", \"key_objectives\", \"investor_profile\", \"first_name\", \"last_name\", \"created_at\", \"updated_at\")\n    readonly_fields = (\"created_at\", \"updated_at\")\n    extra = 0\n    classes = (\"collapse\",)\n"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "tool_id": "ruff-format",
+    "signal_type": "format",
+    "signals": [
+      {
+        "signal_type": "format",
+        "severity": "low",
+        "file_path": "authentication/utils.py",
+        "span": {
+          "start": {
+            "row": 44,
+            "column": 1
+          },
+          "end": {
+            "row": 48,
+            "column": 1
+          }
+        },
+        "rule_code": "FORMAT",
+        "message": "1 formatting region(s) to update (7 lines affected)",
+        "docs_url": "https://docs.astral.sh/ruff/formatter/",
+        "fix": {
+          "applicability": "safe",
+          "message": "Apply 1 formatting change(s)",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 44,
+                  "column": 1
+                },
+                "end": {
+                  "row": 48,
+                  "column": 1
+                }
+              },
+              "content": "    if is_admin:\n        normalized.add(\"admin\")\n    return sorted(list(normalized))\n"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "tool_id": "ruff-format",
+    "signal_type": "format",
+    "signals": [
+      {
+        "signal_type": "format",
+        "severity": "low",
+        "file_path": "ria/serializers.py",
+        "span": {
+          "start": {
+            "row": 376,
+            "column": 1
+          },
+          "end": {
+            "row": 455,
+            "column": 1
+          }
+        },
+        "rule_code": "FORMAT",
+        "message": "5 formatting region(s) to update (102 lines affected)",
+        "docs_url": "https://docs.astral.sh/ruff/formatter/",
+        "fix": {
+          "applicability": "safe",
+          "message": "Apply 5 formatting change(s)",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 376,
+                  "column": 1
+                },
+                "end": {
+                  "row": 392,
+                  "column": 1
+                }
+              },
+              "content": "    total_aum = serializers.FloatField(required=False, allow_null=True)\n    total_employees = serializers.IntegerField(required=False, allow_null=True)\n    total_offices = serializers.IntegerField(required=False, allow_null=True)\n    top_3_private_funds = serializers.ListField(child=serializers.DictField(), required=False, allow_null=True)\n    top_3_allocations = serializers.ListField(child=serializers.DictField(), required=False, allow_null=True)\n    total_clients = serializers.IntegerField(required=False, allow_null=True)\n    match_score = serializers.FloatField(required=False, allow_null=True)\n    match_details = serializers.DictField(required=False, allow_null=True)\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 393,
+                  "column": 1
+                },
+                "end": {
+                  "row": 405,
+                  "column": 1
+                }
+              },
+              "content": "\nclass RIAIndexResponseSerializer(serializers.Serializer):\n    \"\"\"Serializer for /ria/index response.\"\"\"\n\n    total_matches = serializers.IntegerField()\n    rows = serializers.ListField(child=serializers.DictField())\n\n\nclass RIACompanyLookupResponseSerializer(serializers.Serializer):\n    \"\"\"Serializer for /ria/company/lookup response.\"\"\"\n\n    total_matches = serializers.IntegerField()\n    matches = serializers.ListField(child=RIACompanyPreviewSerializer())\n    pagination = serializers.DictField()\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 415,
+                  "column": 1
+                },
+                "end": {
+                  "row": 427,
+                  "column": 1
+                }
+              },
+              "content": "\nclass RIAPdfRecordSerializer(serializers.Serializer):\n    \"\"\"Serializer for PDF metadata records.\"\"\"\n\n    # All fields are dynamic based on CSV columns\n    pass  # Will be handled as DictField in practice\n\n\nclass RIALocationMetadataSerializer(serializers.Serializer):\n    \"\"\"Serializer for location metadata endpoints.\"\"\"\n\n    countries = serializers.ListField(child=serializers.CharField())\n    cities = serializers.ListField(child=serializers.CharField())\n\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 442,
+                  "column": 1
+                },
+                "end": {
+                  "row": 448,
+                  "column": 1
+                }
+              },
+              "content": "\nclass RIAActivityListResponseSerializer(serializers.Serializer):\n    \"\"\"Serializer for /admin/ria/activity response.\"\"\"\n\n    records = serializers.ListField(child=RIAActivitySerializer())\n    pagination = serializers.DictField()\n    filters = serializers.DictField()\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 449,
+                  "column": 1
+                },
+                "end": {
+                  "row": 455,
+                  "column": 1
+                }
+              },
+              "content": "\nclass RIAActivitySummaryResponseSerializer(serializers.Serializer):\n    \"\"\"Serializer for /admin/ria/activity/summary response.\"\"\"\n\n    total_activities = serializers.IntegerField()\n    by_activity_type = serializers.DictField()\n    by_user = serializers.DictField()\n"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "tool_id": "ruff-format",
+    "signal_type": "format",
+    "signals": [
+      {
+        "signal_type": "format",
+        "severity": "low",
+        "file_path": "ria/utils/helpers.py",
+        "span": {
+          "start": {
+            "row": 23,
+            "column": 1
+          },
+          "end": {
+            "row": 97,
+            "column": 1
+          }
+        },
+        "rule_code": "FORMAT",
+        "message": "5 formatting region(s) to update (110 lines affected)",
+        "docs_url": "https://docs.astral.sh/ruff/formatter/",
+        "fix": {
+          "applicability": "safe",
+          "message": "Apply 5 formatting change(s)",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 23,
+                  "column": 1
+                },
+                "end": {
+                  "row": 44,
+                  "column": 1
+                }
+              },
+              "content": "    # Django uses request.META for headers (prefixed with HTTP_)\n    # FastAPI uses request.headers\n    search_context_header = None\n\n    # Try Django-style header access\n    if hasattr(request, \"META\"):\n        search_context_header = request.META.get(\"HTTP_X_SEARCH_CONTEXT\")\n    # Try FastAPI-style header access (for backward compatibility)\n    elif hasattr(request, \"headers\"):\n        search_context_header = request.headers.get(\"X-Search-Context\")\n\n    if not search_context_header:\n        return None\n\n    try:\n        return json.loads(search_context_header)\n    except json.JSONDecodeError:\n        from common.utils.logging_config import get_logger\n\n        logger = get_logger(__name__)\n        logger.warning(f\"Invalid search context header: {search_context_header}\")\n        return None\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 46,
+                  "column": 1
+                },
+                "end": {
+                  "row": 56,
+                  "column": 1
+                }
+              },
+              "content": "def get_session_id_from_request(request) -> str:\n    \"\"\"\n    Extract session ID from request headers or generate a new one.\n\n    Args:\n        request: Django request object\n\n    Returns:\n        Session ID string\n    \"\"\"\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 61,
+                  "column": 1
+                },
+                "end": {
+                  "row": 71,
+                  "column": 1
+                }
+              },
+              "content": "def format_search_params_for_storage(request_params: dict) -> dict:\n    \"\"\"\n    Format search parameters for database storage.\n\n    Args:\n        request_params: Dictionary of search parameters\n\n    Returns:\n        Filtered dictionary with None values removed\n    \"\"\"\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 76,
+                  "column": 1
+                },
+                "end": {
+                  "row": 86,
+                  "column": 1
+                }
+              },
+              "content": "def format_reset_time(seconds: int) -> str:\n    \"\"\"\n    Format seconds into human-readable hours and minutes.\n\n    Args:\n        seconds: Number of seconds\n\n    Returns:\n        Human-readable time string\n    \"\"\"\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 93,
+                  "column": 1
+                },
+                "end": {
+                  "row": 97,
+                  "column": 1
+                }
+              },
+              "content": "        return f\"{minutes} minute{'s' if minutes != 1 else ''}\"\n    else:\n        return \"less than a minute\"\n"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "tool_id": "ruff-format",
+    "signal_type": "format",
+    "signals": [
+      {
+        "signal_type": "format",
+        "severity": "low",
+        "file_path": "ria/services/company_service.py",
+        "span": {
+          "start": {
+            "row": 17,
+            "column": 1
+          },
+          "end": {
+            "row": 130,
+            "column": 1
+          }
+        },
+        "rule_code": "FORMAT",
+        "message": "4 formatting region(s) to update (207 lines affected)",
+        "docs_url": "https://docs.astral.sh/ruff/formatter/",
+        "fix": {
+          "applicability": "safe",
+          "message": "Apply 4 formatting change(s)",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 17,
+                  "column": 1
+                },
+                "end": {
+                  "row": 26,
+                  "column": 1
+                }
+              },
+              "content": "\nfrom ria.services.index_cache_service import get_index_cache\nfrom ria.services.pdf_cache_service import get_pdf_cache\nfrom ria.utils.constants import CRD_COLUMN, NAME_COLUMN, CITY_COLUMN, STATE_COLUMN, COUNTRY_COLUMN\nfrom common.utils.config import get_s3_bucket, get_s3_prefix\nfrom common.utils.logging_config import get_logger\n\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 28,
+                  "column": 1
+                },
+                "end": {
+                  "row": 79,
+                  "column": 1
+                }
+              },
+              "content": "\nclass CompanyService:\n    \"\"\"Service for company detail operations.\"\"\"\n\n    @staticmethod\n    def get_company_by_crd(crd: int) -> Dict[str, Any]:\n        \"\"\"\n        Get company details from index by CRD number.\n\n        Args:\n            crd: Company CRD number\n\n        Returns:\n            Company record as dictionary\n        \"\"\"\n        index_cache = get_index_cache()\n        df = index_cache.load()\n\n        # Filter by CRD - cast to int for comparison\n        company_df = df.filter(pl.col(CRD_COLUMN).cast(pl.Int64, strict=False) == crd)\n\n        if company_df.is_empty():\n            raise ValueError(f\"CRD {crd} not found in RIA database\")\n\n        company_data = company_df.to_dicts()[0]\n        return company_data\n\n    @staticmethod\n    def get_company_pdfs(crd: int) -> List[Dict[str, Any]]:\n        \"\"\"\n        Get PDF records for a specific CRD.\n\n        Args:\n            crd: Company CRD number\n\n        Returns:\n            List of PDF records\n        \"\"\"\n        return pdf_records_for_crd(crd)\n\n    @staticmethod\n    def load_trends_json(crd: int) -> Dict[str, Any]:\n        \"\"\"\n        Load trend data for a specific CRD from S3.\n\n        Args:\n            crd: Company CRD number\n\n        Returns:\n            Trend data as dictionary\n        \"\"\"\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 81,
+                  "column": 1
+                },
+                "end": {
+                  "row": 100,
+                  "column": 1
+                }
+              },
+              "content": "\ndef _load_trends_json(crd: int) -> Dict[str, Any]:\n    \"\"\"Load trend data for a specific CRD from S3.\"\"\"\n    s3_client = boto3.client(\"s3\")\n    bucket = get_s3_bucket()\n\n    # S3 path structure: output/sec_ingestion/processed/trends/latest/crd={crd}/trends.v1.json\n    s3_path = f\"{get_s3_prefix()}/processed/trends/latest/crd={crd}/trends.v1.json\"\n\n    try:\n        # Download trend data from S3\n        response = s3_client.get_object(Bucket=bucket, Key=s3_path)\n        content = response[\"Body\"].read().decode(\"utf-8\")\n        return json.loads(content)\n    except ClientError as e:\n        if e.response[\"Error\"][\"Code\"] == \"NoSuchKey\":\n            raise ValueError(f\"Trend data not found for CRD {crd}\")\n        else:\n            raise RuntimeError(f\"Failed to load trend data: {str(e)}\")\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 104,
+                  "column": 1
+                },
+                "end": {
+                  "row": 130,
+                  "column": 1
+                }
+              },
+              "content": "def pdf_records_for_crd(crd: int) -> List[Dict[str, Any]]:\n    \"\"\"Get PDF records for a specific CRD.\"\"\"\n    logger.info(f\"Looking up PDF records for CRD: {crd}\")\n\n    pdf_cache = get_pdf_cache()\n    pdf_df = pdf_cache.load().copy()\n    logger.info(f\"Loaded PDF data: {len(pdf_df)} rows, columns: {list(pdf_df.columns)}\")\n\n    if \"crd\" not in pdf_df.columns:\n        logger.error(\"\u274c RIA latest.csv missing 'crd' column\")\n        raise RuntimeError(\"RIA latest.csv missing 'crd' column\")\n\n    pdf_df[\"crd_numeric\"] = pd.to_numeric(pdf_df[\"crd\"], errors=\"coerce\")\n    subset = pdf_df[pdf_df[\"crd_numeric\"] == crd]\n    logger.info(f\"Found {len(subset)} PDF records for CRD {crd}\")\n\n    if subset.empty:\n        logger.warning(f\"No PDF records found for CRD {crd}\")\n        return []\n\n    subset = subset.drop(columns=[\"crd_numeric\"], errors=\"ignore\")\n    subset = subset.where(pd.notnull(subset), None)\n    records = subset.to_dict(orient=\"records\")\n    logger.info(f\"Returning {len(records)} PDF records for CRD {crd}\")\n    return records\n"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "tool_id": "ruff-format",
+    "signal_type": "format",
+    "signals": [
+      {
+        "signal_type": "format",
+        "severity": "low",
+        "file_path": "prospecting/enrichment_types.py",
+        "span": {
+          "start": {
+            "row": 55,
+            "column": 1
+          },
+          "end": {
+            "row": 559,
+            "column": 1
+          }
+        },
+        "rule_code": "FORMAT",
+        "message": "3 formatting region(s) to update (143 lines affected)",
+        "docs_url": "https://docs.astral.sh/ruff/formatter/",
+        "fix": {
+          "applicability": "safe",
+          "message": "Apply 3 formatting change(s)",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 55,
+                  "column": 1
+                },
+                "end": {
+                  "row": 62,
+                  "column": 1
+                }
+              },
+              "content": "    max_length: Optional[int] = None\n    min_length: Optional[int] = None\n    array_item_type: Optional[FieldType] = None\n    nested_schema: Optional[Dict[str, \"FieldDefinition\"]] = None\n    needs_llm: bool = False  # Whether this field needs LLM processing\n    merge_strategy: Literal[\"prefer_website\", \"prefer_external\", \"merge\", \"concat\", \"deduplicate\"] = \"merge\"\n    output_format: str = \"value\"  # \"value\", \"value_with_citations\", \"structured\", \"pydantic_model\"\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 335,
+                  "column": 1
+                },
+                "end": {
+                  "row": 374,
+                  "column": 1
+                }
+              },
+              "content": "        pydantic_model=RecentLeadershipChanges,\n        needs_llm=True,\n        merge_strategy=\"merge\",\n        output_format=\"pydantic_model\",\n    ),\n    \"organization_decision_making.parent_company\": FieldDefinition(\n        field_path=\"organization_decision_making.parent_company\",\n        field_type=FieldType.OBJECT,\n        needs_llm=False,  # CoreSignal-only field\n        merge_strategy=\"prefer_coresignal\",  # CoreSignal-only field\n        output_format=\"structured\",\n    ),\n    # ==================== Firm Information (Distribution Coverage) ====================\n    \"firm_information.target_investor_type\": FieldDefinition(\n        field_path=\"firm_information.target_investor_type\",\n        field_type=FieldType.STRING,  # Frontend expects string, not array of strings\n        needs_llm=False,  # Perplexity-only: structure at source via prompts\n        merge_strategy=\"prefer_perplexity\",  # Perplexity-only field\n        output_format=\"value_with_citations\",\n    ),\n    \"firm_information.regulated_by\": FieldDefinition(\n        field_path=\"firm_information.regulated_by\",\n        field_type=FieldType.STRING,  # Frontend expects string, not array of strings\n        needs_llm=False,  # Perplexity-only: structure at source via prompts\n        merge_strategy=\"prefer_perplexity\",  # Perplexity-only field\n        output_format=\"value_with_citations\",\n    ),\n    \"firm_information.litigation_regulatory_risk\": FieldDefinition(\n        field_path=\"firm_information.litigation_regulatory_risk\",\n        field_type=FieldType.STRING,  # Frontend expects string, not array\n        needs_llm=False,  # Perplexity-only: structure at source via prompts\n        merge_strategy=\"prefer_perplexity\",  # Perplexity-only field\n        output_format=\"value_with_citations\",\n    ),\n    # ==================== Activity Sentiment Signals ====================\n    \"news_activity_signals.recent_hires\": FieldDefinition(\n        field_path=\"news_activity_signals.recent_hires\",\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 530,
+                  "column": 1
+                },
+                "end": {
+                  "row": 559,
+                  "column": 1
+                }
+              },
+              "content": "        pydantic_model=CompanyRadars,\n        needs_llm=False,  # Already resolved by dedicated resolver\n        merge_strategy=\"prefer_resolver\",  # Resolver-exclusive section\n        output_format=\"pydantic_model\",\n    ),\n}\n\n\n# ==================== Helper Functions ====================\n\n\ndef get_field_definition(field_path: str) -> Optional[FieldDefinition]:\n    return ENRICHMENT_FIELD_DEFINITIONS.get(field_path)\n\n\ndef get_fields_needing_llm() -> List[str]:\n    return [path for path, definition in ENRICHMENT_FIELD_DEFINITIONS.items() if definition.needs_llm]\n\n\ndef get_fields_by_category(category: str) -> List[FieldDefinition]:\n    return [definition for path, definition in ENRICHMENT_FIELD_DEFINITIONS.items() if path.startswith(f\"{category}.\")]\n\n\ndef get_output_type(field_path: str) -> FieldType:\n"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "tool_id": "ruff-format",
+    "signal_type": "format",
+    "signals": [
+      {
+        "signal_type": "format",
+        "severity": "low",
+        "file_path": "authentication/clerk.py",
+        "span": {
+          "start": {
+            "row": 47,
+            "column": 1
+          },
+          "end": {
+            "row": 211,
+            "column": 1
+          }
+        },
+        "rule_code": "FORMAT",
+        "message": "5 formatting region(s) to update (94 lines affected)",
+        "docs_url": "https://docs.astral.sh/ruff/formatter/",
+        "fix": {
+          "applicability": "safe",
+          "message": "Apply 5 formatting change(s)",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 47,
+                  "column": 1
+                },
+                "end": {
+                  "row": 61,
+                  "column": 1
+                }
+              },
+              "content": "        issuer = get_clerk_issuer()\n        audience = get_clerk_audience()\n\n        missing = [\n            name\n            for name, value in (\n                (\"CLERK_JWKS_URL\", jwks_url),\n                (\"CLERK_ISSUER\", issuer),\n            )\n            if not value\n        ]\n        if missing:\n            raise ClerkConfigurationError(f\"Missing Clerk configuration value(s): {', '.join(missing)}\")\n\n        return cls(jwks_url=jwks_url, issuer=issuer, audience=audience)\n\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 69,
+                  "column": 1
+                },
+                "end": {
+                  "row": 83,
+                  "column": 1
+                }
+              },
+              "content": "    issuer = get_lp_clerk_issuer()\n    audience = get_lp_clerk_audience()\n\n    missing = [\n        name\n        for name, value in (\n            (\"LP_CLERK_JWKS_URL\", jwks_url),\n            (\"LP_CLERK_ISSUER\", issuer),\n        )\n        if not value\n    ]\n    if missing:\n        raise ClerkConfigurationError(f\"Missing LP Clerk configuration value(s): {', '.join(missing)}\")\n\n    return ClerkSettings(jwks_url=jwks_url, issuer=issuer, audience=audience)\n\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 100,
+                  "column": 1
+                },
+                "end": {
+                  "row": 106,
+                  "column": 1
+                }
+              },
+              "content": "    if http_get is not None:\n        fetcher = http_get\n    else:\n\n        def fetcher(url: str) -> Dict[str, Any]:\n            logger.info(f\"\ud83d\udd0d Fetching JWKS from: {url}\")\n            try:\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 181,
+                  "column": 1
+                },
+                "end": {
+                  "row": 188,
+                  "column": 1
+                }
+              },
+              "content": "            # Convert empty string to None (don't verify audience)\n            audience = audience if audience else None\n        verify_aud = bool(audience)\n\n        # PyJWT decode with proper options\n        # Add leeway to handle clock skew between server and Clerk\n        claims = jwt.decode(\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 207,
+                  "column": 1
+                },
+                "end": {
+                  "row": 211,
+                  "column": 1
+                }
+              },
+              "content": "def clear_jwks_cache() -> None:\n    \"\"\"Reset the in-memory JWKS cache (useful for tests).\"\"\"\n    _JWKS_CACHE.clear()\n"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "tool_id": "ruff-format",
+    "signal_type": "format",
+    "signals": [
+      {
+        "signal_type": "format",
+        "severity": "low",
+        "file_path": "ria/services/query_service.py",
+        "span": {
+          "start": {
+            "row": 31,
+            "column": 1
+          },
+          "end": {
+            "row": 149,
+            "column": 1
+          }
+        },
+        "rule_code": "FORMAT",
+        "message": "4 formatting region(s) to update (186 lines affected)",
+        "docs_url": "https://docs.astral.sh/ruff/formatter/",
+        "fix": {
+          "applicability": "safe",
+          "message": "Apply 4 formatting change(s)",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 31,
+                  "column": 1
+                },
+                "end": {
+                  "row": 42,
+                  "column": 1
+                }
+              },
+              "content": "        company_crd: Optional[str] = None,\n        company_name: Optional[str] = None,\n        company_action: Optional[str] = None,\n        ip_address: Optional[str] = None,\n    ) -> int:\n        \"\"\"\n        Store RIA activity (search or company view) in the database.\n\n        Args:\n            user_id: User identifier\n            session_id: Session identifier\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 47,
+                  "column": 1
+                },
+                "end": {
+                  "row": 54,
+                  "column": 1
+                }
+              },
+              "content": "            company_name: Name of the company\n            company_action: Action taken on the company\n            ip_address: User's IP address\n\n        Returns:\n            Activity ID of the stored record\n        \"\"\"\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 64,
+                  "column": 1
+                },
+                "end": {
+                  "row": 83,
+                  "column": 1
+                }
+              },
+              "content": "                company_action=company_action,\n                ip_address=ip_address,\n            )\n\n            logger.info(\n                f\"Stored RIA activity: {activity_type} for user {user_id}, activity_id: {activity.id}\",\n                extra={\"activity_id\": activity.id, \"user_id\": user_id, \"activity_type\": activity_type},\n            )\n            return activity.id\n\n        except Exception as e:\n            logger.error(f\"Failed to store RIA activity: {str(e)}\", extra={\"user_id\": user_id, \"activity_type\": activity_type}, exc_info=True)\n            raise\n\n    @staticmethod\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 87,
+                  "column": 1
+                },
+                "end": {
+                  "row": 149,
+                  "column": 1
+                }
+              },
+              "content": "        from_date: Optional[datetime] = None,\n        to_date: Optional[datetime] = None,\n        limit: int = 50,\n        offset: int = 0,\n    ) -> Dict[str, Any]:\n        try:\n            # Build query filters\n            filters = {}\n\n            if user_id:\n                filters[\"user_id\"] = user_id\n            if search_id:\n                filters[\"search_id\"] = search_id\n            if activity_type:\n                filters[\"activity_type\"] = activity_type\n            if from_date:\n                filters[\"created_at__gte\"] = from_date\n            if to_date:\n                filters[\"created_at__lte\"] = to_date\n\n            # Get total count\n            total_count = await RIAUserActivity.objects.filter(**filters).acount()\n\n            # Get paginated results\n            queryset = RIAUserActivity.objects.filter(**filters).order_by(\"search_id\", \"created_at\")\n            records = []\n\n            async for activity in queryset[offset : offset + limit]:\n                records.append(\n                    {\n                        \"id\": activity.id,\n                        \"user_id\": activity.user_id,\n                        \"session_id\": activity.session_id,\n                        \"activity_type\": activity.activity_type,\n                        \"search_id\": activity.search_id,\n                        \"search_params\": activity.search_params,\n                        \"search_timestamp\": activity.search_timestamp.isoformat() if activity.search_timestamp else None,\n                        \"company_crd\": activity.company_crd,\n                        \"company_name\": activity.company_name,\n                        \"company_action\": activity.company_action,\n                        \"ip_address\": activity.ip_address,\n                        \"created_at\": activity.created_at.isoformat() if activity.created_at else None,\n                    }\n                )\n\n            return {\"records\": records, \"total_count\": total_count, \"limit\": limit, \"offset\": offset}\n\n        except Exception as e:\n            logger.error(\n                f\"Failed to get RIA activity: {str(e)}\",\n                extra={\"user_id\": user_id, \"search_id\": search_id, \"activity_type\": activity_type},\n                exc_info=True,\n            )\n            raise\n"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "tool_id": "ruff-format",
+    "signal_type": "format",
+    "signals": [
+      {
+        "signal_type": "format",
+        "severity": "low",
+        "file_path": "ria/views.py",
+        "span": {
+          "start": {
+            "row": 249,
+            "column": 1
+          },
+          "end": {
+            "row": 638,
+            "column": 1
+          }
+        },
+        "rule_code": "FORMAT",
+        "message": "4 formatting region(s) to update (227 lines affected)",
+        "docs_url": "https://docs.astral.sh/ruff/formatter/",
+        "fix": {
+          "applicability": "safe",
+          "message": "Apply 4 formatting change(s)",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 249,
+                  "column": 1
+                },
+                "end": {
+                  "row": 260,
+                  "column": 1
+                }
+              },
+              "content": "\nclass RIACompanyDetailView(AsyncAPIView):\n    permission_classes = [IsAuthenticated]\n\n    async def get(self, request: Request, crd: int):\n        \"\"\"Handle GET request for company details.\"\"\"\n        logger.info(f\"RIA company detail request for CRD: {crd}\")\n\n        try:\n            index_cache = get_index_cache()\n            df = index_cache.load()\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 318,
+                  "column": 1
+                },
+                "end": {
+                  "row": 347,
+                  "column": 1
+                }
+              },
+              "content": "        }\n        response_serializer = RIACompanyDetailSerializer(data=response_data)\n        response_serializer.is_valid()\n\n        return Response(response_serializer.data, status=status.HTTP_200_OK)\n\n\nclass RIAPdfListView(AsyncAPIView):\n    \"\"\"GET /ria/company/{crd}/pdfs - List all available PDFs for a specific CRD.\"\"\"\n\n    permission_classes = [IsAuthenticated]\n\n    async def get(self, request: Request, crd: int):\n        \"\"\"Handle GET request for PDF list.\"\"\"\n        logger.info(f\"PDF list request for CRD: {crd}\")\n\n        try:\n            company_service = CompanyService()\n            pdfs = company_service.get_company_pdfs(crd)\n            logger.info(f\"Found {len(pdfs)} PDF records for CRD {crd}\")\n\n            return Response({\"crd\": crd, \"pdf_count\": len(pdfs), \"pdfs\": pdfs}, status=status.HTTP_200_OK)\n\n        except Exception as e:\n            logger.error(f\"Failed to list PDFs for CRD {crd}: {str(e)}\", exc_info=True)\n            raise APIException(detail=f\"Failed to list PDFs: {str(e)}\")\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 474,
+                  "column": 1
+                },
+                "end": {
+                  "row": 493,
+                  "column": 1
+                }
+              },
+              "content": "\nclass RIALocationMetadataView(AsyncAPIView):\n    permission_classes = [IsAuthenticated]\n\n    async def get(self, request: Request):\n        \"\"\"Handle GET request for location metadata.\"\"\"\n        logger.info(\"RIA location metadata request\")\n\n        try:\n            location_cache = get_location_cache()\n            location_data = location_cache.get_location_data()\n            logger.info(f\"Returning {len(location_data['countries'])} countries and {len(location_data['cities'])} cities\")\n\n            serializer = RIALocationMetadataSerializer(data=location_data)\n            serializer.is_valid()\n\n            return Response(serializer.data, status=status.HTTP_200_OK)\n        except Exception as e:\n            logger.error(f\"Failed to get location metadata: {str(e)}\", exc_info=True)\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 580,
+                  "column": 1
+                },
+                "end": {
+                  "row": 638,
+                  "column": 1
+                }
+              },
+              "content": "# Admin Endpoints\n# ============================================================================\n\n\nclass RIAActivityAdminView(AsyncAPIView):\n    \"\"\"GET /admin/ria/activity - Admin endpoint to retrieve RIA activity history.\"\"\"\n\n    permission_classes = [IsAuthenticated, IsAdmin]\n\n    async def get(self, request: Request):\n        \"\"\"Handle GET request for activity admin.\"\"\"\n        serializer = RIAActivityAdminSerializer(data=request.query_params)\n        serializer.is_valid(raise_exception=True)\n\n        user_id = serializer.validated_data.get(\"user_id\")\n        search_id = serializer.validated_data.get(\"search_id\")\n        activity_type = serializer.validated_data.get(\"activity_type\")\n        from_date = serializer.validated_data.get(\"from_date\")\n        to_date = serializer.validated_data.get(\"to_date\")\n        limit = serializer.validated_data.get(\"limit\", 50)\n        offset = serializer.validated_data.get(\"offset\", 0)\n\n        logger.info(f\"Admin RIA activity request: user_id={user_id}, search_id={search_id}, activity_type={activity_type}\")\n\n        try:\n            activity_data = await QueryService.get_ria_activity(\n                user_id=user_id, search_id=search_id, activity_type=activity_type, from_date=from_date, to_date=to_date, limit=limit, offset=offset\n            )\n\n            response_data = {\n                \"records\": activity_data[\"records\"],\n                \"pagination\": {\n                    \"total_count\": activity_data[\"total_count\"],\n                    \"limit\": activity_data[\"limit\"],\n                    \"offset\": activity_data[\"offset\"],\n                    \"has_more\": (activity_data[\"offset\"] + activity_data[\"limit\"]) < activity_data[\"total_count\"],\n                },\n                \"filters\": {\n                    \"user_id\": user_id,\n                    \"search_id\": search_id,\n                    \"activity_type\": activity_type,\n                    \"from_date\": from_date.isoformat() if from_date else None,\n                    \"to_date\": to_date.isoformat() if to_date else None,\n                },\n            }\n\n            response_serializer = RIAActivityListResponseSerializer(data=response_data)\n            response_serializer.is_valid()\n\n            return Response(response_serializer.data, status=status.HTTP_200_OK)\n\n        except Exception as e:\n            logger.error(f\"Failed to retrieve RIA activity: {str(e)}\", exc_info=True)\n            raise APIException(detail=f\"Failed to retrieve RIA activity: {str(e)}\")\n"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "tool_id": "ruff-format",
+    "signal_type": "format",
+    "signals": [
+      {
+        "signal_type": "format",
+        "severity": "low",
+        "file_path": "ria/services/search_service.py",
+        "span": {
+          "start": {
+            "row": 59,
+            "column": 1
+          },
+          "end": {
+            "row": 443,
+            "column": 1
+          }
+        },
+        "rule_code": "FORMAT",
+        "message": "3 formatting region(s) to update (184 lines affected)",
+        "docs_url": "https://docs.astral.sh/ruff/formatter/",
+        "fix": {
+          "applicability": "safe",
+          "message": "Apply 3 formatting change(s)",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 59,
+                  "column": 1
+                },
+                "end": {
+                  "row": 72,
+                  "column": 1
+                }
+              },
+              "content": "    if column not in df.columns:\n        logger.warning(f\"\u26a0\ufe0f Website column '{column}' not found, adding empty domain column\")\n        return df.with_columns(pl.lit(None).alias(\"__domain\"))\n\n    return df.with_columns(pl.col(column).map_elements(canonicalize_domain, return_dtype=pl.Utf8).alias(\"__domain\"))\n\n\ndef to_serializable_records(df: pl.DataFrame, limit: int) -> List[Dict[str, Any]]:\n    \"\"\"Convert DataFrame to list of dictionaries, limited to specified count.\"\"\"\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 131,
+                  "column": 1
+                },
+                "end": {
+                  "row": 204,
+                  "column": 1
+                }
+              },
+              "content": "                    total_count += count\n            except (ValueError, TypeError):\n                continue\n\n    return total_count\n\n\ndef transform_company_record_for_preview(company_record: Dict[str, Any]) -> Dict[str, Any]:\n    \"\"\"Transform a company record for search preview with limited fields as per schema.\"\"\"\n    transformed = {}\n\n    # Map only the specific fields required for search preview (limited subset)\n    for original_field, display_field in COMPANY_PREVIEW_MAPPING.items():\n        if original_field in company_record and company_record[original_field] is not None:\n            transformed[display_field] = company_record[original_field]\n\n    # Add top 3 private funds (calculated from all private fund data)\n    transformed[\"top_3_private_funds\"] = get_top_3_private_funds(company_record)\n\n    # Add top 3 allocations (calculated from all SMA allocation data)\n    transformed[\"top_3_allocations\"] = get_top_3_allocations(company_record)\n\n    # Add total clients (calculated from all client type columns)\n    transformed[\"total_clients\"] = get_total_clients(company_record)\n\n    return transformed\n\n\ndef intelligent_name_search(df: pl.DataFrame, search_name: str, max_results: int) -> List[Dict[str, Any]]:\n    \"\"\"\n    Intelligent company name search with best-in-class ensemble fuzzy matching.\n\n    Strategy:\n    1. Try exact match first (case-insensitive)\n    2. If no exact match, use ensemble fuzzy matching\n    3. Return only high-quality matches (quality over quantity)\n\n    Ensemble Algorithm:\n    - Uses 4 different similarity algorithms for robustness\n    - Weighted combination ensures balanced matching\n    - Quality threshold prevents weak matches\n    \"\"\"\n    search_name_lower = search_name.lower().strip()\n\n    # Phase 1: Exact match (case-insensitive)\n    exact_matches = df.filter(pl.col(NAME_COLUMN).str.to_lowercase() == search_name_lower)\n\n    if not exact_matches.is_empty():\n        logger.info(f\"Found {exact_matches.height} exact matches for '{search_name}'\")\n        return to_serializable_records(exact_matches, max_results)\n\n    # Phase 2: Ensemble fuzzy matching\n    logger.info(f\"No exact matches found, performing fuzzy search for '{search_name}'\")\n    fuzzy_matches = ensemble_fuzzy_search(df, search_name, max_results)\n\n    return fuzzy_matches\n\n\ndef ensemble_fuzzy_search(df: pl.DataFrame, search_name: str, max_results: int) -> List[Dict[str, Any]]:\n    \"\"\"\n    Best-in-class ensemble fuzzy matching using multiple algorithms.\n\n    Ensemble Components:\n    1. Ratio (40%): Overall character similarity - handles typos\n    2. Partial Ratio (25%): Best substring match - handles partial names\n    3. Token Sort Ratio (20%): Word order independent - handles \"Company American\" vs \"American Company\"\n    4. Token Set Ratio (15%): Word overlap - handles extra/missing words\n\n    Why this ensemble is robust:\n    - Multiple algorithms catch different types of variations\n    - Weighted combination balances different matching strategies\n"
+            },
+            {
+              "span": {
+                "start": {
+                  "row": 430,
+                  "column": 1
+                },
+                "end": {
+                  "row": 443,
+                  "column": 1
+                }
+              },
+              "content": "                \"limit\": limit,\n                \"has_more\": has_more,\n                \"next_offset\": next_offset,\n                \"showing\": f\"{len(matches)} of {total_matches}\",\n            },\n            \"filter_status\": {\"applied_filters\": {}, \"ignored_filters\": {}, \"available_filters\": []},\n        }\n"
+            }
+          ]
+        }
+      }
+    ]
+  }
+]

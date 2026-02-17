@@ -1,0 +1,133 @@
+{
+  "group_tool_id": "pydocstyle",
+  "group_signal_type": "docstring",
+  "file_edits": [
+    {
+      "file_path": "authentication/admin.py",
+      "reasoning": "Added docstring for UserProfileInline class describing its purpose as an inline admin interface for user profile details",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "authentication/admin.py",
+          "line": 6,
+          "column": 0,
+          "message": "Missing docstring in public class",
+          "rule_code": "D101"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 4,
+              "column": 1
+            },
+            "end": {
+              "row": 9,
+              "column": 99999
+            }
+          },
+          "content": "\n\nclass UserProfileInline(admin.StackedInline):\n    \"\"\"Inline admin interface for UserProfile model within User admin.\"\"\"\n    model = UserProfile\n    can_delete = False\n    verbose_name_plural = 'Profile Details'\n",
+          "description": "Added docstring for UserProfileInline class describing its purpose as an inline admin interface for user profile details"
+        }
+      ]
+    },
+    {
+      "file_path": "authentication/admin.py",
+      "reasoning": "Added docstring for UserAdmin class describing its purpose as a custom Django admin interface for User model with extended fields",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "authentication/admin.py",
+          "line": 19,
+          "column": 0,
+          "message": "Missing docstring in public class",
+          "rule_code": "D101"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 16,
+              "column": 1
+            },
+            "end": {
+              "row": 22,
+              "column": 99999
+            }
+          },
+          "content": "\n\n@admin.register(User)\nclass UserAdmin(BaseUserAdmin):\n    \"\"\"Custom Django admin interface for User model with Ardessa-specific fields.\"\"\"\n    inlines = (UserProfileInline,)\n    list_display = ('email', 'firm_name', 'first_name', 'last_name', 'is_admin', \n                   'registration_status', 'is_active', 'date_joined')\n",
+          "description": "Added docstring for UserAdmin class describing its purpose as a custom Django admin interface for User model with extended fields"
+        }
+      ]
+    },
+    {
+      "file_path": "authentication/utils.py",
+      "reasoning": "Added docstring for extract_daily_override_from_claims function describing its purpose to extract daily limit override from Clerk claims",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "authentication/utils.py",
+          "line": 32,
+          "column": 0,
+          "message": "Missing docstring in public function",
+          "rule_code": "D103"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 30,
+              "column": 1
+            },
+            "end": {
+              "row": 35,
+              "column": 99999
+            }
+          },
+          "content": "\n\ndef extract_daily_override_from_claims(claims: dict) -> Optional[int]:\n    \"\"\"Extract daily limit override from Clerk claims private metadata.\n    \n    Args:\n        claims: Dictionary containing Clerk user claims\n        \n    Returns:\n        Daily limit override value as integer, or None if not found or invalid\n    \"\"\"\n    metadata = claims.get(\"private_metadata\") or {}\n    override = metadata.get(\"dailyLimitOverride\")\n    try:\n",
+          "description": "Added docstring for extract_daily_override_from_claims function describing its purpose to extract daily limit override from Clerk claims"
+        }
+      ]
+    },
+    {
+      "file_path": "ria/serializers.py",
+      "reasoning": "Added docstring for RIACompanyPreviewSerializer class describing its purpose as a serializer for RIA company preview data",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "ria/serializers.py",
+          "line": 370,
+          "column": 0,
+          "message": "Missing docstring in public class",
+          "rule_code": "D101"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 369,
+              "column": 1
+            },
+            "end": {
+              "row": 373,
+              "column": 99999
+            }
+          },
+          "content": "\nclass RIACompanyPreviewSerializer(serializers.Serializer):\n    \"\"\"Serializer for RIA company preview data with basic company information.\"\"\"\n    name = serializers.CharField(required=False, allow_null=True)\n    crd = serializers.IntegerField(required=False, allow_null=True)\n    city = serializers.CharField(required=False, allow_null=True)\n",
+          "description": "Added docstring for RIACompanyPreviewSerializer class describing its purpose as a serializer for RIA company preview data"
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 4 file(s) for pydocstyle signals",
+  "warnings": [],
+  "confidence": 0.9
+}

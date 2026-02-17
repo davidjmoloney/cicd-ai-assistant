@@ -1,0 +1,109 @@
+{
+  "group_tool_id": "ruff",
+  "group_signal_type": "lint",
+  "file_edits": [
+    {
+      "file_path": "ria/views.py",
+      "reasoning": "Added \"from e\" to the raise statement to properly chain the exception as required by B904",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "ria/views.py",
+          "line": 695,
+          "column": 13,
+          "message": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+          "rule_code": "B904"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 688,
+              "column": 1
+            },
+            "end": {
+              "row": 695,
+              "column": 99999
+            }
+          },
+          "content": "            response_serializer = RIAActivitySummaryResponseSerializer(data=response_data)\n            response_serializer.is_valid()\n            \n            return Response(response_serializer.data, status=status.HTTP_200_OK)\n            \n        except Exception as e:\n            logger.error(f\"Failed to generate RIA activity summary: {str(e)}\", exc_info=True)\n            raise APIException(detail=f\"Failed to generate RIA activity summary: {str(e)}\") from e\n",
+          "description": "Added \"from e\" to the raise statement to properly chain the exception as required by B904"
+        }
+      ]
+    },
+    {
+      "file_path": "authentication/admin.py",
+      "reasoning": "Sorted imports according to isort standards - Django imports first, then local imports",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "authentication/admin.py",
+          "line": 1,
+          "column": 1,
+          "message": "Import block is un-sorted or un-formatted",
+          "rule_code": "I001"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 1,
+              "column": 1
+            },
+            "end": {
+              "row": 5,
+              "column": 99999
+            }
+          },
+          "content": "from django.contrib import admin\nfrom django.contrib.auth.admin import UserAdmin as BaseUserAdmin\n\nfrom .models import User, UserProfile\n\n\n",
+          "description": "Sorted imports according to isort standards - Django imports first, then local imports"
+        }
+      ]
+    },
+    {
+      "file_path": "ria/serializers.py",
+      "reasoning": "Sorted imports and replaced deprecated typing.List with built-in list type",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "ria/serializers.py",
+          "line": 7,
+          "column": 1,
+          "message": "Import block is un-sorted or un-formatted",
+          "rule_code": "I001"
+        },
+        {
+          "file_path": "ria/serializers.py",
+          "line": 8,
+          "column": 1,
+          "message": "`typing.List` is deprecated, use `list` instead",
+          "rule_code": "UP035"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 1,
+              "column": 1
+            },
+            "end": {
+              "row": 14,
+              "column": 99999
+            }
+          },
+          "content": "\"\"\"\nDjango REST Framework serializers for RIA API.\n\nThis module contains all request and response serializers for RIA endpoints.\n\"\"\"\n\nfrom typing import Any, Dict, Optional\n\nfrom rest_framework import serializers\n\n\n# ============================================================================\n# Request Serializers\n# ============================================================================\n\n",
+          "description": "Sorted imports and replaced deprecated typing.List with built-in list type"
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 3 file(s) for ruff signals",
+  "warnings": [],
+  "confidence": 0.9333333333333332
+}

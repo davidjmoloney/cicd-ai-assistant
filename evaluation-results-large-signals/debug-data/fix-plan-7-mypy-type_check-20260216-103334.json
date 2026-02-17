@@ -1,0 +1,40 @@
+{
+  "group_tool_id": "mypy",
+  "group_signal_type": "type_check",
+  "file_edits": [
+    {
+      "file_path": "ria/views.py",
+      "reasoning": "Added dict type annotation to by_user variable to satisfy mypy. Based on the usage pattern where it stores user_id keys with integer counts as values, the appropriate type is dict[str, int].",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "ria/views.py",
+          "line": 667,
+          "column": 13,
+          "message": "Need type annotation for \"by_user\" (hint: \"by_user: dict[<type>, <type>] = ...\")",
+          "rule_code": "var-annotated"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 660,
+              "column": 1
+            },
+            "end": {
+              "row": 674,
+              "column": 99999
+            }
+          },
+          "content": "            )\n            \n            records = all_activities[\"records\"]\n            \n            # Calculate summary statistics\n            total_activities = len(records)\n            by_activity_type = {}\n            by_user: dict[str, int] = {}\n            \n            for record in records:\n                # Count by activity type\n                activity_type = record.get(\"activity_type\", \"unknown\")\n                by_activity_type[activity_type] = by_activity_type.get(activity_type, 0) + 1\n                \n                # Count by user\n",
+          "description": "Added dict type annotation to by_user variable to satisfy mypy. Based on the usage pattern where it stores user_id keys with integer counts as values, the appropriate type is dict[str, int]."
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 1 file(s) for mypy signals",
+  "warnings": [],
+  "confidence": 0.95
+}

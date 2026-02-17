@@ -1,0 +1,85 @@
+{
+  "group_tool_id": "mypy",
+  "group_signal_type": "type_check",
+  "file_edits": [
+    {
+      "file_path": "ria/services/search_service.py",
+      "reasoning": "The lambda functions are returning dict values which are typed as object, but sort() expects comparable types. Adding type annotations to specify that the dict values are int/float will resolve the type checker issues.",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "ria/services/search_service.py",
+          "line": 96,
+          "column": 36,
+          "message": "Incompatible return value type (got \"object\", expected \"SupportsDunderLT[Any] | SupportsDunderGT[Any]\")",
+          "rule_code": "return-value"
+        },
+        {
+          "file_path": "ria/services/search_service.py",
+          "line": 118,
+          "column": 36,
+          "message": "Incompatible return value type (got \"object\", expected \"SupportsDunderLT[Any] | SupportsDunderGT[Any]\")",
+          "rule_code": "return-value"
+        },
+        {
+          "file_path": "ria/services/search_service.py",
+          "line": 118,
+          "column": 26,
+          "message": "Argument \"key\" to \"sort\" of \"list\" has incompatible type \"Callable[[dict[str, object]], object]\"; expected \"Callable[[dict[str, object]], SupportsDunderLT[Any] | SupportsDunderGT[Any]]\"",
+          "rule_code": "arg-type"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 76,
+              "column": 1
+            },
+            "end": {
+              "row": 125,
+              "column": 99999
+            }
+          },
+          "content": "\n\ndef get_top_3_private_funds(company_record: Dict[str, Any]) -> List[Dict[str, Any]]:\n    \"\"\"Get top 3 private fund types by count for a company.\"\"\"\n    fund_counts = []\n    \n    for field_name, column_name in PRIVATE_FUND_COUNT_COLUMNS.items():\n        if column_name in company_record and company_record[column_name] is not None:\n            try:\n                count = int(company_record[column_name])\n                if count > 0:\n                    display_name = DISPLAY_NAME_MAPPING.get(column_name, column_name)\n                    fund_counts.append({\n                        \"category\": display_name,\n                        \"count\": count\n                    })\n            except (ValueError, TypeError):\n                continue\n    \n    # Sort by count (highest first) and return top 3\n    fund_counts.sort(key=lambda x: int(x[\"count\"]), reverse=True)\n    return fund_counts[:3]\n\n\ndef get_top_3_allocations(company_record: Dict[str, Any]) -> List[Dict[str, Any]]:\n    \"\"\"Get top 3 SMA allocation categories by percentage for a company.\"\"\"\n    allocations = []\n    \n    for field_name, column_name in SMA_ALLOCATION_COLUMNS.items():\n        if column_name in company_record and company_record[column_name] is not None:\n            try:\n                percentage = float(company_record[column_name])\n                if percentage > 0:\n                    display_name = DISPLAY_NAME_MAPPING.get(column_name, column_name)\n                    allocations.append({\n                        \"category\": display_name,\n                        \"percentage\": percentage\n                    })\n            except (ValueError, TypeError):\n                continue\n    \n    # Sort by percentage (highest first) and return top 3\n    allocations.sort(key=lambda x: float(x[\"percentage\"]), reverse=True)\n    return allocations[:3]\n\n\ndef get_total_clients(company_record: Dict[str, Any]) -> int:\n    \"\"\"Get total count of all clients for a company by summing all client type columns.\"\"\"\n    total_count = 0\n    \n",
+          "description": "The lambda functions are returning dict values which are typed as object, but sort() expects comparable types. Adding type annotations to specify that the dict values are int/float will resolve the type checker issues."
+        }
+      ]
+    },
+    {
+      "file_path": "ria/views.py",
+      "reasoning": "Added type annotation for by_activity_type dictionary that maps string activity types to integer counts",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "ria/views.py",
+          "line": 666,
+          "column": 13,
+          "message": "Need type annotation for \"by_activity_type\" (hint: \"by_activity_type: dict[<type>, <type>] = ...\")",
+          "rule_code": "var-annotated"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 659,
+              "column": 1
+            },
+            "end": {
+              "row": 673,
+              "column": 99999
+            }
+          },
+          "content": "                offset=0\n            )\n            \n            records = all_activities[\"records\"]\n            \n            # Calculate summary statistics\n            total_activities = len(records)\n            by_activity_type: dict[str, int] = {}\n            by_user = {}\n            \n            for record in records:\n                # Count by activity type\n                activity_type = record.get(\"activity_type\", \"unknown\")\n                by_activity_type[activity_type] = by_activity_type.get(activity_type, 0) + 1\n                \n",
+          "description": "Added type annotation for by_activity_type dictionary that maps string activity types to integer counts"
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 2 file(s) for mypy signals",
+  "warnings": [],
+  "confidence": 0.925
+}

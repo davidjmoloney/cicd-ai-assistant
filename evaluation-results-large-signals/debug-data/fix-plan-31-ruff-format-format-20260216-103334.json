@@ -1,0 +1,77 @@
+{
+  "group_tool_id": "ruff-format",
+  "group_signal_type": "format",
+  "file_edits": [
+    {
+      "file_path": "ria/services/query_service.py",
+      "reasoning": "Auto-applied format fixes from ruff-format",
+      "confidence": 1.0,
+      "signal_errors": [],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 31,
+              "column": 1
+            },
+            "end": {
+              "row": 42,
+              "column": 1
+            }
+          },
+          "content": "        company_crd: Optional[str] = None,\n        company_name: Optional[str] = None,\n        company_action: Optional[str] = None,\n        ip_address: Optional[str] = None,\n    ) -> int:\n        \"\"\"\n        Store RIA activity (search or company view) in the database.\n\n        Args:\n            user_id: User identifier\n            session_id: Session identifier\n",
+          "description": "Apply 4 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 47,
+              "column": 1
+            },
+            "end": {
+              "row": 54,
+              "column": 1
+            }
+          },
+          "content": "            company_name: Name of the company\n            company_action: Action taken on the company\n            ip_address: User's IP address\n\n        Returns:\n            Activity ID of the stored record\n        \"\"\"\n",
+          "description": "Apply 4 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 64,
+              "column": 1
+            },
+            "end": {
+              "row": 83,
+              "column": 1
+            }
+          },
+          "content": "                company_action=company_action,\n                ip_address=ip_address,\n            )\n\n            logger.info(\n                f\"Stored RIA activity: {activity_type} for user {user_id}, activity_id: {activity.id}\",\n                extra={\"activity_id\": activity.id, \"user_id\": user_id, \"activity_type\": activity_type},\n            )\n            return activity.id\n\n        except Exception as e:\n            logger.error(f\"Failed to store RIA activity: {str(e)}\", extra={\"user_id\": user_id, \"activity_type\": activity_type}, exc_info=True)\n            raise\n\n    @staticmethod\n",
+          "description": "Apply 4 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 87,
+              "column": 1
+            },
+            "end": {
+              "row": 149,
+              "column": 1
+            }
+          },
+          "content": "        from_date: Optional[datetime] = None,\n        to_date: Optional[datetime] = None,\n        limit: int = 50,\n        offset: int = 0,\n    ) -> Dict[str, Any]:\n        try:\n            # Build query filters\n            filters = {}\n\n            if user_id:\n                filters[\"user_id\"] = user_id\n            if search_id:\n                filters[\"search_id\"] = search_id\n            if activity_type:\n                filters[\"activity_type\"] = activity_type\n            if from_date:\n                filters[\"created_at__gte\"] = from_date\n            if to_date:\n                filters[\"created_at__lte\"] = to_date\n\n            # Get total count\n            total_count = await RIAUserActivity.objects.filter(**filters).acount()\n\n            # Get paginated results\n            queryset = RIAUserActivity.objects.filter(**filters).order_by(\"search_id\", \"created_at\")\n            records = []\n\n            async for activity in queryset[offset : offset + limit]:\n                records.append(\n                    {\n                        \"id\": activity.id,\n                        \"user_id\": activity.user_id,\n                        \"session_id\": activity.session_id,\n                        \"activity_type\": activity.activity_type,\n                        \"search_id\": activity.search_id,\n                        \"search_params\": activity.search_params,\n                        \"search_timestamp\": activity.search_timestamp.isoformat() if activity.search_timestamp else None,\n                        \"company_crd\": activity.company_crd,\n                        \"company_name\": activity.company_name,\n                        \"company_action\": activity.company_action,\n                        \"ip_address\": activity.ip_address,\n                        \"created_at\": activity.created_at.isoformat() if activity.created_at else None,\n                    }\n                )\n\n            return {\"records\": records, \"total_count\": total_count, \"limit\": limit, \"offset\": offset}\n\n        except Exception as e:\n            logger.error(\n                f\"Failed to get RIA activity: {str(e)}\",\n                extra={\"user_id\": user_id, \"search_id\": search_id, \"activity_type\": activity_type},\n                exc_info=True,\n            )\n            raise\n",
+          "description": "Apply 4 formatting change(s)"
+        }
+      ]
+    }
+  ],
+  "summary": "Auto-applied 1 format fix(es) across 1 file(s)",
+  "warnings": [],
+  "confidence": 1.0
+}

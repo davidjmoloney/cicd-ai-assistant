@@ -1,0 +1,12 @@
+{
+  "success": true,
+  "pr_url": "https://github.com/davidjmoloney/ardessa-backend-clone-12Feb2026/pull/66",
+  "pr_number": 66,
+  "branch_name": "cicd-agent-fix/format/20260216-110200-25ee55",
+  "error": null,
+  "files_changed": [
+    "authentication/utils.py"
+  ],
+  "skipped_fixes": [],
+  "unchanged_fixes": []
+}

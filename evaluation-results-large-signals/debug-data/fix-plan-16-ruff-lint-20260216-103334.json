@@ -1,0 +1,85 @@
+{
+  "group_tool_id": "ruff",
+  "group_signal_type": "lint",
+  "file_edits": [
+    {
+      "file_path": "authentication/clerk.py",
+      "reasoning": "Replaced Dict with dict for modern Python type annotation as required by UP006",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "authentication/clerk.py",
+          "line": 132,
+          "column": 51,
+          "message": "Use `dict` instead of `Dict` for type annotation",
+          "rule_code": "UP006"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 130,
+              "column": 1
+            },
+            "end": {
+              "row": 134,
+              "column": 99999
+            }
+          },
+          "content": "\n\ndef _select_signing_key(token: str, jwks_payload: dict[str, Any]) -> dict[str, Any]:\n    \"\"\"Return the JWK matching the token's `kid` header.\"\"\"\n    # PyJWT has the same get_unverified_header method\n",
+          "description": "Replaced Dict with dict for modern Python type annotation as required by UP006"
+        }
+      ]
+    },
+    {
+      "file_path": "ria/services/query_service.py",
+      "reasoning": "Removed unused imports (List, timezone) and sorted imports according to isort standards",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "ria/services/query_service.py",
+          "line": 8,
+          "column": 1,
+          "message": "Import block is un-sorted or un-formatted",
+          "rule_code": "I001"
+        },
+        {
+          "file_path": "ria/services/query_service.py",
+          "line": 8,
+          "column": 41,
+          "message": "`typing.List` imported but unused",
+          "rule_code": "F401"
+        },
+        {
+          "file_path": "ria/services/query_service.py",
+          "line": 12,
+          "column": 26,
+          "message": "`django.utils.timezone` imported but unused",
+          "rule_code": "F401"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 1,
+              "column": 1
+            },
+            "end": {
+              "row": 16,
+              "column": 99999
+            }
+          },
+          "content": "\"\"\"\nQuery Service\n\nThis service handles all database operations for RIA using Django ORM.\nReplaces asyncpg database calls with Django ORM queries.\n\"\"\"\n\nfrom datetime import datetime\nfrom typing import Any, Dict, Optional\n\nfrom django.db import transaction\n\nfrom common.utils.logging_config import get_logger\nfrom ria.models import RIAUserActivity\n\n",
+          "description": "Removed unused imports (List, timezone) and sorted imports according to isort standards"
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 2 file(s) for ruff signals",
+  "warnings": [],
+  "confidence": 0.925
+}

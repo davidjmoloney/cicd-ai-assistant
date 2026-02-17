@@ -1,0 +1,88 @@
+{
+  "group_tool_id": "mypy",
+  "group_signal_type": "type_check",
+  "file_edits": [
+    {
+      "file_path": "prospecting/enrichment_types.py",
+      "reasoning": "The merge_strategy field expects specific literal values but is receiving \"prefer_coresignal\" which is not in the allowed set. Need to change to \"prefer_external\" which is the closest semantic match for external data sources.",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "prospecting/enrichment_types.py",
+          "line": 428,
+          "column": 24,
+          "message": "Argument \"merge_strategy\" to \"FieldDefinition\" has incompatible type \"Literal['prefer_coresignal']\"; expected \"Literal['prefer_website', 'prefer_external', 'merge', 'concat', 'deduplicate']\"",
+          "rule_code": "arg-type"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 421,
+              "column": 1
+            },
+            "end": {
+              "row": 435,
+              "column": 99999
+            }
+          },
+          "content": "        merge_strategy=\"prefer_external\",  # CoreSignal-only field\n        output_format=\"value\"\n    ),\n    \"news_activity_signals.job_market_activity\": FieldDefinition(\n        field_path=\"news_activity_signals.job_market_activity\",\n        field_type=FieldType.OBJECT,\n        needs_llm=False,  # CoreSignal-only field\n        merge_strategy=\"prefer_external\",  # CoreSignal-only field\n        output_format=\"value\"\n    ),\n    \"news_activity_signals.social_media_engagement\": FieldDefinition(\n        field_path=\"news_activity_signals.social_media_engagement\",\n        field_type=FieldType.OBJECT,\n        needs_llm=False,  # CoreSignal-only field\n        merge_strategy=\"prefer_external\",  # CoreSignal-only field\n",
+          "description": "The merge_strategy field expects specific literal values but is receiving \"prefer_coresignal\" which is not in the allowed set. Need to change to \"prefer_external\" which is the closest semantic match for external data sources."
+        }
+      ]
+    },
+    {
+      "file_path": "prospecting/enrichment_types.py",
+      "reasoning": "The merge_strategy field expects specific literal values but is receiving \"prefer_nasdaq\" which is not in the allowed set. Need to change to \"prefer_external\" which is the closest semantic match for external data sources like Nasdaq.",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "prospecting/enrichment_types.py",
+          "line": 458,
+          "column": 24,
+          "message": "Argument \"merge_strategy\" to \"FieldDefinition\" has incompatible type \"Literal['prefer_nasdaq']\"; expected \"Literal['prefer_website', 'prefer_external', 'merge', 'concat', 'deduplicate']\"",
+          "rule_code": "arg-type"
+        },
+        {
+          "file_path": "prospecting/enrichment_types.py",
+          "line": 465,
+          "column": 24,
+          "message": "Argument \"merge_strategy\" to \"FieldDefinition\" has incompatible type \"Literal['prefer_nasdaq']\"; expected \"Literal['prefer_website', 'prefer_external', 'merge', 'concat', 'deduplicate']\"",
+          "rule_code": "arg-type"
+        },
+        {
+          "file_path": "prospecting/enrichment_types.py",
+          "line": 481,
+          "column": 24,
+          "message": "Argument \"merge_strategy\" to \"FieldDefinition\" has incompatible type \"Literal['prefer_nasdaq']\"; expected \"Literal['prefer_website', 'prefer_external', 'merge', 'concat', 'deduplicate']\"",
+          "rule_code": "arg-type"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 451,
+              "column": 1
+            },
+            "end": {
+              "row": 488,
+              "column": 99999
+            }
+          },
+          "content": "    ),\n    \n    # ==================== Nasdaq-Exclusive: Core Profile Extensions ====================\n    \"firm_information.firm_type\": FieldDefinition(\n        field_path=\"firm_information.firm_type\",\n        field_type=FieldType.STRING,\n        needs_llm=False,\n        merge_strategy=\"prefer_external\",  # Nasdaq-only field\n        output_format=\"value\"\n    ),\n    \"firm_information.firm_sub_type\": FieldDefinition(\n        field_path=\"firm_information.firm_sub_type\",\n        field_type=FieldType.STRING,\n        needs_llm=False,\n        merge_strategy=\"prefer_external\",  # Nasdaq-only field\n        output_format=\"value\"\n    ),\n    \"firm_information.primary_investor_type\": FieldDefinition(\n        field_path=\"firm_information.primary_investor_type\",\n        field_type=FieldType.STRING,\n        needs_llm=False,\n        merge_strategy=\"prefer_external\",  # Nasdaq-only field\n        output_format=\"value\"\n    ),\n    \n    # ==================== Nasdaq-Exclusive: AUM Extensions ====================\n    \"investment_strategy_mandate.defined_benefit_assets\": FieldDefinition(\n        field_path=\"investment_strategy_mandate.defined_benefit_assets\",\n        field_type=FieldType.OBJECT,\n        needs_llm=False,\n        merge_strategy=\"prefer_external\",  # Nasdaq-only field\n        output_format=\"structured\"\n    ),\n    \n    # ==================== Nasdaq-Exclusive: Mandates ====================\n    \"mandates\": FieldDefinition(\n        field_path=\"mandates\",\n        field_type=FieldType.PYDANTIC_MODEL,\n",
+          "description": "The merge_strategy field expects specific literal values but is receiving \"prefer_nasdaq\" which is not in the allowed set. Need to change to \"prefer_external\" which is the closest semantic match for external data sources like Nasdaq."
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 2 file(s) for mypy signals",
+  "warnings": [
+    "prospecting/enrichment_types.py: Changed \"prefer_coresignal\" to \"prefer_external\" - verify this matches intended merge behavior for CoreSignal data",
+    "prospecting/enrichment_types.py: Changed \"prefer_nasdaq\" to \"prefer_external\" - verify this matches intended merge behavior for Nasdaq data"
+  ],
+  "confidence": 0.95
+}

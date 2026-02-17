@@ -1,0 +1,92 @@
+{
+  "group_tool_id": "ruff-format",
+  "group_signal_type": "format",
+  "file_edits": [
+    {
+      "file_path": "ria/serializers.py",
+      "reasoning": "Auto-applied format fixes from ruff-format",
+      "confidence": 1.0,
+      "signal_errors": [],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 376,
+              "column": 1
+            },
+            "end": {
+              "row": 392,
+              "column": 1
+            }
+          },
+          "content": "    total_aum = serializers.FloatField(required=False, allow_null=True)\n    total_employees = serializers.IntegerField(required=False, allow_null=True)\n    total_offices = serializers.IntegerField(required=False, allow_null=True)\n    top_3_private_funds = serializers.ListField(child=serializers.DictField(), required=False, allow_null=True)\n    top_3_allocations = serializers.ListField(child=serializers.DictField(), required=False, allow_null=True)\n    total_clients = serializers.IntegerField(required=False, allow_null=True)\n    match_score = serializers.FloatField(required=False, allow_null=True)\n    match_details = serializers.DictField(required=False, allow_null=True)\n",
+          "description": "Apply 5 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 393,
+              "column": 1
+            },
+            "end": {
+              "row": 405,
+              "column": 1
+            }
+          },
+          "content": "\nclass RIAIndexResponseSerializer(serializers.Serializer):\n    \"\"\"Serializer for /ria/index response.\"\"\"\n\n    total_matches = serializers.IntegerField()\n    rows = serializers.ListField(child=serializers.DictField())\n\n\nclass RIACompanyLookupResponseSerializer(serializers.Serializer):\n    \"\"\"Serializer for /ria/company/lookup response.\"\"\"\n\n    total_matches = serializers.IntegerField()\n    matches = serializers.ListField(child=RIACompanyPreviewSerializer())\n    pagination = serializers.DictField()\n",
+          "description": "Apply 5 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 415,
+              "column": 1
+            },
+            "end": {
+              "row": 427,
+              "column": 1
+            }
+          },
+          "content": "\nclass RIAPdfRecordSerializer(serializers.Serializer):\n    \"\"\"Serializer for PDF metadata records.\"\"\"\n\n    # All fields are dynamic based on CSV columns\n    pass  # Will be handled as DictField in practice\n\n\nclass RIALocationMetadataSerializer(serializers.Serializer):\n    \"\"\"Serializer for location metadata endpoints.\"\"\"\n\n    countries = serializers.ListField(child=serializers.CharField())\n    cities = serializers.ListField(child=serializers.CharField())\n\n",
+          "description": "Apply 5 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 442,
+              "column": 1
+            },
+            "end": {
+              "row": 448,
+              "column": 1
+            }
+          },
+          "content": "\nclass RIAActivityListResponseSerializer(serializers.Serializer):\n    \"\"\"Serializer for /admin/ria/activity response.\"\"\"\n\n    records = serializers.ListField(child=RIAActivitySerializer())\n    pagination = serializers.DictField()\n    filters = serializers.DictField()\n",
+          "description": "Apply 5 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 449,
+              "column": 1
+            },
+            "end": {
+              "row": 455,
+              "column": 1
+            }
+          },
+          "content": "\nclass RIAActivitySummaryResponseSerializer(serializers.Serializer):\n    \"\"\"Serializer for /admin/ria/activity/summary response.\"\"\"\n\n    total_activities = serializers.IntegerField()\n    by_activity_type = serializers.DictField()\n    by_user = serializers.DictField()\n",
+          "description": "Apply 5 formatting change(s)"
+        }
+      ]
+    }
+  ],
+  "summary": "Auto-applied 1 format fix(es) across 1 file(s)",
+  "warnings": [],
+  "confidence": 1.0
+}

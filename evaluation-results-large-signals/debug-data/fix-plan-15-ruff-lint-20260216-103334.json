@@ -1,0 +1,133 @@
+{
+  "group_tool_id": "ruff",
+  "group_signal_type": "lint",
+  "file_edits": [
+    {
+      "file_path": "ria/services/company_service.py",
+      "reasoning": "Modernizing type annotation from Dict to dict for Python 3.9+ compatibility",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "ria/services/company_service.py",
+          "line": 33,
+          "column": 41,
+          "message": "Use `dict` instead of `Dict` for type annotation",
+          "rule_code": "UP006"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 31,
+              "column": 1
+            },
+            "end": {
+              "row": 35,
+              "column": 99999
+            }
+          },
+          "content": "    \n    @staticmethod\n    def get_company_by_crd(crd: int) -> dict[str, Any]:\n        \"\"\"\n        Get company details from index by CRD number.",
+          "description": "Modernizing type annotation from Dict to dict for Python 3.9+ compatibility"
+        }
+      ]
+    },
+    {
+      "file_path": "ria/services/company_service.py",
+      "reasoning": "Modernizing type annotation from List[Dict[str, Any]] to list[dict[str, Any]] for Python 3.9+ compatibility",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "ria/services/company_service.py",
+          "line": 56,
+          "column": 39,
+          "message": "Use `list` instead of `List` for type annotation",
+          "rule_code": "UP006"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 54,
+              "column": 1
+            },
+            "end": {
+              "row": 58,
+              "column": 99999
+            }
+          },
+          "content": "    \n    @staticmethod\n    def get_company_pdfs(crd: int) -> list[dict[str, Any]]:\n        \"\"\"\n        Get PDF records for a specific CRD.",
+          "description": "Modernizing type annotation from List[Dict[str, Any]] to list[dict[str, Any]] for Python 3.9+ compatibility"
+        }
+      ]
+    },
+    {
+      "file_path": "ria/services/company_service.py",
+      "reasoning": "Modernizing type annotation from List[Dict[str, Any]] to list[dict[str, Any]] for Python 3.9+ compatibility",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "ria/services/company_service.py",
+          "line": 104,
+          "column": 43,
+          "message": "Use `dict` instead of `Dict` for type annotation",
+          "rule_code": "UP006"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 102,
+              "column": 1
+            },
+            "end": {
+              "row": 106,
+              "column": 99999
+            }
+          },
+          "content": "\n\ndef pdf_records_for_crd(crd: int) -> list[dict[str, Any]]:\n    \"\"\"Get PDF records for a specific CRD.\"\"\"\n    logger.info(f\"Looking up PDF records for CRD: {crd}\")",
+          "description": "Modernizing type annotation from List[Dict[str, Any]] to list[dict[str, Any]] for Python 3.9+ compatibility"
+        }
+      ]
+    },
+    {
+      "file_path": "authentication/clerk.py",
+      "reasoning": "Removing quotes from type annotation as the class is already defined in the same scope",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "authentication/clerk.py",
+          "line": 45,
+          "column": 29,
+          "message": "Remove quotes from type annotation",
+          "rule_code": "UP037"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 43,
+              "column": 1
+            },
+            "end": {
+              "row": 47,
+              "column": 99999
+            }
+          },
+          "content": "\n    @classmethod\n    def from_config(cls) -> ClerkSettings:\n        jwks_url = get_clerk_jwks_url()\n        issuer = get_clerk_issuer()",
+          "description": "Removing quotes from type annotation as the class is already defined in the same scope"
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 4 file(s) for ruff signals",
+  "warnings": [],
+  "confidence": 0.95
+}

@@ -1,0 +1,40 @@
+{
+  "group_tool_id": "ruff",
+  "group_signal_type": "lint",
+  "file_edits": [
+    {
+      "file_path": "ria/services/search_service.py",
+      "reasoning": "Changed `List` to `list` in type annotation to use modern Python 3.9+ built-in generic type instead of typing module import",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "ria/services/search_service.py",
+          "line": 191,
+          "column": 84,
+          "message": "Use `list` instead of `List` for type annotation",
+          "rule_code": "UP006"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 189,
+              "column": 1
+            },
+            "end": {
+              "row": 193,
+              "column": 99999
+            }
+          },
+          "content": "\n\ndef ensemble_fuzzy_search(df: pl.DataFrame, search_name: str, max_results: int) -> list[Dict[str, Any]]:\n    \"\"\"\n    Best-in-class ensemble fuzzy matching using multiple algorithms.\n",
+          "description": "Changed `List` to `list` in type annotation to use modern Python 3.9+ built-in generic type instead of typing module import"
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 1 file(s) for ruff signals",
+  "warnings": [],
+  "confidence": 0.95
+}

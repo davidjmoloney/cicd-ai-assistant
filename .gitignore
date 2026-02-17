@@ -213,8 +213,7 @@ __marimo__/
 test-repo-stripped/
 
 # Test and Debug files
-scripts/debug/*
-scripts/test-outputs/*
 debug/*.json
+debug/llm-contexts/*.json
 logs/*.txt
 

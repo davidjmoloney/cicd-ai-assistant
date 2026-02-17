@@ -1,0 +1,12 @@
+{
+  "success": true,
+  "pr_url": "https://github.com/davidjmoloney/ardessa-backend-clone-12Feb2026/pull/44",
+  "pr_number": 44,
+  "branch_name": "cicd-agent-fix/type_check/20260216-103723-db9ac0",
+  "error": null,
+  "files_changed": [
+    "prospecting/enrichment_types.py"
+  ],
+  "skipped_fixes": [],
+  "unchanged_fixes": []
+}

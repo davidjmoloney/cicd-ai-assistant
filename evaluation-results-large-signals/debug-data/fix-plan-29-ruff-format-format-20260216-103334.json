@@ -1,0 +1,62 @@
+{
+  "group_tool_id": "ruff-format",
+  "group_signal_type": "format",
+  "file_edits": [
+    {
+      "file_path": "prospecting/enrichment_types.py",
+      "reasoning": "Auto-applied format fixes from ruff-format",
+      "confidence": 1.0,
+      "signal_errors": [],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 55,
+              "column": 1
+            },
+            "end": {
+              "row": 62,
+              "column": 1
+            }
+          },
+          "content": "    max_length: Optional[int] = None\n    min_length: Optional[int] = None\n    array_item_type: Optional[FieldType] = None\n    nested_schema: Optional[Dict[str, \"FieldDefinition\"]] = None\n    needs_llm: bool = False  # Whether this field needs LLM processing\n    merge_strategy: Literal[\"prefer_website\", \"prefer_external\", \"merge\", \"concat\", \"deduplicate\"] = \"merge\"\n    output_format: str = \"value\"  # \"value\", \"value_with_citations\", \"structured\", \"pydantic_model\"\n",
+          "description": "Apply 3 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 335,
+              "column": 1
+            },
+            "end": {
+              "row": 374,
+              "column": 1
+            }
+          },
+          "content": "        pydantic_model=RecentLeadershipChanges,\n        needs_llm=True,\n        merge_strategy=\"merge\",\n        output_format=\"pydantic_model\",\n    ),\n    \"organization_decision_making.parent_company\": FieldDefinition(\n        field_path=\"organization_decision_making.parent_company\",\n        field_type=FieldType.OBJECT,\n        needs_llm=False,  # CoreSignal-only field\n        merge_strategy=\"prefer_coresignal\",  # CoreSignal-only field\n        output_format=\"structured\",\n    ),\n    # ==================== Firm Information (Distribution Coverage) ====================\n    \"firm_information.target_investor_type\": FieldDefinition(\n        field_path=\"firm_information.target_investor_type\",\n        field_type=FieldType.STRING,  # Frontend expects string, not array of strings\n        needs_llm=False,  # Perplexity-only: structure at source via prompts\n        merge_strategy=\"prefer_perplexity\",  # Perplexity-only field\n        output_format=\"value_with_citations\",\n    ),\n    \"firm_information.regulated_by\": FieldDefinition(\n        field_path=\"firm_information.regulated_by\",\n        field_type=FieldType.STRING,  # Frontend expects string, not array of strings\n        needs_llm=False,  # Perplexity-only: structure at source via prompts\n        merge_strategy=\"prefer_perplexity\",  # Perplexity-only field\n        output_format=\"value_with_citations\",\n    ),\n    \"firm_information.litigation_regulatory_risk\": FieldDefinition(\n        field_path=\"firm_information.litigation_regulatory_risk\",\n        field_type=FieldType.STRING,  # Frontend expects string, not array\n        needs_llm=False,  # Perplexity-only: structure at source via prompts\n        merge_strategy=\"prefer_perplexity\",  # Perplexity-only field\n        output_format=\"value_with_citations\",\n    ),\n    # ==================== Activity Sentiment Signals ====================\n    \"news_activity_signals.recent_hires\": FieldDefinition(\n        field_path=\"news_activity_signals.recent_hires\",\n",
+          "description": "Apply 3 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 530,
+              "column": 1
+            },
+            "end": {
+              "row": 559,
+              "column": 1
+            }
+          },
+          "content": "        pydantic_model=CompanyRadars,\n        needs_llm=False,  # Already resolved by dedicated resolver\n        merge_strategy=\"prefer_resolver\",  # Resolver-exclusive section\n        output_format=\"pydantic_model\",\n    ),\n}\n\n\n# ==================== Helper Functions ====================\n\n\ndef get_field_definition(field_path: str) -> Optional[FieldDefinition]:\n    return ENRICHMENT_FIELD_DEFINITIONS.get(field_path)\n\n\ndef get_fields_needing_llm() -> List[str]:\n    return [path for path, definition in ENRICHMENT_FIELD_DEFINITIONS.items() if definition.needs_llm]\n\n\ndef get_fields_by_category(category: str) -> List[FieldDefinition]:\n    return [definition for path, definition in ENRICHMENT_FIELD_DEFINITIONS.items() if path.startswith(f\"{category}.\")]\n\n\ndef get_output_type(field_path: str) -> FieldType:\n",
+          "description": "Apply 3 formatting change(s)"
+        }
+      ]
+    }
+  ],
+  "summary": "Auto-applied 1 format fix(es) across 1 file(s)",
+  "warnings": [],
+  "confidence": 1.0
+}

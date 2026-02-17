@@ -1,0 +1,111 @@
+{
+  "group_tool_id": "mypy",
+  "group_signal_type": "type_check",
+  "file_edits": [
+    {
+      "file_path": "prospecting/enrichment_types.py",
+      "reasoning": "The merge_strategy \"prefer_resolver\" is not in the allowed Literal type. Based on the context showing other fields use \"prefer_nasdaq\", this should likely be \"prefer_external\" for resolver-exclusive sections.",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "prospecting/enrichment_types.py",
+          "line": 522,
+          "column": 24,
+          "message": "Argument \"merge_strategy\" to \"FieldDefinition\" has incompatible type \"Literal['prefer_resolver']\"; expected \"Literal['prefer_website', 'prefer_external', 'merge', 'concat', 'deduplicate']\"",
+          "rule_code": "arg-type"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 515,
+              "column": 1
+            },
+            "end": {
+              "row": 529,
+              "column": 99999
+            }
+          },
+          "content": "    \n    # ==================== Company Analytics (Unified Highlights Card) ====================\n    \"company_analytics\": FieldDefinition(\n        field_path=\"company_analytics\",\n        field_type=FieldType.PYDANTIC_MODEL,\n        pydantic_model=CompanyAnalytics,\n        needs_llm=False,  # Already resolved by dedicated resolver\n        merge_strategy=\"prefer_external\",  # Resolver-exclusive section\n        output_format=\"pydantic_model\"\n    ),\n    \n    # ==================== Company Radars (All Tier 1, 2, 3) ====================\n    \"company_radars\": FieldDefinition(\n        field_path=\"company_radars\",\n        field_type=FieldType.PYDANTIC_MODEL,\n",
+          "description": "The merge_strategy \"prefer_resolver\" is not in the allowed Literal type. Based on the context showing other fields use \"prefer_nasdaq\", this should likely be \"prefer_external\" for resolver-exclusive sections."
+        }
+      ]
+    },
+    {
+      "file_path": "authentication/clerk.py",
+      "reasoning": "The validation logic ensures jwks_url and issuer are not None before reaching the return statement. Added type assertions after validation to inform the type checker.",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "authentication/clerk.py",
+          "line": 59,
+          "column": 29,
+          "message": "Argument \"jwks_url\" to \"ClerkSettings\" has incompatible type \"str | None\"; expected \"str\"",
+          "rule_code": "arg-type"
+        },
+        {
+          "file_path": "authentication/clerk.py",
+          "line": 59,
+          "column": 46,
+          "message": "Argument \"issuer\" to \"ClerkSettings\" has incompatible type \"str | None\"; expected \"str\"",
+          "rule_code": "arg-type"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 52,
+              "column": 1
+            },
+            "end": {
+              "row": 66,
+              "column": 99999
+            }
+          },
+          "content": "            (\"CLERK_ISSUER\", issuer),\n        ) if not value]\n        if missing:\n            raise ClerkConfigurationError(\n                f\"Missing Clerk configuration value(s): {', '.join(missing)}\"\n            )\n\n        assert jwks_url is not None  # Validated above\n        assert issuer is not None    # Validated above\n        return cls(jwks_url=jwks_url, issuer=issuer, audience=audience)\n\n\ndef get_clerk_settings() -> ClerkSettings:\n    \"\"\"Load Clerk token validation settings from config helpers.\"\"\"\n    return ClerkSettings.from_config()\n\n\n",
+          "description": "The validation logic ensures jwks_url and issuer are not None before reaching the return statement. Added type assertions after validation to inform the type checker."
+        }
+      ]
+    },
+    {
+      "file_path": "authentication/clerk.py",
+      "reasoning": "The validation logic ensures jwks_url and issuer are not None before reaching the return statement. Added type assertions after validation to inform the type checker.",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "authentication/clerk.py",
+          "line": 81,
+          "column": 35,
+          "message": "Argument \"jwks_url\" to \"ClerkSettings\" has incompatible type \"str | None\"; expected \"str\"",
+          "rule_code": "arg-type"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 74,
+              "column": 1
+            },
+            "end": {
+              "row": 88,
+              "column": 99999
+            }
+          },
+          "content": "        (\"LP_CLERK_ISSUER\", issuer),\n    ) if not value]\n    if missing:\n        raise ClerkConfigurationError(\n            f\"Missing LP Clerk configuration value(s): {', '.join(missing)}\"\n        )\n\n    assert jwks_url is not None  # Validated above\n    assert issuer is not None    # Validated above\n    return ClerkSettings(jwks_url=jwks_url, issuer=issuer, audience=audience)\n\n\n_JWKS_CACHE: Dict[str, Dict[str, Any]] = {}\n\n\ndef _fetch_jwks(\n    settings: ClerkSettings,\n",
+          "description": "The validation logic ensures jwks_url and issuer are not None before reaching the return statement. Added type assertions after validation to inform the type checker."
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 3 file(s) for mypy signals",
+  "warnings": [
+    "prospecting/enrichment_types.py: Changed \"prefer_resolver\" to \"prefer_external\" - please verify this is the correct merge strategy for resolver-exclusive sections"
+  ],
+  "confidence": 0.9499999999999998
+}

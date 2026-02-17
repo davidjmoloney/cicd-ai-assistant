@@ -1,0 +1,109 @@
+{
+  "group_tool_id": "ruff",
+  "group_signal_type": "lint",
+  "file_edits": [
+    {
+      "file_path": "ria/services/company_service.py",
+      "reasoning": "Added \"from e\" to both raise statements to properly chain exceptions as required by B904 rule",
+      "confidence": 0.9,
+      "signal_errors": [
+        {
+          "file_path": "ria/services/company_service.py",
+          "line": 99,
+          "column": 13,
+          "message": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+          "rule_code": "B904"
+        },
+        {
+          "file_path": "ria/services/company_service.py",
+          "line": 101,
+          "column": 9,
+          "message": "Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling",
+          "rule_code": "B904"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 92,
+              "column": 1
+            },
+            "end": {
+              "row": 108,
+              "column": 99999
+            }
+          },
+          "content": "        response = s3_client.get_object(Bucket=bucket, Key=s3_path)\n        content = response['Body'].read().decode('utf-8')\n        return json.loads(content)\n    except ClientError as e:\n        if e.response['Error']['Code'] == 'NoSuchKey':\n            raise ValueError(f\"Trend data not found for CRD {crd}\") from e\n        else:\n            raise RuntimeError(f\"Failed to load trend data: {str(e)}\") from e\n    except json.JSONDecodeError as e:\n        raise ValueError(f\"Invalid trend data format: {str(e)}\") from e\n\n\ndef pdf_records_for_crd(crd: int) -> List[Dict[str, Any]]:\n    \"\"\"Get PDF records for a specific CRD.\"\"\"\n    logger.info(f\"Looking up PDF records for CRD: {crd}\")\n    \n    pdf_cache = get_pdf_cache()\n",
+          "description": "Added \"from e\" to both raise statements to properly chain exceptions as required by B904 rule"
+        }
+      ]
+    },
+    {
+      "file_path": "authentication/clerk.py",
+      "reasoning": "Replaced Optional[str] with str | None to use modern Python 3.10+ union syntax as required by UP045 rule",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "authentication/clerk.py",
+          "line": 41,
+          "column": 15,
+          "message": "Use `X | None` for type annotations",
+          "rule_code": "UP045"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 34,
+              "column": 1
+            },
+            "end": {
+              "row": 48,
+              "column": 99999
+            }
+          },
+          "content": "    \"\"\"Raised when mandatory Clerk configuration values are missing.\"\"\"\n\n\n@dataclass(frozen=True)\nclass ClerkSettings:\n    jwks_url: str\n    issuer: str\n    audience: str | None = None\n    cache_ttl_seconds: int = 300\n\n    @classmethod\n    def from_config(cls) -> \"ClerkSettings\":\n        jwks_url = get_clerk_jwks_url()\n        issuer = get_clerk_issuer()\n        audience = get_clerk_audience()\n",
+          "description": "Replaced Optional[str] with str | None to use modern Python 3.10+ union syntax as required by UP045 rule"
+        }
+      ]
+    },
+    {
+      "file_path": "ria/services/query_service.py",
+      "reasoning": "Replaced all Optional[X] type annotations with X | None to use modern Python 3.10+ union syntax as required by UP045 rule",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "ria/services/query_service.py",
+          "line": 34,
+          "column": 21,
+          "message": "Use `X | None` for type annotations",
+          "rule_code": "UP045"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 27,
+              "column": 1
+            },
+            "end": {
+              "row": 41,
+              "column": 99999
+            }
+          },
+          "content": "        activity_type: str,\n        search_id: str | None = None,\n        search_params: Dict[str, Any] | None = None,\n        search_timestamp: datetime | None = None,\n        company_crd: str | None = None,\n        company_name: str | None = None,\n        company_action: str | None = None,\n        ip_address: str | None = None\n    ) -> int:\n        \"\"\"\n        Store RIA activity (search or company view) in the database.\n        \n        Args:\n            user_id: User identifier\n            session_id: Session identifier\n",
+          "description": "Replaced all Optional[X] type annotations with X | None to use modern Python 3.10+ union syntax as required by UP045 rule"
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 3 file(s) for ruff signals",
+  "warnings": [],
+  "confidence": 0.9333333333333332
+}

@@ -1,0 +1,62 @@
+{
+  "group_tool_id": "ruff-format",
+  "group_signal_type": "format",
+  "file_edits": [
+    {
+      "file_path": "ria/services/search_service.py",
+      "reasoning": "Auto-applied format fixes from ruff-format",
+      "confidence": 1.0,
+      "signal_errors": [],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 59,
+              "column": 1
+            },
+            "end": {
+              "row": 72,
+              "column": 1
+            }
+          },
+          "content": "    if column not in df.columns:\n        logger.warning(f\"\u26a0\ufe0f Website column '{column}' not found, adding empty domain column\")\n        return df.with_columns(pl.lit(None).alias(\"__domain\"))\n\n    return df.with_columns(pl.col(column).map_elements(canonicalize_domain, return_dtype=pl.Utf8).alias(\"__domain\"))\n\n\ndef to_serializable_records(df: pl.DataFrame, limit: int) -> List[Dict[str, Any]]:\n    \"\"\"Convert DataFrame to list of dictionaries, limited to specified count.\"\"\"\n",
+          "description": "Apply 3 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 131,
+              "column": 1
+            },
+            "end": {
+              "row": 204,
+              "column": 1
+            }
+          },
+          "content": "                    total_count += count\n            except (ValueError, TypeError):\n                continue\n\n    return total_count\n\n\ndef transform_company_record_for_preview(company_record: Dict[str, Any]) -> Dict[str, Any]:\n    \"\"\"Transform a company record for search preview with limited fields as per schema.\"\"\"\n    transformed = {}\n\n    # Map only the specific fields required for search preview (limited subset)\n    for original_field, display_field in COMPANY_PREVIEW_MAPPING.items():\n        if original_field in company_record and company_record[original_field] is not None:\n            transformed[display_field] = company_record[original_field]\n\n    # Add top 3 private funds (calculated from all private fund data)\n    transformed[\"top_3_private_funds\"] = get_top_3_private_funds(company_record)\n\n    # Add top 3 allocations (calculated from all SMA allocation data)\n    transformed[\"top_3_allocations\"] = get_top_3_allocations(company_record)\n\n    # Add total clients (calculated from all client type columns)\n    transformed[\"total_clients\"] = get_total_clients(company_record)\n\n    return transformed\n\n\ndef intelligent_name_search(df: pl.DataFrame, search_name: str, max_results: int) -> List[Dict[str, Any]]:\n    \"\"\"\n    Intelligent company name search with best-in-class ensemble fuzzy matching.\n\n    Strategy:\n    1. Try exact match first (case-insensitive)\n    2. If no exact match, use ensemble fuzzy matching\n    3. Return only high-quality matches (quality over quantity)\n\n    Ensemble Algorithm:\n    - Uses 4 different similarity algorithms for robustness\n    - Weighted combination ensures balanced matching\n    - Quality threshold prevents weak matches\n    \"\"\"\n    search_name_lower = search_name.lower().strip()\n\n    # Phase 1: Exact match (case-insensitive)\n    exact_matches = df.filter(pl.col(NAME_COLUMN).str.to_lowercase() == search_name_lower)\n\n    if not exact_matches.is_empty():\n        logger.info(f\"Found {exact_matches.height} exact matches for '{search_name}'\")\n        return to_serializable_records(exact_matches, max_results)\n\n    # Phase 2: Ensemble fuzzy matching\n    logger.info(f\"No exact matches found, performing fuzzy search for '{search_name}'\")\n    fuzzy_matches = ensemble_fuzzy_search(df, search_name, max_results)\n\n    return fuzzy_matches\n\n\ndef ensemble_fuzzy_search(df: pl.DataFrame, search_name: str, max_results: int) -> List[Dict[str, Any]]:\n    \"\"\"\n    Best-in-class ensemble fuzzy matching using multiple algorithms.\n\n    Ensemble Components:\n    1. Ratio (40%): Overall character similarity - handles typos\n    2. Partial Ratio (25%): Best substring match - handles partial names\n    3. Token Sort Ratio (20%): Word order independent - handles \"Company American\" vs \"American Company\"\n    4. Token Set Ratio (15%): Word overlap - handles extra/missing words\n\n    Why this ensemble is robust:\n    - Multiple algorithms catch different types of variations\n    - Weighted combination balances different matching strategies\n",
+          "description": "Apply 3 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 430,
+              "column": 1
+            },
+            "end": {
+              "row": 443,
+              "column": 1
+            }
+          },
+          "content": "                \"limit\": limit,\n                \"has_more\": has_more,\n                \"next_offset\": next_offset,\n                \"showing\": f\"{len(matches)} of {total_matches}\",\n            },\n            \"filter_status\": {\"applied_filters\": {}, \"ignored_filters\": {}, \"available_filters\": []},\n        }\n",
+          "description": "Apply 3 formatting change(s)"
+        }
+      ]
+    }
+  ],
+  "summary": "Auto-applied 1 format fix(es) across 1 file(s)",
+  "warnings": [],
+  "confidence": 1.0
+}

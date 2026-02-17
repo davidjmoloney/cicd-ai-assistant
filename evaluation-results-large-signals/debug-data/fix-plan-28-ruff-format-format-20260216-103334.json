@@ -1,0 +1,77 @@
+{
+  "group_tool_id": "ruff-format",
+  "group_signal_type": "format",
+  "file_edits": [
+    {
+      "file_path": "ria/services/company_service.py",
+      "reasoning": "Auto-applied format fixes from ruff-format",
+      "confidence": 1.0,
+      "signal_errors": [],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 17,
+              "column": 1
+            },
+            "end": {
+              "row": 26,
+              "column": 1
+            }
+          },
+          "content": "\nfrom ria.services.index_cache_service import get_index_cache\nfrom ria.services.pdf_cache_service import get_pdf_cache\nfrom ria.utils.constants import CRD_COLUMN, NAME_COLUMN, CITY_COLUMN, STATE_COLUMN, COUNTRY_COLUMN\nfrom common.utils.config import get_s3_bucket, get_s3_prefix\nfrom common.utils.logging_config import get_logger\n\n",
+          "description": "Apply 4 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 28,
+              "column": 1
+            },
+            "end": {
+              "row": 79,
+              "column": 1
+            }
+          },
+          "content": "\nclass CompanyService:\n    \"\"\"Service for company detail operations.\"\"\"\n\n    @staticmethod\n    def get_company_by_crd(crd: int) -> Dict[str, Any]:\n        \"\"\"\n        Get company details from index by CRD number.\n\n        Args:\n            crd: Company CRD number\n\n        Returns:\n            Company record as dictionary\n        \"\"\"\n        index_cache = get_index_cache()\n        df = index_cache.load()\n\n        # Filter by CRD - cast to int for comparison\n        company_df = df.filter(pl.col(CRD_COLUMN).cast(pl.Int64, strict=False) == crd)\n\n        if company_df.is_empty():\n            raise ValueError(f\"CRD {crd} not found in RIA database\")\n\n        company_data = company_df.to_dicts()[0]\n        return company_data\n\n    @staticmethod\n    def get_company_pdfs(crd: int) -> List[Dict[str, Any]]:\n        \"\"\"\n        Get PDF records for a specific CRD.\n\n        Args:\n            crd: Company CRD number\n\n        Returns:\n            List of PDF records\n        \"\"\"\n        return pdf_records_for_crd(crd)\n\n    @staticmethod\n    def load_trends_json(crd: int) -> Dict[str, Any]:\n        \"\"\"\n        Load trend data for a specific CRD from S3.\n\n        Args:\n            crd: Company CRD number\n\n        Returns:\n            Trend data as dictionary\n        \"\"\"\n",
+          "description": "Apply 4 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 81,
+              "column": 1
+            },
+            "end": {
+              "row": 100,
+              "column": 1
+            }
+          },
+          "content": "\ndef _load_trends_json(crd: int) -> Dict[str, Any]:\n    \"\"\"Load trend data for a specific CRD from S3.\"\"\"\n    s3_client = boto3.client(\"s3\")\n    bucket = get_s3_bucket()\n\n    # S3 path structure: output/sec_ingestion/processed/trends/latest/crd={crd}/trends.v1.json\n    s3_path = f\"{get_s3_prefix()}/processed/trends/latest/crd={crd}/trends.v1.json\"\n\n    try:\n        # Download trend data from S3\n        response = s3_client.get_object(Bucket=bucket, Key=s3_path)\n        content = response[\"Body\"].read().decode(\"utf-8\")\n        return json.loads(content)\n    except ClientError as e:\n        if e.response[\"Error\"][\"Code\"] == \"NoSuchKey\":\n            raise ValueError(f\"Trend data not found for CRD {crd}\")\n        else:\n            raise RuntimeError(f\"Failed to load trend data: {str(e)}\")\n",
+          "description": "Apply 4 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 104,
+              "column": 1
+            },
+            "end": {
+              "row": 130,
+              "column": 1
+            }
+          },
+          "content": "def pdf_records_for_crd(crd: int) -> List[Dict[str, Any]]:\n    \"\"\"Get PDF records for a specific CRD.\"\"\"\n    logger.info(f\"Looking up PDF records for CRD: {crd}\")\n\n    pdf_cache = get_pdf_cache()\n    pdf_df = pdf_cache.load().copy()\n    logger.info(f\"Loaded PDF data: {len(pdf_df)} rows, columns: {list(pdf_df.columns)}\")\n\n    if \"crd\" not in pdf_df.columns:\n        logger.error(\"\u274c RIA latest.csv missing 'crd' column\")\n        raise RuntimeError(\"RIA latest.csv missing 'crd' column\")\n\n    pdf_df[\"crd_numeric\"] = pd.to_numeric(pdf_df[\"crd\"], errors=\"coerce\")\n    subset = pdf_df[pdf_df[\"crd_numeric\"] == crd]\n    logger.info(f\"Found {len(subset)} PDF records for CRD {crd}\")\n\n    if subset.empty:\n        logger.warning(f\"No PDF records found for CRD {crd}\")\n        return []\n\n    subset = subset.drop(columns=[\"crd_numeric\"], errors=\"ignore\")\n    subset = subset.where(pd.notnull(subset), None)\n    records = subset.to_dict(orient=\"records\")\n    logger.info(f\"Returning {len(records)} PDF records for CRD {crd}\")\n    return records\n",
+          "description": "Apply 4 formatting change(s)"
+        }
+      ]
+    }
+  ],
+  "summary": "Auto-applied 1 format fix(es) across 1 file(s)",
+  "warnings": [],
+  "confidence": 1.0
+}

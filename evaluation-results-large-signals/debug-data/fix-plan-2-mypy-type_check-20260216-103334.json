@@ -1,0 +1,88 @@
+{
+  "group_tool_id": "mypy",
+  "group_signal_type": "type_check",
+  "file_edits": [
+    {
+      "file_path": "prospecting/enrichment_types.py",
+      "reasoning": "The merge_strategy field expects specific literal values but is receiving 'prefer_perplexity' and 'prefer_coresignal' which are not in the allowed set. Need to update the MergeStrategy type definition to include these new values.",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "prospecting/enrichment_types.py",
+          "line": 290,
+          "column": 24,
+          "message": "Argument \"merge_strategy\" to \"FieldDefinition\" has incompatible type \"Literal['prefer_perplexity']\"; expected \"Literal['prefer_website', 'prefer_external', 'merge', 'concat', 'deduplicate']\"",
+          "rule_code": "arg-type"
+        },
+        {
+          "file_path": "prospecting/enrichment_types.py",
+          "line": 304,
+          "column": 24,
+          "message": "Argument \"merge_strategy\" to \"FieldDefinition\" has incompatible type \"Literal['prefer_perplexity']\"; expected \"Literal['prefer_website', 'prefer_external', 'merge', 'concat', 'deduplicate']\"",
+          "rule_code": "arg-type"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 283,
+              "column": 1
+            },
+            "end": {
+              "row": 311,
+              "column": 99999
+            }
+          },
+          "content": "    ),\n    \n    # ==================== Investment Strategy & Mandate (AUM) ====================\n    \"investment_strategy_mandate.aum\": FieldDefinition(\n        field_path=\"investment_strategy_mandate.aum\",\n        field_type=FieldType.STRING,\n        needs_llm=False,  # Perplexity-only: structure at source via prompts\n        merge_strategy=\"prefer_external\",  # Use prefer_external for Perplexity data\n        output_format=\"value_with_citations\"\n    ),\n    \"investment_strategy_mandate.breakdown_by_asset_class\": FieldDefinition(\n        field_path=\"investment_strategy_mandate.breakdown_by_asset_class\",\n        field_type=FieldType.ARRAY_OBJECT,  # Prompt returns array of objects\n        needs_llm=False,  # Perplexity-only: structure at source via prompts\n        merge_strategy=\"prefer_external\",  # Use prefer_external for Perplexity data\n        output_format=\"structured\"\n    ),\n    \"investment_strategy_mandate.growth_decline_trajectory\": FieldDefinition(\n        field_path=\"investment_strategy_mandate.growth_decline_trajectory\",\n        field_type=FieldType.STRING,\n        needs_llm=False,  # Perplexity-only: structure at source via prompts\n        merge_strategy=\"prefer_external\",  # Use prefer_external for Perplexity data\n        output_format=\"value_with_citations\"\n    ),\n    \"investment_strategy_mandate.esg_dei_strategy\": FieldDefinition(\n        field_path=\"investment_strategy_mandate.esg_dei_strategy\",\n        field_type=FieldType.STRING,\n        needs_llm=False,  # Perplexity-only: structure at source via prompts\n        merge_strategy=\"prefer_external\",  # Use prefer_external for Perplexity data\n",
+          "description": "The merge_strategy field expects specific literal values but is receiving 'prefer_perplexity' and 'prefer_coresignal' which are not in the allowed set. Need to update the MergeStrategy type definition to include these new values."
+        }
+      ]
+    },
+    {
+      "file_path": "prospecting/enrichment_types.py",
+      "reasoning": "Similar to the previous fix, replacing 'prefer_coresignal' with 'prefer_external' and 'prefer_perplexity' with 'prefer_external' to match the allowed literal values in the MergeStrategy type.",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "prospecting/enrichment_types.py",
+          "line": 344,
+          "column": 24,
+          "message": "Argument \"merge_strategy\" to \"FieldDefinition\" has incompatible type \"Literal['prefer_coresignal']\"; expected \"Literal['prefer_website', 'prefer_external', 'merge', 'concat', 'deduplicate']\"",
+          "rule_code": "arg-type"
+        },
+        {
+          "file_path": "prospecting/enrichment_types.py",
+          "line": 360,
+          "column": 24,
+          "message": "Argument \"merge_strategy\" to \"FieldDefinition\" has incompatible type \"Literal['prefer_perplexity']\"; expected \"Literal['prefer_website', 'prefer_external', 'merge', 'concat', 'deduplicate']\"",
+          "rule_code": "arg-type"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 337,
+              "column": 1
+            },
+            "end": {
+              "row": 367,
+              "column": 99999
+            }
+          },
+          "content": "        merge_strategy=\"merge\",\n        output_format=\"pydantic_model\"\n    ),\n    \"organization_decision_making.parent_company\": FieldDefinition(\n        field_path=\"organization_decision_making.parent_company\",\n        field_type=FieldType.OBJECT,\n        needs_llm=False,  # CoreSignal-only field\n        merge_strategy=\"prefer_external\",  # Use prefer_external for CoreSignal data\n        output_format=\"structured\"\n    ),\n    \n    # ==================== Firm Information (Distribution Coverage) ====================\n    \"firm_information.target_investor_type\": FieldDefinition(\n        field_path=\"firm_information.target_investor_type\",\n        field_type=FieldType.STRING,  # Frontend expects string, not array of strings\n        needs_llm=False,  # Perplexity-only: structure at source via prompts\n        merge_strategy=\"prefer_external\",  # Use prefer_external for Perplexity data\n        output_format=\"value_with_citations\"\n    ),\n    \"firm_information.regulated_by\": FieldDefinition(\n        field_path=\"firm_information.regulated_by\",\n        field_type=FieldType.STRING,  # Frontend expects string, not array of strings\n        needs_llm=False,  # Perplexity-only: structure at source via prompts\n        merge_strategy=\"prefer_external\",  # Use prefer_external for Perplexity data\n        output_format=\"value_with_citations\"\n    ),\n    \"firm_information.litigation_regulatory_risk\": FieldDefinition(\n        field_path=\"firm_information.litigation_regulatory_risk\",\n        field_type=FieldType.STRING,  # Frontend expects string, not array\n        needs_llm=False,  # Perplexity-only: structure at source via prompts\n        merge_strategy=\"prefer_external\",  # Use prefer_external for Perplexity data\n",
+          "description": "Similar to the previous fix, replacing 'prefer_coresignal' with 'prefer_external' and 'prefer_perplexity' with 'prefer_external' to match the allowed literal values in the MergeStrategy type."
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 2 file(s) for mypy signals",
+  "warnings": [
+    "prospecting/enrichment_types.py: Changed 'prefer_perplexity' to 'prefer_external' as it's the closest semantic match for external data sources like Perplexity. The MergeStrategy type definition may need to be updated to include 'prefer_perplexity' and 'prefer_coresignal' as valid options if these are intended to be distinct strategies.",
+    "prospecting/enrichment_types.py: Changed 'prefer_coresignal' and 'prefer_perplexity' to 'prefer_external' to match allowed literal values. If these data sources need distinct merge strategies, the MergeStrategy type definition should be updated to include these specific values."
+  ],
+  "confidence": 0.95
+}

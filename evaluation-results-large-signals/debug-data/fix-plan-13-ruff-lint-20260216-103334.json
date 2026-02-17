@@ -1,0 +1,61 @@
+{
+  "group_tool_id": "ruff",
+  "group_signal_type": "lint",
+  "file_edits": [
+    {
+      "file_path": "ria/utils/helpers.py",
+      "reasoning": "Fixed import sorting (I001), removed unused Dict and Any imports (F401), and modernized Dict to dict (UP035). The imports are now properly sorted with standard library first, then typing imports.",
+      "confidence": 0.95,
+      "signal_errors": [
+        {
+          "file_path": "ria/utils/helpers.py",
+          "line": 11,
+          "column": 1,
+          "message": "Import block is un-sorted or un-formatted",
+          "rule_code": "I001"
+        },
+        {
+          "file_path": "ria/utils/helpers.py",
+          "line": 14,
+          "column": 30,
+          "message": "`typing.Dict` imported but unused",
+          "rule_code": "F401"
+        },
+        {
+          "file_path": "ria/utils/helpers.py",
+          "line": 14,
+          "column": 36,
+          "message": "`typing.Any` imported but unused",
+          "rule_code": "F401"
+        },
+        {
+          "file_path": "ria/utils/helpers.py",
+          "line": 14,
+          "column": 1,
+          "message": "`typing.Dict` is deprecated, use `dict` instead",
+          "rule_code": "UP035"
+        }
+      ],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 1,
+              "column": 1
+            },
+            "end": {
+              "row": 16,
+              "column": 99999
+            }
+          },
+          "content": "\"\"\"\nRIA Helper Functions\n\nThis module contains utility functions for RIA operations including:\n- Search ID generation\n- Search context extraction\n- Session ID management\n- Search parameter formatting\n\"\"\"\n\nimport json\nimport time\nimport uuid\nfrom typing import Optional\n\n\n",
+          "description": "Fixed import sorting (I001), removed unused Dict and Any imports (F401), and modernized Dict to dict (UP035). The imports are now properly sorted with standard library first, then typing imports."
+        }
+      ]
+    }
+  ],
+  "summary": "Fixed 1 file(s) for ruff signals",
+  "warnings": [],
+  "confidence": 0.95
+}

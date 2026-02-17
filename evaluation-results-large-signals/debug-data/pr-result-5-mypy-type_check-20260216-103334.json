@@ -1,0 +1,34 @@
+{
+  "success": true,
+  "pr_url": "https://github.com/davidjmoloney/ardessa-backend-clone-12Feb2026/pull/46",
+  "pr_number": 46,
+  "branch_name": "cicd-agent-fix/type_check/20260216-103952-0879fb",
+  "error": null,
+  "files_changed": [
+    "authentication/clerk.py",
+    "ria/services/search_service.py"
+  ],
+  "skipped_fixes": [],
+  "unchanged_fixes": [
+    {
+      "file_path": "ria/services/query_service.py",
+      "reasoning": "The Django ORM expects datetime objects for date filtering, not strings. The from_date and to_date parameters are already datetime objects, so they can be used directly in the filters.",
+      "signal_errors": [
+        {
+          "file_path": "ria/services/query_service.py",
+          "line": 103,
+          "column": 46,
+          "message": "Incompatible types in assignment (expression has type \"datetime\", target has type \"str\")",
+          "rule_code": "assignment"
+        },
+        {
+          "file_path": "ria/services/query_service.py",
+          "line": 105,
+          "column": 46,
+          "message": "Incompatible types in assignment (expression has type \"datetime\", target has type \"str\")",
+          "rule_code": "assignment"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "group_tool_id": "ruff-format",
+  "group_signal_type": "format",
+  "file_edits": [
+    {
+      "file_path": "ria/utils/helpers.py",
+      "reasoning": "Auto-applied format fixes from ruff-format",
+      "confidence": 1.0,
+      "signal_errors": [],
+      "edits": [
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 23,
+              "column": 1
+            },
+            "end": {
+              "row": 44,
+              "column": 1
+            }
+          },
+          "content": "    # Django uses request.META for headers (prefixed with HTTP_)\n    # FastAPI uses request.headers\n    search_context_header = None\n\n    # Try Django-style header access\n    if hasattr(request, \"META\"):\n        search_context_header = request.META.get(\"HTTP_X_SEARCH_CONTEXT\")\n    # Try FastAPI-style header access (for backward compatibility)\n    elif hasattr(request, \"headers\"):\n        search_context_header = request.headers.get(\"X-Search-Context\")\n\n    if not search_context_header:\n        return None\n\n    try:\n        return json.loads(search_context_header)\n    except json.JSONDecodeError:\n        from common.utils.logging_config import get_logger\n\n        logger = get_logger(__name__)\n        logger.warning(f\"Invalid search context header: {search_context_header}\")\n        return None\n",
+          "description": "Apply 5 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 46,
+              "column": 1
+            },
+            "end": {
+              "row": 56,
+              "column": 1
+            }
+          },
+          "content": "def get_session_id_from_request(request) -> str:\n    \"\"\"\n    Extract session ID from request headers or generate a new one.\n\n    Args:\n        request: Django request object\n\n    Returns:\n        Session ID string\n    \"\"\"\n",
+          "description": "Apply 5 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 61,
+              "column": 1
+            },
+            "end": {
+              "row": 71,
+              "column": 1
+            }
+          },
+          "content": "def format_search_params_for_storage(request_params: dict) -> dict:\n    \"\"\"\n    Format search parameters for database storage.\n\n    Args:\n        request_params: Dictionary of search parameters\n\n    Returns:\n        Filtered dictionary with None values removed\n    \"\"\"\n",
+          "description": "Apply 5 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 76,
+              "column": 1
+            },
+            "end": {
+              "row": 86,
+              "column": 1
+            }
+          },
+          "content": "def format_reset_time(seconds: int) -> str:\n    \"\"\"\n    Format seconds into human-readable hours and minutes.\n\n    Args:\n        seconds: Number of seconds\n\n    Returns:\n        Human-readable time string\n    \"\"\"\n",
+          "description": "Apply 5 formatting change(s)"
+        },
+        {
+          "edit_type": "replace",
+          "span": {
+            "start": {
+              "row": 93,
+              "column": 1
+            },
+            "end": {
+              "row": 97,
+              "column": 1
+            }
+          },
+          "content": "        return f\"{minutes} minute{'s' if minutes != 1 else ''}\"\n    else:\n        return \"less than a minute\"\n",
+          "description": "Apply 5 formatting change(s)"
+        }
+      ]
+    }
+  ],
+  "summary": "Auto-applied 1 format fix(es) across 1 file(s)",
+  "warnings": [],
+  "confidence": 1.0
+}

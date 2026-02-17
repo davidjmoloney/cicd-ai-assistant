@@ -1,0 +1,355 @@
+{
+  "_debug_metadata": {
+    "timestamp": "20260216_104829",
+    "tool_id": "ruff",
+    "signal_type": "lint",
+    "num_signals": 4,
+    "signal_files": [
+      "ria/utils/helpers.py"
+    ],
+    "system_prompt_length": 8600,
+    "user_prompt_length": 3014
+  },
+  "context": {
+    "group": {
+      "tool_id": "ruff",
+      "signal_type": "lint",
+      "group_size": 4
+    },
+    "signals": [
+      {
+        "signal": {
+          "tool_id": "ruff",
+          "signal_type": "lint",
+          "severity": "low",
+          "rule_code": "I001",
+          "message": "Import block is un-sorted or un-formatted",
+          "docs_url": "https://docs.astral.sh/ruff/rules/unsorted-imports",
+          "file_path": "ria/utils/helpers.py",
+          "span": {
+            "start": {
+              "row": 11,
+              "column": 1
+            },
+            "end": {
+              "row": 14,
+              "column": 39
+            }
+          }
+        },
+        "file_read_error": null,
+        "code_context": {
+          "window": {
+            "file_path": "ria/utils/helpers.py",
+            "start_row": 1,
+            "end_row": 44,
+            "text": "\"\"\"\nRIA Helper Functions\n\nThis module contains utility functions for RIA operations including:\n- Search ID generation\n- Search context extraction\n- Session ID management\n- Search parameter formatting\n\"\"\"\n\nimport json\nimport time\nimport uuid\nfrom typing import Optional, Dict, Any\n\n\ndef generate_search_id() -> str:\n    \"\"\"Generate a unique search ID for tracking related activities.\"\"\"\n    return f\"search_{int(time.time() * 1000)}_{uuid.uuid4().hex[:9]}\"\n\n\ndef extract_search_context(request) -> Optional[dict]:\n    # Django uses request.META for headers (prefixed with HTTP_)\n    # FastAPI uses request.headers\n    search_context_header = None\n    \n    # Try Django-style header access\n    if hasattr(request, 'META'):\n        search_context_header = request.META.get('HTTP_X_SEARCH_CONTEXT')\n    # Try FastAPI-style header access (for backward compatibility)\n    elif hasattr(request, 'headers'):\n        search_context_header = request.headers.get(\"X-Search-Context\")\n    \n    if not search_context_header:\n        return None\n    \n    try:\n        return json.loads(search_context_header)\n    except json.JSONDecodeError:\n        from common.utils.logging_config import get_logger\n        logger = get_logger(__name__)\n        logger.warning(f\"Invalid search context header: {search_context_header}\")\n        return None\n\n"
+          },
+          "imports": {
+            "file_path": "ria/utils/helpers.py",
+            "start_row": 1,
+            "end_row": 16,
+            "text": "\"\"\"\nRIA Helper Functions\n\nThis module contains utility functions for RIA operations including:\n- Search ID generation\n- Search context extraction\n- Session ID management\n- Search parameter formatting\n\"\"\"\n\nimport json\nimport time\nimport uuid\nfrom typing import Optional, Dict, Any\n\n\n"
+          },
+          "enclosing_function": null,
+          "try_except_block": null,
+          "class_definition": null,
+          "type_aliases": null,
+          "related_function": null,
+          "module_constants": null
+        },
+        "edit_snippet": {
+          "file_path": "ria/utils/helpers.py",
+          "start_row": 1,
+          "end_row": 16,
+          "text": "\"\"\"\nRIA Helper Functions\n\nThis module contains utility functions for RIA operations including:\n- Search ID generation\n- Search context extraction\n- Session ID management\n- Search parameter formatting\n\"\"\"\n\nimport json\nimport time\nimport uuid\nfrom typing import Optional, Dict, Any\n\n\n",
+          "original_text": "\"\"\"\nRIA Helper Functions\n\nThis module contains utility functions for RIA operations including:\n- Search ID generation\n- Search context extraction\n- Session ID management\n- Search parameter formatting\n\"\"\"\n\nimport json\nimport time\nimport uuid\nfrom typing import Optional, Dict, Any\n\n\n",
+          "error_line": 11,
+          "error_line_in_snippet": 11,
+          "snippet_length": 16,
+          "base_indent": ""
+        },
+        "edit_window_type": "imports",
+        "fix_context": {
+          "exists": true,
+          "applicability": "safe",
+          "tool_message": "Organize imports",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 11,
+                  "column": 1
+                },
+                "end": {
+                  "row": 17,
+                  "column": 1
+                }
+              },
+              "content": "import json\nimport time\nimport uuid\nfrom typing import Any, Dict, Optional\n\n\n"
+            }
+          ]
+        }
+      },
+      {
+        "signal": {
+          "tool_id": "ruff",
+          "signal_type": "lint",
+          "severity": "low",
+          "rule_code": "UP035",
+          "message": "`typing.Dict` is deprecated, use `dict` instead",
+          "docs_url": "https://docs.astral.sh/ruff/rules/deprecated-import",
+          "file_path": "ria/utils/helpers.py",
+          "span": {
+            "start": {
+              "row": 14,
+              "column": 1
+            },
+            "end": {
+              "row": 14,
+              "column": 39
+            }
+          }
+        },
+        "file_read_error": null,
+        "code_context": {
+          "window": {
+            "file_path": "ria/utils/helpers.py",
+            "start_row": 1,
+            "end_row": 44,
+            "text": "\"\"\"\nRIA Helper Functions\n\nThis module contains utility functions for RIA operations including:\n- Search ID generation\n- Search context extraction\n- Session ID management\n- Search parameter formatting\n\"\"\"\n\nimport json\nimport time\nimport uuid\nfrom typing import Optional, Dict, Any\n\n\ndef generate_search_id() -> str:\n    \"\"\"Generate a unique search ID for tracking related activities.\"\"\"\n    return f\"search_{int(time.time() * 1000)}_{uuid.uuid4().hex[:9]}\"\n\n\ndef extract_search_context(request) -> Optional[dict]:\n    # Django uses request.META for headers (prefixed with HTTP_)\n    # FastAPI uses request.headers\n    search_context_header = None\n    \n    # Try Django-style header access\n    if hasattr(request, 'META'):\n        search_context_header = request.META.get('HTTP_X_SEARCH_CONTEXT')\n    # Try FastAPI-style header access (for backward compatibility)\n    elif hasattr(request, 'headers'):\n        search_context_header = request.headers.get(\"X-Search-Context\")\n    \n    if not search_context_header:\n        return None\n    \n    try:\n        return json.loads(search_context_header)\n    except json.JSONDecodeError:\n        from common.utils.logging_config import get_logger\n        logger = get_logger(__name__)\n        logger.warning(f\"Invalid search context header: {search_context_header}\")\n        return None\n\n"
+          },
+          "imports": {
+            "file_path": "ria/utils/helpers.py",
+            "start_row": 1,
+            "end_row": 16,
+            "text": "\"\"\"\nRIA Helper Functions\n\nThis module contains utility functions for RIA operations including:\n- Search ID generation\n- Search context extraction\n- Session ID management\n- Search parameter formatting\n\"\"\"\n\nimport json\nimport time\nimport uuid\nfrom typing import Optional, Dict, Any\n\n\n"
+          },
+          "enclosing_function": null,
+          "try_except_block": null,
+          "class_definition": null,
+          "type_aliases": null,
+          "related_function": null,
+          "module_constants": null
+        },
+        "edit_snippet": {
+          "file_path": "ria/utils/helpers.py",
+          "start_row": 12,
+          "end_row": 16,
+          "text": "import time\nimport uuid\nfrom typing import Optional, Dict, Any\n\n\n",
+          "original_text": "import time\nimport uuid\nfrom typing import Optional, Dict, Any\n\n\n",
+          "error_line": 14,
+          "error_line_in_snippet": 3,
+          "snippet_length": 5,
+          "base_indent": ""
+        },
+        "edit_window_type": "lines",
+        "fix_context": {
+          "exists": false
+        }
+      },
+      {
+        "signal": {
+          "tool_id": "ruff",
+          "signal_type": "lint",
+          "severity": "low",
+          "rule_code": "F401",
+          "message": "`typing.Dict` imported but unused",
+          "docs_url": "https://docs.astral.sh/ruff/rules/unused-import",
+          "file_path": "ria/utils/helpers.py",
+          "span": {
+            "start": {
+              "row": 14,
+              "column": 30
+            },
+            "end": {
+              "row": 14,
+              "column": 34
+            }
+          }
+        },
+        "file_read_error": null,
+        "code_context": {
+          "window": {
+            "file_path": "ria/utils/helpers.py",
+            "start_row": 1,
+            "end_row": 44,
+            "text": "\"\"\"\nRIA Helper Functions\n\nThis module contains utility functions for RIA operations including:\n- Search ID generation\n- Search context extraction\n- Session ID management\n- Search parameter formatting\n\"\"\"\n\nimport json\nimport time\nimport uuid\nfrom typing import Optional, Dict, Any\n\n\ndef generate_search_id() -> str:\n    \"\"\"Generate a unique search ID for tracking related activities.\"\"\"\n    return f\"search_{int(time.time() * 1000)}_{uuid.uuid4().hex[:9]}\"\n\n\ndef extract_search_context(request) -> Optional[dict]:\n    # Django uses request.META for headers (prefixed with HTTP_)\n    # FastAPI uses request.headers\n    search_context_header = None\n    \n    # Try Django-style header access\n    if hasattr(request, 'META'):\n        search_context_header = request.META.get('HTTP_X_SEARCH_CONTEXT')\n    # Try FastAPI-style header access (for backward compatibility)\n    elif hasattr(request, 'headers'):\n        search_context_header = request.headers.get(\"X-Search-Context\")\n    \n    if not search_context_header:\n        return None\n    \n    try:\n        return json.loads(search_context_header)\n    except json.JSONDecodeError:\n        from common.utils.logging_config import get_logger\n        logger = get_logger(__name__)\n        logger.warning(f\"Invalid search context header: {search_context_header}\")\n        return None\n\n"
+          },
+          "imports": {
+            "file_path": "ria/utils/helpers.py",
+            "start_row": 1,
+            "end_row": 16,
+            "text": "\"\"\"\nRIA Helper Functions\n\nThis module contains utility functions for RIA operations including:\n- Search ID generation\n- Search context extraction\n- Session ID management\n- Search parameter formatting\n\"\"\"\n\nimport json\nimport time\nimport uuid\nfrom typing import Optional, Dict, Any\n\n\n"
+          },
+          "enclosing_function": null,
+          "try_except_block": null,
+          "class_definition": null,
+          "type_aliases": null,
+          "related_function": null,
+          "module_constants": null
+        },
+        "edit_snippet": {
+          "file_path": "ria/utils/helpers.py",
+          "start_row": 1,
+          "end_row": 16,
+          "text": "\"\"\"\nRIA Helper Functions\n\nThis module contains utility functions for RIA operations including:\n- Search ID generation\n- Search context extraction\n- Session ID management\n- Search parameter formatting\n\"\"\"\n\nimport json\nimport time\nimport uuid\nfrom typing import Optional, Dict, Any\n\n\n",
+          "original_text": "\"\"\"\nRIA Helper Functions\n\nThis module contains utility functions for RIA operations including:\n- Search ID generation\n- Search context extraction\n- Session ID management\n- Search parameter formatting\n\"\"\"\n\nimport json\nimport time\nimport uuid\nfrom typing import Optional, Dict, Any\n\n\n",
+          "error_line": 14,
+          "error_line_in_snippet": 14,
+          "snippet_length": 16,
+          "base_indent": ""
+        },
+        "edit_window_type": "imports",
+        "fix_context": {
+          "exists": true,
+          "applicability": "safe",
+          "tool_message": "Remove unused import",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 14,
+                  "column": 1
+                },
+                "end": {
+                  "row": 14,
+                  "column": 39
+                }
+              },
+              "content": "from typing import Optional"
+            }
+          ]
+        }
+      },
+      {
+        "signal": {
+          "tool_id": "ruff",
+          "signal_type": "lint",
+          "severity": "low",
+          "rule_code": "F401",
+          "message": "`typing.Any` imported but unused",
+          "docs_url": "https://docs.astral.sh/ruff/rules/unused-import",
+          "file_path": "ria/utils/helpers.py",
+          "span": {
+            "start": {
+              "row": 14,
+              "column": 36
+            },
+            "end": {
+              "row": 14,
+              "column": 39
+            }
+          }
+        },
+        "file_read_error": null,
+        "code_context": {
+          "window": {
+            "file_path": "ria/utils/helpers.py",
+            "start_row": 1,
+            "end_row": 44,
+            "text": "\"\"\"\nRIA Helper Functions\n\nThis module contains utility functions for RIA operations including:\n- Search ID generation\n- Search context extraction\n- Session ID management\n- Search parameter formatting\n\"\"\"\n\nimport json\nimport time\nimport uuid\nfrom typing import Optional, Dict, Any\n\n\ndef generate_search_id() -> str:\n    \"\"\"Generate a unique search ID for tracking related activities.\"\"\"\n    return f\"search_{int(time.time() * 1000)}_{uuid.uuid4().hex[:9]}\"\n\n\ndef extract_search_context(request) -> Optional[dict]:\n    # Django uses request.META for headers (prefixed with HTTP_)\n    # FastAPI uses request.headers\n    search_context_header = None\n    \n    # Try Django-style header access\n    if hasattr(request, 'META'):\n        search_context_header = request.META.get('HTTP_X_SEARCH_CONTEXT')\n    # Try FastAPI-style header access (for backward compatibility)\n    elif hasattr(request, 'headers'):\n        search_context_header = request.headers.get(\"X-Search-Context\")\n    \n    if not search_context_header:\n        return None\n    \n    try:\n        return json.loads(search_context_header)\n    except json.JSONDecodeError:\n        from common.utils.logging_config import get_logger\n        logger = get_logger(__name__)\n        logger.warning(f\"Invalid search context header: {search_context_header}\")\n        return None\n\n"
+          },
+          "imports": {
+            "file_path": "ria/utils/helpers.py",
+            "start_row": 1,
+            "end_row": 16,
+            "text": "\"\"\"\nRIA Helper Functions\n\nThis module contains utility functions for RIA operations including:\n- Search ID generation\n- Search context extraction\n- Session ID management\n- Search parameter formatting\n\"\"\"\n\nimport json\nimport time\nimport uuid\nfrom typing import Optional, Dict, Any\n\n\n"
+          },
+          "enclosing_function": null,
+          "try_except_block": null,
+          "class_definition": null,
+          "type_aliases": null,
+          "related_function": null,
+          "module_constants": null
+        },
+        "edit_snippet": {
+          "file_path": "ria/utils/helpers.py",
+          "start_row": 1,
+          "end_row": 16,
+          "text": "\"\"\"\nRIA Helper Functions\n\nThis module contains utility functions for RIA operations including:\n- Search ID generation\n- Search context extraction\n- Session ID management\n- Search parameter formatting\n\"\"\"\n\nimport json\nimport time\nimport uuid\nfrom typing import Optional, Dict, Any\n\n\n",
+          "original_text": "\"\"\"\nRIA Helper Functions\n\nThis module contains utility functions for RIA operations including:\n- Search ID generation\n- Search context extraction\n- Session ID management\n- Search parameter formatting\n\"\"\"\n\nimport json\nimport time\nimport uuid\nfrom typing import Optional, Dict, Any\n\n\n",
+          "error_line": 14,
+          "error_line_in_snippet": 14,
+          "snippet_length": 16,
+          "base_indent": ""
+        },
+        "edit_window_type": "imports",
+        "fix_context": {
+          "exists": true,
+          "applicability": "safe",
+          "tool_message": "Remove unused import",
+          "edits": [
+            {
+              "span": {
+                "start": {
+                  "row": 14,
+                  "column": 1
+                },
+                "end": {
+                  "row": 14,
+                  "column": 39
+                }
+              },
+              "content": "from typing import Optional"
+            }
+          ]
+        }
+      }
+    ],
+    "merged_snippet_groups": [
+      {
+        "signal_indices": [
+          0,
+          2,
+          3,
+          1
+        ],
+        "edit_snippet": {
+          "file_path": "ria/utils/helpers.py",
+          "start_row": 1,
+          "end_row": 16,
+          "text": "\"\"\"\nRIA Helper Functions\n\nThis module contains utility functions for RIA operations including:\n- Search ID generation\n- Search context extraction\n- Session ID management\n- Search parameter formatting\n\"\"\"\n\nimport json\nimport time\nimport uuid\nfrom typing import Optional, Dict, Any\n\n\n",
+          "original_text": "\"\"\"\nRIA Helper Functions\n\nThis module contains utility functions for RIA operations including:\n- Search ID generation\n- Search context extraction\n- Session ID management\n- Search parameter formatting\n\"\"\"\n\nimport json\nimport time\nimport uuid\nfrom typing import Optional, Dict, Any\n\n\n",
+          "error_line": 11,
+          "error_line_in_snippet": 11,
+          "snippet_length": 16,
+          "base_indent": ""
+        }
+      }
+    ],
+    "standalone_signal_indices": []
+  },
+  "prompts": {
+    "system_prompt": "You are an expert code repair agent. Your task is to make MINIMAL, SURGICAL fixes to code errors.\n\n## CRITICAL PRINCIPLE: MINIMAL CHANGES ONLY\n\nYour job is to fix ONLY the specific error mentioned. You are NOT improving, refactoring, or cleaning up code.\n\n**THE GOLDEN RULE**: Every line in your output that is NOT directly part of the fix MUST be IDENTICAL to the input - same content, same whitespace, same everything.\n\n## How This Works\n\nFor each error signal, you will receive:\n\n1. **Error Information**: Type, message, severity, and rule code\n2. **Edit Snippet**: A small code snippet (~13 lines) containing the error\n   - This is what you need to FIX and RETURN\n   - The error location within the snippet is indicated (e.g., \"Error on line 4 of 13\")\n3. **Context Window**: A larger code window (~30 lines) around the error for understanding\n   - Use this to understand the surrounding code, but DON'T return it\n\n4. **Tailored Context** (varies by signal type - optimized to reduce token usage):\n   - **Imports**: The file's import block (for type definitions, dependencies)\n     - Included for: type errors, undefined names, most issues\n     - Excluded for: import-only errors, bare except blocks\n   - **Enclosing Function**: The function containing the error (for understanding scope/logic)\n     - Included for: type errors, docstring errors, function-level issues\n     - Excluded for: import errors (global scope), bare except (sent separately)\n   - **Try/Except Block**: The try/except block containing the error\n     - Included for: bare except errors (E722)\n     - Excluded for: most other errors\n\nNote: Context is carefully selected to provide what you need while minimizing token usage.\nNot all context is present for every error - you'll only receive relevant context.\n\n## Response Format\n\nFor EACH signal/snippet you receive, respond with this EXACT format:\n\n```\n===== FIX FOR: <file_path> =====\nCONFIDENCE: <0.0-1.0>\nREASONING: <brief explanation of the fix>\n\n```FIXED_CODE\n<complete fixed snippet - ALL lines from edit_snippet, with ONLY the fix applied>\n```\n\nWARNINGS: <any caveats, or \"None\">\n===== END FIX =====\n```\n\n## CRITICAL Rules - READ CAREFULLY\n\n1. **MINIMAL CHANGES ONLY** - Change ONLY what is necessary to fix the specific error. Nothing more.\n\n2. **PRESERVE EVERYTHING ELSE EXACTLY** - Every line that is NOT part of the fix must be returned EXACTLY as it appeared in the input, character-for-character, including:\n   - Comments and documentation\n   - Blank lines (including leading and trailing blank lines)\n   - All whitespace (including trailing newlines at the end of the snippet)\n   - Other variable declarations\n   - Function definitions\n   - String content (including multi-line strings)\n\n   **CRITICAL**: If the input snippet ends with blank lines or newlines, your output MUST end with the exact same number of blank lines/newlines. Do NOT trim trailing whitespace.\n\n3. **DO NOT under any circumstances**:\n   - Delete lines that aren't related to the fix\n   - Add code that isn't required for the fix\n   - \"Clean up\" or \"improve\" surrounding code\n   - Modify comments or documentation\n   - Change formatting on unrelated lines\n   - Remove blank lines\n   - Add blank lines (unless the fix specifically requires it)\n   - Modify string literals or docstrings\n   - Delete function definitions\n   - Remove dictionary entries or list items unrelated to the fix\n\n4. **Maintain RELATIVE indentation** - The snippet has had its base indentation removed. Preserve relative indentation exactly. If a line has 4 spaces in the input, it must have 4 spaces in your output.\n\n5. **One fix block per signal** - If multiple signals, provide multiple fix blocks\n\n6. **Use context for understanding only** - The context window, imports, and enclosing function help you understand the code, but you only return the fixed edit_snippet\n\n## Example - Correct Minimal Fix\n\nInput:\n- Error: \"Need type annotation for 'cache'\" on line 173\n- Edit Snippet (error on line 4 of 7, lines 170-176):\n```\n}\n\nDEPRIORITIZE_QUERIES = {}\ncache = {}\n\n# Model configuration\nEMBEDDING_MODEL = \"text-embedding-3-large\"\n```\n(Note: The snippet ends with a newline after the last line - this MUST be preserved)\n\nCORRECT Response (only `cache = {}` changed to `cache: dict = {}`):\n```\n===== FIX FOR: app/config/tier_queries.py =====\nCONFIDENCE: 0.95\nREASONING: Added dict type annotation to cache variable to satisfy mypy\n\n```FIXED_CODE\n}\n\nDEPRIORITIZE_QUERIES = {}\ncache: dict = {}\n\n# Model configuration\nEMBEDDING_MODEL = \"text-embedding-3-large\"\n```\n\nWARNINGS: None\n===== END FIX =====\n```\n(Note: The output preserves the exact same trailing newline as the input)\n\n## Example - Preserving Trailing Whitespace\n\nInput snippet ending with blank lines (note the TWO newlines after the return statement):\n```\ndef get_clerk_settings() -> ClerkSettings:\n    # Load Clerk token validation settings from config helpers\n    return ClerkSettings.from_config()\n\n\n```\n\nCORRECT - Preserves both trailing newlines:\n```FIXED_CODE\ndef get_clerk_settings() -> ClerkSettings:\n    # Load Clerk token validation settings from config helpers\n    return ClerkSettings.from_config()\n\n\n```\n(Output MUST have the same TWO trailing newlines)\n\nWRONG - Trimming trailing newlines:\n```FIXED_CODE\ndef get_clerk_settings() -> ClerkSettings:\n    # Load Clerk token validation settings from config helpers\n    return ClerkSettings.from_config()\n```\n^ This is WRONG because it removed trailing newlines. The snippet MUST end with the same whitespace as the input.\n\n## Example - WRONG (Deleting Unrelated Content)\n\nIf the input snippet contains documentation or other code, you MUST preserve it:\n\nWRONG - Deleting unrelated lines:\n```FIXED_CODE\ncache: dict = {}\nEMBEDDING_MODEL = \"text-embedding-3-large\"\n```\n^ This is WRONG because it deleted the closing brace, blank lines, DEPRIORITIZE_QUERIES, and the comment.\n\n## Confidence Guidelines\n- High (>0.8): Simple fixes like type annotations, obvious corrections\n- Medium (0.5-0.8): Logic changes, type guards, refactoring\n- Low (<0.5): Complex changes, unclear intent - add detailed warnings\n\n\n\n## Ruff Lint Error Fixing - Specialized Guidance\n\nYou are fixing LINTING errors from Ruff. These are code quality, style, and\nbest practice issues - NOT security or type correctness.\n\nRisk Level: LOW to MEDIUM\nThese fixes should improve code quality without changing behavior.\n\nCommon Ruff Rule Categories:\n\nF (Pyflakes):\n- Unused imports/variables\n- Undefined names\n- Duplicate arguments\n- Invalid format strings\n\nE/W (pycodestyle):\n- Line length (E501)\n- Whitespace issues (E203, W291)\n- Indentation (E111, E114)\n- Blank lines (E302, E303)\n\nC (McCabe):\n- Complexity warnings (C901)\n- Too many branches/statements\n\nN (pep8-naming):\n- Naming conventions (N801-N818)\n- Lowercase function names\n- CamelCase class names\n\nI (isort):\n- Import sorting/organization\n\nUP (pyupgrade):\n- Outdated syntax\n- Type hint modernization\n\nFixing Strategies:\n\n1. **Remove Unused Code** - But verify it's truly unused\n   \u2705 Remove unused imports\n   \u2705 Remove unused variables\n   \u26a0\ufe0f Check for side effects first!\n\n2. **Simplify Logic** - Follow Python idioms\n   \u2705 `if x == True:` \u2192 `if x:`\n   \u2705 `if len(list) > 0:` \u2192 `if list:`\n   \u2705 Use comprehensions instead of loops\n\n3. **Fix Naming** - Follow PEP 8\n   \u2705 `MyFunction` \u2192 `my_function`\n   \u2705 `my_class` \u2192 `MyClass`\n\n4. **Modernize Syntax** - Use newer Python features\n   \u2705 `Union[str, int]` \u2192 `str | int` (Python 3.10+)\n   \u2705 `Optional[str]` \u2192 `str | None` (Python 3.10+)\n\n5. **Organize Imports** - Sort and group properly\n   \u2705 Standard library first\n   \u2705 Third-party second\n   \u2705 Local imports last\n\nNEVER do these:\n\u274c Remove code that has side effects (initializers, registrations)\n\u274c Change behavior to fix style\n\u274c Break working code to satisfy complexity metrics\n\u274c Remove \"unused\" variables that are part of unpacking\n\nSpecial Cases:\n\nComplexity Warnings (C901):\n- Don't just suppress with # noqa\n- Consider refactoring if genuinely complex\n- But set confidence < 0.7 for refactoring suggestions\n\nUnused Variables:\n- `x, y, z = tuple` - y might be \"unused\" but needed for unpacking\n- Consider renaming to `_` if truly unused: `x, _, z = tuple`\n\nLine Length (E501):\n- Can often be fixed by breaking long lines\n- But some URLs or strings are legitimately long\n- Use # noqa: E501 with comment explaining why\n\nConfidence Guidelines:\n- High (>0.8): Remove unused imports, fix obvious naming\n- Medium (0.5-0.8): Simplify logic, organize imports\n- Low (<0.5): Refactoring suggestions, complex changes\n\nRemember: Preserve behavior. These are style improvements, not bug fixes.\n",
+    "user_prompt": "Tool: ruff\nSignal Type: lint\nNumber of Signals: 4\n\n============================================================\nSIGNALS 1-2 (shared edit region)\n============================================================\n\n## Error 1\n- File: ria/utils/helpers.py\n- Message: Import block is un-sorted or un-formatted\n- Rule Code: I001\n- Severity: low\n- Location: Line 11, Column 1\n\n## Error 2\n- File: ria/utils/helpers.py\n- Message: `typing.Dict` imported but unused\n- Rule Code: F401\n- Severity: low\n- Location: Line 14, Column 30\n\n## Error 3\n- File: ria/utils/helpers.py\n- Message: `typing.Any` imported but unused\n- Rule Code: F401\n- Severity: low\n- Location: Line 14, Column 36\n\n## Error 4\n- File: ria/utils/helpers.py\n- Message: `typing.Dict` is deprecated, use `dict` instead\n- Rule Code: UP035\n- Severity: low\n- Location: Line 14, Column 1\n\n## Edit Snippet (FIX ALL ERRORS ABOVE AND RETURN THIS)\nLines 1-16 (4 errors in 16 lines)\n```python\n\"\"\"\nRIA Helper Functions\n\nThis module contains utility functions for RIA operations including:\n- Search ID generation\n- Search context extraction\n- Session ID management\n- Search parameter formatting\n\"\"\"\n\nimport json\nimport time\nimport uuid\nfrom typing import Optional, Dict, Any\n\n\n\n```\n\n## Context Window (for understanding, DO NOT return)\nLines 1-44\n```python\n\"\"\"\nRIA Helper Functions\n\nThis module contains utility functions for RIA operations including:\n- Search ID generation\n- Search context extraction\n- Session ID management\n- Search parameter formatting\n\"\"\"\n\nimport json\nimport time\nimport uuid\nfrom typing import Optional, Dict, Any\n\n\ndef generate_search_id() -> str:\n    \"\"\"Generate a unique search ID for tracking related activities.\"\"\"\n    return f\"search_{int(time.time() * 1000)}_{uuid.uuid4().hex[:9]}\"\n\n\ndef extract_search_context(request) -> Optional[dict]:\n    # Django uses request.META for headers (prefixed with HTTP_)\n    # FastAPI uses request.headers\n    search_context_header = None\n    \n    # Try Django-style header access\n    if hasattr(request, 'META'):\n        search_context_header = request.META.get('HTTP_X_SEARCH_CONTEXT')\n    # Try FastAPI-style header access (for backward compatibility)\n    elif hasattr(request, 'headers'):\n        search_context_header = request.headers.get(\"X-Search-Context\")\n    \n    if not search_context_header:\n        return None\n    \n    try:\n        return json.loads(search_context_header)\n    except json.JSONDecodeError:\n        from common.utils.logging_config import get_logger\n        logger = get_logger(__name__)\n        logger.warning(f\"Invalid search context header: {search_context_header}\")\n        return None\n\n\n```\n\n## Imports\n```python\n\"\"\"\nRIA Helper Functions\n\nThis module contains utility functions for RIA operations including:\n- Search ID generation\n- Search context extraction\n- Session ID management\n- Search parameter formatting\n\"\"\"\n\nimport json\nimport time\nimport uuid\nfrom typing import Optional, Dict, Any\n\n\n\n```\n\n\nPlease provide fixes for the above signals using the specified response format."
+  },
+  "llm_response": [
+    "===== FIX FOR: ria/utils/helpers.py =====\n",
+    "CONFIDENCE: 0.95\n",
+    "REASONING: Fixed import sorting (I001), removed unused Dict and Any imports (F401), and modernized Dict to dict (UP035). The imports are now properly sorted with standard library first, then typing imports.\n",
+    "\n",
+    "```FIXED_CODE\n",
+    "\"\"\"\n",
+    "RIA Helper Functions\n",
+    "\n",
+    "This module contains utility functions for RIA operations including:\n",
+    "- Search ID generation\n",
+    "- Search context extraction\n",
+    "- Session ID management\n",
+    "- Search parameter formatting\n",
+    "\"\"\"\n",
+    "\n",
+    "import json\n",
+    "import time\n",
+    "import uuid\n",
+    "from typing import Optional\n",
+    "\n",
+    "\n",
+    "\n",
+    "```\n",
+    "\n",
+    "WARNINGS: None\n",
+    "===== END FIX ====="
+  ]
+}
