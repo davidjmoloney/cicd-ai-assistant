@@ -4,6 +4,21 @@ Chronological summary of project development for the CI/CD AI Assistant.
 
 ---
 
+## Condensed Development Timeline
+
+| Phase | Dates | Commits | Work Completed |
+|-------|-------|---------|----------------|
+| **1. Foundation** | Dec 2025 | `9aeb54d` → `5344980` | Data model (`FixSignal`, `Severity`, `Span`), ruff lint parser, path policy |
+| **2. Orchestration** | Dec 2025 – Jan 2026 | `3108471` → `ddfee4a` | Signal prioritiser with tool-homogeneous grouping; context builder assembling windowed code snippets for LLM prompts |
+| **3. LLM Integration & PR Generator** | Jan 2026 | `16903f1` → `019d1b7` | LLM provider abstraction (OpenAI + Anthropic), agent handler with structured fix parsing, GitHub PR generator applying span-based edits |
+| **4. Full Signal Coverage** | Jan 2026 | `eb5ef3b` → `f68e3c6` | Ruff format diff parser, fix planner routing (direct-apply vs LLM path), mypy type-check parser |
+| **5. Prompt Engineering & Context Windows** | Jan 2026 | `46b24c5` → `e7e2c0f` | Tool-specific LLM guidance (mypy / ruff / pydocstyle), refactored response format to code-block strings, rule-code-driven edit window types (`lines`, `function`, `imports`, `try_except`) |
+| **6. Pydocstyle & Confidence Filtering** | Jan – Feb 2026 | `de7b850` → `6ba4019` | Pydocstyle parser (D101–D103), docstring LLM prompts, confidence threshold filtering in PR generator |
+| **7. Pipeline Completion** | Feb 2026 | `bffa7e2` → `a858995` | `main.py` entry point with CLI, full end-to-end pipeline orchestration, `RunMetrics` reporting |
+| **8. Prioritisation & Reliability Improvements** | Feb 2026 | `36d0045` → `a2425dc` | Severity-based signal ordering, expanded ruff rule → context window mappings, shared GitHub API client, live file retrieval from GitHub, unchanged-fix detection, extended LLM retry backoff |
+
+---
+
 ## 2025-12-09 — `9aeb54d` — Initial commit
 
 - Repository initialised with `.gitignore` and `README.md`.
@@ -266,3 +281,50 @@ Chronological summary of project development for the CI/CD AI Assistant.
   - Added evaluation artifact files with real tool output.
 - Added `logs/` and `debug/` directories with `.gitkeep` files.
 - Updated `.gitignore` to exclude generated log and debug files.
+
+---
+
+## 2026-02-10 — `36d0045` — Severity-based ordering within signal groups
+
+- Extended `src/orchestrator/prioritizer.py` with severity-aware grouping:
+  - Added `SEVERITY_PRIORITY` mapping (`CRITICAL → 0` … `LOW → 3`).
+  - Signals within each tool bucket are now sorted by severity before being chunked into groups, so the highest-severity issues reach the LLM first.
+  - Increased the default `max_group_size` from 3 to 4 signals per group.
+
+---
+
+## 2026-02-12 — `cfe9e91` — Expanded ruff rule coverage in context windows
+
+- Significantly broadened `src/orchestrator/signal_requirements.py` to map many more ruff rule codes to appropriate edit window types:
+  - Added `I002` to the import-block window group.
+  - Added multiple `B`-series rules (bare except variants, closure/loop issues) to try/except and function windows.
+  - Added a new `class` window type for class-level issues (e.g. `B024` — abstract class without abstract methods).
+  - Mapped the full `UP`-series (modernisation rules) and relevant `S`-series (security rules) to single-line and function windows.
+- Added corresponding severity mappings to `src/signals/policy/severity.py` for the newly covered rule codes.
+
+---
+
+## 2026-02-14 — `d51671b` — Shared GitHub client and live file retrieval
+
+- Created `src/github/client.py` — a shared GitHub API utility module:
+  - `github_headers()` and `github_request()` provide authenticated, retry-aware HTTP helpers used across the `github/` package.
+  - `read_file_from_github()` fetches live file content from the target repository via the GitHub Contents API.
+- Refactored `src/orchestrator/context_builder.py` to retrieve source files from the GitHub API instead of the local filesystem, enabling the assistant to operate without a local checkout of the target repository.
+- Refactored `src/github/pr_generator.py` to delegate all API calls through the shared client.
+
+---
+
+## 2026-02-15 — `8bf5e63` — Unchanged fix detection and enriched PR descriptions
+
+- Added `SignalError` dataclass to `src/agents/agent_handler.py` to carry the original CI signal metadata (file, line, column, rule code, message) through the pipeline and attach it to each `FileEdit`.
+- Added `UnchangedFix` dataclass to `src/github/pr_generator.py`; the PR generator now detects when the LLM returns code identical to the original content and records these as skipped-unchanged entries rather than committing no-op edits.
+- PR body now reports three outcome counts: **Fixes Applied**, **Unchanged**, and **Skipped (confidence)**.
+- Per-file sections in the PR description now list the original CI errors addressed (rule code, line, message) alongside the LLM's fix rationale.
+
+---
+
+## 2026-02-15 — `a2425dc` — Extended LLM retry backoff
+
+- Updated `src/agents/llm_provider.py` for both `OpenAIProvider` and `AnthropicProvider`:
+  - Maximum retries increased from 4 to 7.
+  - Backoff ceiling raised from 30 s to 300 s (5 minutes), giving rate-limited requests time to recover during large runs.

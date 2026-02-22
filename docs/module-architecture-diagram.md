@@ -4,6 +4,65 @@ Comprehensive diagram of the CI/CD AI Assistant architecture showing all modules
 
 ---
 
+## Simplified Overview (Thesis Diagram)
+
+Streamlined view showing modules and the data signals passed between them.
+
+```mermaid
+flowchart TB
+    subgraph Inputs["CI/CD Tool Outputs"]
+        Ruff["Ruff Lint / Format"]
+        MyPy["MyPy"]
+        PyDoc["Pydocstyle"]
+    end
+
+    subgraph Parsers["signals/parsers/"]
+        RuffP["ruff.py"]
+        MyPyP["mypy.py"]
+        PyDocP["pydocstyle.py"]
+    end
+
+    Main["main.py\n(Pipeline Coordinator)"]
+
+    Prioritizer["prioritizer.py"]
+
+    Planner["fix_planner.py"]
+
+    subgraph LLMPath["LLM Path"]
+        Context["context_builder.py"]
+        Agent["agent_handler.py"]
+        LLM["LLM Provider\n(Claude / OpenAI)"]
+    end
+
+    Direct["Direct Apply\n(FORMAT only, no LLM)"]
+
+    PRGen["pr_generator.py"]
+
+    Output[/"GitHub Pull Request"/]
+
+    Ruff --> RuffP
+    MyPy --> MyPyP
+    PyDoc --> PyDocP
+
+    RuffP & MyPyP & PyDocP -->|"list[FixSignal]"| Main
+
+    Main -->|"list[FixSignal]"| Prioritizer
+    Prioritizer -->|"list[SignalGroup]"| Planner
+
+    Planner -->|"FORMAT"| Direct
+    Planner -->|"LINT / TYPE_CHECK / DOCSTRING"| Context
+
+    Context -->|"Context dict"| Agent
+    Agent <-->|"Prompt / Response"| LLM
+
+    Direct -->|"FixPlan"| PRGen
+    Agent -->|"FixPlan"| PRGen
+
+    PRGen --> Output
+```
+
+---
+
 ## System Overview Diagram
 
 ```mermaid
